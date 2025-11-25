@@ -1,36 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import '../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CSpinner,
+  CInputGroup,
+  CInputGroupText,
+  CAlert,
+  CRow,
+  CCol
+} from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilLocationPin, cilUser } from '@coreui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
-import axiosInstance from '../../axiosInstance';
-import FormButtons from '../../utils/FormButtons';
+import { showError, axiosInstance } from '../../utils/tableImports';
+import '../../css/form.css';
 
-function AddCash() {
+const AddCash = ({ show, onClose, onCashSaved, editingCash }) => {
   const [formData, setFormData] = useState({
     name: '',
     branch: ''
   });
-  const [errors, setErrors] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const [branches, setBranches] = useState([]);
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    if (id) {
-      fetchCashLocation(id);
+    if (editingCash) {
+      // Pre-fill form with existing data when editing
+      setFormData({
+        name: editingCash.name || '',
+        branch: editingCash.branch || ''
+      });
+    } else {
+      // Reset form when adding new
+      resetForm();
     }
-  }, [id]);
-  const fetchCashLocation = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/cash-locations/${id}`);
-      setFormData(res.data.data.cashLocation);
-    } catch (error) {
-      console.error('Error fetching cashLocations:', error);
-    }
-  };
+  }, [editingCash, show]);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -45,94 +58,156 @@ function AddCash() {
 
     fetchBranches();
   }, []);
-  const handleChange = (e) => {
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Account name is required';
+    }
+    
+    if (!formData.branch) {
+      errors.branch = 'Location is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.name) formErrors.name = 'This field is required';
-    if (!formData.branch) formErrors.branch = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      if (id) {
-        await axiosInstance.put(`/cash-locations/${id}`, formData);
-        await showFormSubmitToast('Cash location updated successfully!', () => navigate('/cash-master'));
-
-        navigate('/cash-master');
+      if (editingCash) {
+        await axiosInstance.put(`/cash-locations/${editingCash.id}`, formData);
+        setSuccessMessage('Cash location updated successfully');
       } else {
         await axiosInstance.post('/cash-locations', formData);
-        await showFormSubmitToast('Cash location added successfully!', () => navigate('/cash-master'));
-
-        navigate('/cash-master');
+        setSuccessMessage('Cash location added successfully');
       }
+      
+      // Clear success message after 2 seconds and close modal
+      setTimeout(() => {
+        setSuccessMessage('');
+        onCashSaved();
+      }, 2000);
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving cash location:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/cash-master');
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      branch: ''
+    });
+    setFormErrors({});
+    setSuccessMessage('');
   };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Cash Account</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Location</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilLocationPin} />
-                  </CInputGroupText>
-                  <CFormSelect name="branch" value={formData.branch} onChange={handleChange}>
-                    <option value="">-Select Location-</option>
-                    {branches.map((branch) => (
-                      <option key={branch._id} value={branch._id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CInputGroup>
-                {errors.branch && <p className="error">{errors.branch}</p>}
+    <CModal size="lg" visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingCash ? 'Edit Cash Account' : 'Add New Cash Account'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          {successMessage && (
+            <CAlert color="success" className="mb-3">
+              {successMessage}
+            </CAlert>
+          )}
+           <CRow className="mb-3">
+           <CCol md={6}>
+          <div className="mb-3">
+            <CFormLabel htmlFor="branch">Location <span className="required">*</span></CFormLabel>
+            <CInputGroup>
+              <CFormSelect 
+                id="branch"
+                name="branch" 
+                value={formData.branch} 
+                onChange={handleInputChange}
+                invalid={!!formErrors.branch}
+              >
+                <option value="">-Select Location-</option>
+                {branches.map((branch) => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CInputGroup>
+            {formErrors.branch && (
+              <div className="error-text">
+                {formErrors.branch}
               </div>
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Account Name</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="text" name="name" value={formData.name} onChange={handleChange} />
-                </CInputGroup>
-                {errors.name && <p className="error">{errors.name}</p>}
+            )}
+          </div>
+          </CCol>
+          <CCol md={6}>
+          <div className="mb-3">
+            <CFormLabel htmlFor="name">Account Name <span className="required">*</span></CFormLabel>
+            <CInputGroup>
+              <CFormInput
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                invalid={!!formErrors.name}
+              />
+            </CInputGroup>
+            {formErrors.name && (
+              <div className="error-text">
+                {formErrors.name}
               </div>
-              <FormButtons onCancel={handleCancel} />
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            )}
+          </div>
+          </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting || !!successMessage}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingCash ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
+
 export default AddCash;

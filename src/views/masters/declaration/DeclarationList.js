@@ -7,7 +7,6 @@ import {
   Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
@@ -15,8 +14,6 @@ import {
   showError,
   showSuccess,
   axiosInstance,
-  // FaCheckCircle,
-  // FaTimesCircle
 } from '../../../utils/tableImports';
 import { 
   CButton, 

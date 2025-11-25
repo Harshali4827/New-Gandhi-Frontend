@@ -230,7 +230,7 @@ function RCConfirmation() {
       <div className='title'>RC Confirmation Management</div>
       
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             <CButton 
               size="sm" 
@@ -249,7 +249,7 @@ function RCConfirmation() {
               </CButton>
             )}
           </div>
-        </CCardHeader>
+        </CCardHeader> */}
         
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">

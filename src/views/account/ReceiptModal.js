@@ -15,9 +15,8 @@ import {
   CAlert
 } from '@coreui/react';
 import '../../css/receipt.css';
+import '../../css/form.css';
 import axiosInstance from '../../axiosInstance';
-import tvsLogo from '../../assets/images/logo.png';
-import config from '../../config';
 import { useNavigate } from 'react-router-dom';
 
 const ReceiptModal = ({ show, onClose, bookingData }) => {
@@ -329,14 +328,11 @@ const ReceiptModal = ({ show, onClose, bookingData }) => {
             </CRow>
           </CForm>
         </CModalBody>
-        <CModalFooter className="d-flex justify-content-between">
+        <CModalFooter>
           <div>
-            <CButton color="primary" onClick={handleSubmit} className="me-2" disabled={isLoading}>
+            <CButton color="primary" onClick={handleSubmit} className="me-2 submit-button" disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Save Payment'}
             </CButton>
-            {/* <CButton color="info" variant="outline" onClick={handleViewLedger}>
-              View Ledger
-            </CButton> */}
           </div>
           <CButton color="secondary" onClick={onClose} disabled={isLoading}>
             Close

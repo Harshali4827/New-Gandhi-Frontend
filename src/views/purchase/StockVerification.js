@@ -328,17 +328,16 @@ function StockVerification() {
                 {isVerifying ? 'Verifying...' : `Verify Selected (${selectedVehicles.length})`}
               </CButton>
             )}
-            <CButton 
+            {/* <CButton 
               size="sm" 
               className="action-btn me-1"
             >
               <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
+            </CButton> */}
             {searchTerm && (
               <CButton 
                 size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
+               className="action-btn me-1"
                 onClick={handleResetSearch}
               >
                 <CIcon icon={cilZoomOut} className='icon' /> Reset Search

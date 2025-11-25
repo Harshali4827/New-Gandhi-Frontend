@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CSpinner,
+  CInputGroup,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../../utils/tableImports';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilLocationPin, cilUser } from '@coreui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
-import axiosInstance from '../../../axiosInstance';
-import FormButtons from '../../../utils/FormButtons';
 
-function AddRates() {
+const AddRates = ({ show, onClose, onRateSaved, editingRate }) => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const hasBranch = !!storedUser.branch?._id;
+  
   const [formData, setFormData] = useState({
     branchId: hasBranch ? storedUser.branch?._id : '',
     providerId: '',
@@ -18,29 +29,20 @@ function AddRates() {
   });
   const [branches, setBranches] = useState([]);
   const [providers, setProviders] = useState([]);
-  const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchFinanceRates(id);
-    }
-  }, [id]);
-  const fetchFinanceRates = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/financers/rates/${id}`);
-      const rateData = res.data.data;
-
+    if (editingRate) {
       setFormData({
-        branchId: rateData.branch,
-        providerId: rateData.financeProvider,
-        gcRate: rateData.gcRate
+        branchId: editingRate.branch || '',
+        providerId: editingRate.financeProvider || '',
+        gcRate: editingRate.gcRate || ''
       });
-    } catch (error) {
-      console.error('Error fetching finance rates:', error);
+    } else {
+      resetForm();
     }
-  };
+  }, [editingRate, show]);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -53,9 +55,6 @@ function AddRates() {
       }
     };
 
-    fetchBranches();
-  }, []);
-  useEffect(() => {
     const fetchProviders = async () => {
       try {
         const response = await axiosInstance.get('/financers/providers');
@@ -66,72 +65,110 @@ function AddRates() {
       }
     };
 
+    fetchBranches();
     fetchProviders();
   }, []);
-  const handleChange = (e) => {
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.branchId) {
+      errors.branchId = 'Branch is required';
+    }
+    
+    if (!formData.providerId) {
+      errors.providerId = 'Financer is required';
+    }
+    
+    if (!formData.gcRate) {
+      errors.gcRate = 'GC Rate is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.branchId) formErrors.branchId = 'This field is required';
-    if (!formData.providerId) formErrors.providerId = 'This field is required';
-    if (!formData.gcRate) formErrors.gcRate = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
-    const payload = {
-      ...formData,
-      gcRate: parseFloat(formData.gcRate)
-    };
 
+    setSubmitting(true);
     try {
-      if (id) {
-        await axiosInstance.put(`/financers/rates/${id}`, payload);
-        await showFormSubmitToast('Finance rates updated successfully!', () => navigate('/financer-rates/rates-list'));
+      const payload = {
+        ...formData,
+        gcRate: parseFloat(formData.gcRate)
+      };
 
-        navigate('/financer-rates/rates-list');
+      if (editingRate) {
+        await axiosInstance.put(`/financers/rates/${editingRate.id}`, payload);
+        onRateSaved('Finance rate updated successfully');
       } else {
         await axiosInstance.post('/financers/rates', payload);
-        await showFormSubmitToast('Finance rates added successfully!', () => navigate('/financer-rates/rates-list'));
-
-        navigate('/financer-rates/rates-list');
+        onRateSaved('Finance rate added successfully');
       }
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving finance rate:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/financer-rates/rates-list');
+  const resetForm = () => {
+    setFormData({
+      branchId: hasBranch ? storedUser.branch?._id : '',
+      providerId: '',
+      gcRate: ''
+    });
+    setFormErrors({});
   };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Finance Rates</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Branch Name</span>
-                  <span className="required">*</span>
-                </div>
+    <CModal size="lg" visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingRate ? 'Edit Finance Rate' : 'Add New Finance Rate'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="branchId">Branch Name <span className="required">*</span></CFormLabel>
                 <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilLocationPin} />
-                  </CInputGroupText>
-                  <CFormSelect name="branchId" value={formData.branchId} onChange={handleChange}>
+                  <CFormSelect 
+                    id="branchId"
+                    name="branchId" 
+                    value={formData.branchId} 
+                    onChange={handleInputChange}
+                    invalid={!!formErrors.branchId}
+                    disabled={hasBranch}
+                  >
                     <option value="">-Select-</option>
                     {branches.map((branch) => (
                       <option key={branch._id} value={branch._id}>
@@ -140,18 +177,24 @@ function AddRates() {
                     ))}
                   </CFormSelect>
                 </CInputGroup>
-                {errors.branchId && <p className="error">{errors.branchId}</p>}
+                {formErrors.branchId && (
+                  <div className="error-text">
+                    {formErrors.branchId}
+                  </div>
+                )}
               </div>
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Financer Name</span>
-                  <span className="required">*</span>
-                </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="providerId">Financer Name <span className="required">*</span></CFormLabel>
                 <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormSelect name="providerId" value={formData.providerId} onChange={handleChange}>
+                  <CFormSelect 
+                    id="providerId"
+                    name="providerId" 
+                    value={formData.providerId} 
+                    onChange={handleInputChange}
+                    invalid={!!formErrors.providerId}
+                  >
                     <option value="">-Select-</option>
                     {providers.map((provider) => (
                       <option key={provider._id} value={provider._id}>
@@ -160,27 +203,51 @@ function AddRates() {
                     ))}
                   </CFormSelect>
                 </CInputGroup>
-                {errors.providerId && <p className="error">{errors.providerId}</p>}
+                {formErrors.providerId && (
+                  <div className="error-text">
+                    {formErrors.providerId}
+                  </div>
+                )}
               </div>
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">GC Rate</span>
-                  <span className="required">*</span>
-                </div>
+            </CCol>
+          </CRow>
+          <CRow>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="gcRate">GC Rate <span className="required">*</span></CFormLabel>
                 <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="text" name="gcRate" value={formData.gcRate} onChange={handleChange} />
+                  <CFormInput
+                    type="number"
+                    id="gcRate"
+                    name="gcRate"
+                    value={formData.gcRate}
+                    onChange={handleInputChange}
+                    placeholder="Enter GC Rate"
+                    invalid={!!formErrors.gcRate}
+                    step="0.01"
+                  />
                 </CInputGroup>
-                {errors.gcRate && <p className="error">{errors.gcRate}</p>}
+                {formErrors.gcRate && (
+                  <div className="error-text">
+                    {formErrors.gcRate}
+                  </div>
+                )}
               </div>
-              <FormButtons onCancel={handleCancel} />
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingRate ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
+
 export default AddRates;

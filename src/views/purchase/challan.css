@@ -1,28 +1,18 @@
-/* 
-.challan-display-container {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 5px;
-  margin-bottom: 30px;
-} */
-
 .challan-display-container {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 5px;
   margin-bottom: 30px;
   position: relative;
-  z-index: 1001; /* Higher than other elements */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: add shadow for depth */
+  z-index: 1001;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Add this to ensure form content stays behind */
 .form-container {
   position: relative;
   z-index: 1;
 }
 
-/* Add this for smaller screens */
 @media (max-width: 768px) {
   .challan-display-container {
     padding: 15px;
@@ -61,7 +51,6 @@
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    /* max-width: 800px; */
     margin: 0 auto;
   }
   
@@ -170,7 +159,6 @@
   .accessories-section {
     margin-bottom: 10px;
     padding-top: 10px;
-    /* border-top: 1px solid #000; */
   }
   
   .section-title {
@@ -189,8 +177,7 @@
     margin: 0;
     font-size: 14px;
   }
-  
-  /* Notes section */
+
   .notes-section {
     margin-bottom: 20px;
     padding-top: 15px;
@@ -201,14 +188,11 @@
     font-size: 12px;
     line-height: 1.4;
   }
-  
-  /* Signatures section */
   .signatures-section {
     display: flex;
     justify-content: space-between;
     margin-top: 30px;
     padding-top: 20px;
-    /* border-top: 1px solid #000; */
   }
   
   .signature-line {

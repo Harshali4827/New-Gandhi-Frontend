@@ -1,25 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CSpinner,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../utils/tableImports';
 import '../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilDollar, cilLocationPin } from '@coreui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { showError, showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
-import axiosInstance from '../../axiosInstance';
 
-function AddOpeningBalance() {
+const AddOpeningBalance = ({ show, onClose, onBalanceSaved, editingBranch }) => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const hasBranch = !!storedUser.branch?._id;
+  
   const [formData, setFormData] = useState({
     branch: hasBranch ? storedUser.branch?._id : '',
     amount: ''
   });
-
   const [branches, setBranches] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingBranch) {
+      setFormData({
+        branch: editingBranch.id || editingBranch._id || '',
+        amount: editingBranch.opening_balance?.toString() || ''
+      });
+    } else {
+      resetForm();
+    }
+  }, [editingBranch, show]);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -35,148 +54,149 @@ function AddOpeningBalance() {
     fetchBranches();
   }, []);
 
-  useEffect(() => {
-    if (id) {
-      fetchBranch(id);
-    }
-  }, [id]);
-
-  const fetchBranch = async (branchId) => {
-    try {
-      const res = await axiosInstance.get(`/branches/${branchId}`);
-      const branchData = res.data.data;
-      setFormData({
-        branch: branchData._id,
-        amount: branchData.opening_balance || ''
-      });
-    } catch (error) {
-      console.error('Error fetching branch:', error);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.branch) {
+      errors.branch = 'Branch is required';
+    }
+    
+    if (!formData.amount || isNaN(formData.amount)) {
+      errors.amount = 'Valid amount is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    let formErrors = {};
-    if (!formData.branch) formErrors.branch = 'Branch is required';
-    if (!formData.amount || isNaN(formData.amount)) formErrors.amount = 'Valid amount is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      setIsSubmitting(false);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
       const payload = {
         amount: parseFloat(formData.amount),
-        note: id ? 'Updated opening balance' : 'Initial opening balance'
+        note: editingBranch ? 'Updated opening balance' : 'Initial opening balance'
       };
 
-      // Use PATCH for updates, POST for new entries
-      if (id) {
+      if (editingBranch) {
         await axiosInstance.patch(`/branches/${formData.branch}/opening-balance`, payload);
+        onBalanceSaved('Opening balance updated successfully');
       } else {
         await axiosInstance.post(`/branches/${formData.branch}/opening-balance`, payload);
+        onBalanceSaved('Opening balance added successfully');
       }
-
-      await showFormSubmitToast(id ? 'Opening balance updated successfully!' : 'Opening balance added successfully!', () => {
-        navigate('/opening-balance');
-      });
     } catch (error) {
       console.error('Error saving opening balance:', error);
-      showFormSubmitError(error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/opening-balance');
+  const resetForm = () => {
+    setFormData({
+      branch: hasBranch ? storedUser.branch?._id : '',
+      amount: ''
+    });
+    setFormErrors({});
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
   };
 
   return (
-    <div>
-      <h4>{id ? 'Update' : 'Add'} Opening Balance</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Branch</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilLocationPin} />
-                  </CInputGroupText>
-
-                  {/* <CFormSelect name="unloadLocation" value={formData.unloadLocation} onChange={handleChange}>
-                    <option value="">-Select-</option>
-                    {branches.map((branch) => (
-                      <option key={branch._id} value={branch._id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </CFormSelect> */}
-                  <CFormSelect name="branch" value={formData.branch} onChange={handleChange} disabled={isSubmitting}>
-                    <option value="">-Select-</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CInputGroup>
-                {errors.branch && <p className="error">{errors.branch}</p>}
+    <CModal size="lg" visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingBranch ? 'Update Opening Balance' : 'Add Opening Balance'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="branch">Branch <span className="required">*</span></CFormLabel>
+                <CFormSelect 
+                  id="branch"
+                  name="branch" 
+                  value={formData.branch} 
+                  onChange={handleInputChange}
+                  invalid={!!formErrors.branch}
+                  disabled={submitting || hasBranch}
+                >
+                  <option value="">-Select-</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id || branch._id} value={branch.id || branch._id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {formErrors.branch && (
+                  <div className="error-text">
+                    {formErrors.branch}
+                  </div>
+                )}
               </div>
-
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Opening Balance Amount</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilDollar} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="number"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    placeholder="Enter amount"
-                    disabled={isSubmitting}
-                  />
-                </CInputGroup>
-                {errors.amount && <p className="error">{errors.amount}</p>}
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="amount">Opening Balance Amount <span className="required">*</span></CFormLabel>
+                <CFormInput
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleInputChange}
+                  placeholder="Enter amount"
+                  invalid={!!formErrors.amount}
+                  step="0.01"
+                  min="0"
+                />
+                {formErrors.amount && (
+                  <div className="error-text">
+                    {formErrors.amount}
+                  </div>
+                )}
               </div>
-
-              <div className="button-row">
-                <button type="submit" className="simple-button primary-button" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Save'}
-                </button>
-                <button type="button" className="simple-button secondary-button" onClick={handleCancel} disabled={isSubmitting}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingBranch ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
 
 export default AddOpeningBalance;

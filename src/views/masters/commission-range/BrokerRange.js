@@ -1,117 +1,186 @@
 import React, { useState, useEffect } from 'react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CButton,
+  CSpinner,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../../utils/tableImports';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilUser } from '@coreui/icons';
-import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
-import axiosInstance from '../../../axiosInstance';
-import RangeList from './RangeList';
-import { hasPermission } from '../../../utils/permissionUtils';
 
-function BrokerRange() {
-  const [formData, setFormData] = useState({ minAmount: '', maxAmount: '' });
-  const [errors, setErrors] = useState({});
-  const [ranges, setRanges] = useState([]);
+const BrokerRange = ({ show, onClose, onRangeSaved, editingRange }) => {
+  const [formData, setFormData] = useState({
+    minAmount: '',
+    maxAmount: ''
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchRanges();
-  }, []);
+    if (editingRange) {
+      setFormData({
+        minAmount: editingRange.minAmount?.toString() || '',
+        maxAmount: editingRange.maxAmount?.toString() || ''
+      });
+    } else {
+      resetForm();
+    }
+  }, [editingRange, show]);
 
-  const fetchRanges = async () => {
-    try {
-      const response = await axiosInstance.get('/commission-ranges');
-      setRanges(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      setRanges([]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.minAmount.trim()) {
+      errors.minAmount = 'Minimum amount is required';
+    }
+    
+    if (!formData.maxAmount.trim()) {
+      errors.maxAmount = 'Maximum amount is required';
+    }
+
+    // Validate that max amount is greater than min amount
+    if (formData.minAmount && formData.maxAmount) {
+      const min = parseFloat(formData.minAmount);
+      const max = parseFloat(formData.maxAmount);
+      if (min >= max) {
+        errors.maxAmount = 'Maximum amount must be greater than minimum amount';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.minAmount) formErrors.minAmount = 'This field is required';
-    if (!formData.maxAmount) formErrors.maxAmount = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      await axiosInstance.post('/commission-ranges', formData);
-      await showFormSubmitToast('Payment mode added successfully!');
-      setFormData({ payment_mode: '' });
-      fetchRanges();
+      const payload = {
+        minAmount: parseFloat(formData.minAmount),
+        maxAmount: parseFloat(formData.maxAmount)
+      };
+
+      if (editingRange) {
+        await axiosInstance.put(`/commission-ranges/${editingRange._id || editingRange.id}`, payload);
+        onRangeSaved('Commission range updated successfully');
+      } else {
+        await axiosInstance.post('/commission-ranges', payload);
+        onRangeSaved('Commission range added successfully');
+      }
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving commission range:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      minAmount: '',
+      maxAmount: ''
+    });
+    setFormErrors({});
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>Add Broker Commission Range</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Min Amount</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="number" name="minAmount" value={formData.minAmount} onChange={handleChange} />
-                </CInputGroup>
-                {errors.minAmount && <p className="error">{errors.minAmount}</p>}
-              </div>
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Max Amount</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="number"
-                    name="maxAmount"
-                    value={formData.maxAmount}
-                    onChange={handleChange}
-                    placeholder="Enter payment mode"
-                  />
-                </CInputGroup>
-                {errors.maxAmount && <p className="error">{errors.maxAmount}</p>}
-              </div>
-              <div className="button-row">
-                {hasPermission('BROKER', 'CREATE') && (
-                  <button type="submit" className="simple-button primary-button">
-                    Save
-                  </button>
+    <CModal size="lg" visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingRange ? 'Edit Commission Range' : 'Add New Commission Range'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="minAmount">Minimum Amount <span className="required">*</span></CFormLabel>
+                <CFormInput
+                  type="number"
+                  id="minAmount"
+                  name="minAmount"
+                  value={formData.minAmount}
+                  onChange={handleInputChange}
+                  invalid={!!formErrors.minAmount}
+                  step="0.01"
+                  min="0"
+                />
+                {formErrors.minAmount && (
+                  <div className="error-text">
+                    {formErrors.minAmount}
+                  </div>
                 )}
               </div>
-            </div>
-          </form>
-        </div>
-      </div>
-      {/* <RangeList ranges={ranges} onDelete={fetchRanges} /> */}
-    </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="maxAmount">Maximum Amount <span className="required">*</span></CFormLabel>
+                <CFormInput
+                  type="number"
+                  id="maxAmount"
+                  name="maxAmount"
+                  value={formData.maxAmount}
+                  onChange={handleInputChange}
+                  invalid={!!formErrors.maxAmount}
+                  step="0.01"
+                  min="0"
+                />
+                {formErrors.maxAmount && (
+                  <div className="error-text">
+                    {formErrors.maxAmount}
+                  </div>
+                )}
+              </div>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingRange ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
 
 export default BrokerRange;

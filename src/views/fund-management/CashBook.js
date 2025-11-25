@@ -249,14 +249,11 @@ function CashBook() {
   };
 
   return (
-    <div>
-      <h4>Cash Account Master</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className="title">Cash Account Master</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">
@@ -292,7 +289,7 @@ function CashBook() {
                 {errors.date && <p className="error">{errors.date}</p>}
               </div>
               <div className="button-container">
-                <CButton color="primary" type="submit" disabled={isLoading}>
+                <CButton className='submit-button' type="submit" disabled={isLoading}>
                   {isLoading ? 'Searching...' : 'Search'}
                 </CButton>
               </div>

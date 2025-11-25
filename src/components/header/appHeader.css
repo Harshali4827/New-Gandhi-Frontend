@@ -1,0 +1,19 @@
+
+.profile-dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .bg-gradient-primary {
+    background-color: #2759a2;
+  }
+  
+  .border-4 {
+    border-width: 4px !important;
+  }
+  
+  .border-2 {
+    border-width: 2px !important;
+  }

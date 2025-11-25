@@ -4,16 +4,13 @@ import {
   React,
   useState,
   useEffect,
-  Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance
 } from '../../../utils/tableImports';
 import { hasPermission } from '../../../utils/permissionUtils';
@@ -31,10 +28,12 @@ import {
   CTableRow,
   CTableDataCell,
   CSpinner,
-  CBadge
+  CBadge,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
+import AddProvider from './AddProvider';
 
 const ProviderList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -42,6 +41,9 @@ const ProviderList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingProvider, setEditingProvider] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
@@ -92,7 +94,8 @@ const ProviderList = () => {
         prevData.map((provider) => (provider.id === providerId ? { ...provider, is_active: newStatus } : provider))
       );
       
-      showSuccess(`Insurance provider ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      setSuccessMessage(`Insurance provider ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error toggling provider status:', error);
       showError('Failed to update provider status');
@@ -106,7 +109,8 @@ const ProviderList = () => {
         await axiosInstance.delete(`/insurance-providers/${id}`);
         setData(data.filter((branch) => branch.id !== id));
         fetchData();
-        showSuccess();
+        setSuccessMessage('Insurance provider deleted successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } catch (error) {
         console.log(error);
         showError(error);
@@ -117,6 +121,28 @@ const ProviderList = () => {
   const handleSearch = (value) => {
     setSearchTerm(value);
     handleFilter(value, getDefaultSearchFields('insurance_provider'));
+  };
+
+  const handleShowAddModal = () => {
+    setEditingProvider(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (provider) => {
+    setEditingProvider(provider);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingProvider(null);
+  };
+
+  const handleProviderSaved = (message) => {
+    fetchData();
+    handleCloseModal();
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   if (loading) {
@@ -138,16 +164,25 @@ const ProviderList = () => {
   return (
     <div>
       <div className='title'>Insurance Providers</div>
+      
+      {/* Success Alert */}
+      {successMessage && (
+        <CAlert color="success" className="mb-3">
+          {successMessage}
+        </CAlert>
+      )}
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasCreatePermission && (
-              <Link to="/insurance-provider/add-provider">
-                <CButton size="sm" className="action-btn me-1">
-                  <CIcon icon={cilPlus} className='icon'/> New Provider
-                </CButton>
-              </Link>
+              <CButton 
+                size="sm" 
+                className="action-btn me-1"
+                onClick={handleShowAddModal}
+              >
+                <CIcon icon={cilPlus} className='icon'/> New Provider
+              </CButton>
             )}
           </div>
         </CCardHeader>
@@ -216,12 +251,13 @@ const ProviderList = () => {
                             onClose={handleClose}
                           >
                             {hasEditPermission && (
-                              <Link className="Link" to={`/insurance-provider/update-provider/${provider.id}`}>
-                                <MenuItem style={{ color: 'black' }}>
-                                  <CIcon icon={cilPencil} className="me-2" />
-                                  Edit
-                                </MenuItem>
-                              </Link>
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(provider)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />
+                                Edit
+                              </MenuItem>
                             )}
                             {hasDeletePermission && (
                               <MenuItem onClick={() => handleDelete(provider.id)}>
@@ -240,6 +276,13 @@ const ProviderList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      <AddProvider
+        show={showModal}
+        onClose={handleCloseModal}
+        onProviderSaved={handleProviderSaved}
+        editingProvider={editingProvider}
+      />
     </div>
   );
 };

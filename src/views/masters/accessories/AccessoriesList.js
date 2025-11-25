@@ -194,9 +194,9 @@ const AccessoriesList = () => {
                       <CTableDataCell>{accessories.categoryDetails?.header_key || ''}</CTableDataCell>
                       <CTableDataCell>{accessories.part_number}</CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color={accessories.part_number_status === 'active' ? 'success' : 'secondary'}>
+                        {/* <CBadge color={accessories.part_number_status === 'active' ? 'success' : 'secondary'}>
                           {accessories.part_number_status === 'active' ? 'Active' : 'Inactive'}
-                        </CBadge>
+                        </CBadge> */}
                         <CFormSwitch
                           className="custom-switch-toggle ms-2"
                           checked={accessories.part_number_status === 'active'}

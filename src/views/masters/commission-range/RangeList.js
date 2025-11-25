@@ -2,15 +2,16 @@ import { hasPermission } from '../../../utils/permissionUtils';
 import '../../../css/table.css';
 import {
   React,
+  useState,
   useEffect,
-  SearchOutlinedIcon,
+  Menu,
+  MenuItem,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
-  axiosInstance,
   confirmDelete,
-  showSuccess,
-  showError
+  showError,
+  axiosInstance
 } from '../../../utils/tableImports';
 import { 
   CButton, 
@@ -26,35 +27,72 @@ import {
   CTableRow,
   CTableDataCell,
   CSpinner,
-  CBadge
+  CBadge,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilTrash } from '@coreui/icons';
+import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
+import BrokerRange from './BrokerRange';
 
-const RangeList = ({ ranges, onDelete }) => {
+const RangeList = () => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRange, setEditingRange] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-  const [searchTerm, setSearchTerm] = React.useState('');
 
+  const hasEditPermission = hasPermission('BROKER', 'UPDATE');
   const hasDeletePermission = hasPermission('BROKER', 'DELETE');
-  const showActionColumn = hasDeletePermission;
+  const hasCreatePermission = hasPermission('BROKER', 'CREATE');
+  const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {
-    const rangeData = Array.isArray(ranges) ? ranges : [];
-    setData(rangeData);
-    setFilteredData(rangeData);
-  }, [ranges]);
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/commission-ranges');
+      setData(response.data.data || []);
+      setFilteredData(response.data.data || []);
+    } catch (error) {
+      console.log('Error fetching data', error);
+      setError(error.message);
+      setData([]);
+      setFilteredData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
 
   const handleDelete = async (id) => {
     const result = await confirmDelete();
     if (result.isConfirmed) {
       try {
         await axiosInstance.delete(`/commission-ranges/${id}`);
-        onDelete();
-        showSuccess('Range deleted successfully!');
+        setData(data.filter((range) => (range._id || range.id) !== id));
+        fetchData();
+        setSuccessMessage('Commission range deleted successfully');
+        setTimeout(() => setSuccessMessage(''), 1500);
       } catch (error) {
-        console.log('Delete error:', error);
-        showError(error.response?.data?.message || 'Failed to delete range');
+        console.log(error);
+        showError(error);
       }
     }
   };
@@ -64,80 +102,160 @@ const RangeList = ({ ranges, onDelete }) => {
     handleFilter(value, getDefaultSearchFields('range'));
   };
 
+  const handleShowAddModal = () => {
+    setEditingRange(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (range) => {
+    setEditingRange(range);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingRange(null);
+  };
+
+  const handleRangeSaved = (message) => {
+    fetchData();
+    handleCloseModal();
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 1500);
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <CSpinner color="primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        Error loading commission ranges: {error}
+      </div>
+    );
+  }
+
   return (
-    <CCard className='table-container mt-4'>
-      <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-        <div>
-          <h6 className="mb-0">Commission Ranges</h6>
-        </div>
-      </CCardHeader>
+    <div>
+      <div className='title'>Broker Commission Range</div>
       
-      <CCardBody>
-        <div className="d-flex justify-content-between mb-3">
-          <div></div>
-          <div className='d-flex'>
-            <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
-            <CFormInput
-              type="text"
-              className="d-inline-block square-search"
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search commission ranges..."
-            />
+      {successMessage && (
+        <CAlert color="success" className="mb-3">
+          {successMessage}
+        </CAlert>
+      )}
+    
+      <CCard className='table-container mt-4'>
+        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+          <div>
+            {hasCreatePermission && (
+              <CButton 
+                size="sm" 
+                className="action-btn me-1"
+                onClick={handleShowAddModal}
+              >
+                <CIcon icon={cilPlus} className='icon'/> New Range
+              </CButton>
+            )}
           </div>
-        </div>
+        </CCardHeader>
         
-        <div className="responsive-table-wrapper">
-          <CTable striped bordered hover className='responsive-table'>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                <CTableHeaderCell>Min Amount</CTableHeaderCell>
-                <CTableHeaderCell>Max Amount</CTableHeaderCell>
-                {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {currentRecords && currentRecords.length === 0 ? (
+        <CCardBody>
+          <div className="d-flex justify-content-between mb-3">
+            <div></div>
+            <div className='d-flex'>
+              <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
+              <CFormInput
+                type="text"
+                className="d-inline-block square-search"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="responsive-table-wrapper">
+            <CTable striped bordered hover className='responsive-table'>
+              <CTableHead>
                 <CTableRow>
-                  <CTableDataCell colSpan={showActionColumn ? "4" : "3"} className="text-center">
-                    <CBadge color="secondary">No commission ranges available</CBadge>
-                  </CTableDataCell>
+                  <CTableHeaderCell>Sr.no</CTableHeaderCell>
+                  <CTableHeaderCell>Min Amount</CTableHeaderCell>
+                  <CTableHeaderCell>Max Amount</CTableHeaderCell>
+                  {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
                 </CTableRow>
-              ) : (
-                currentRecords.map((range, index) => (
-                  <CTableRow key={range.id || range._id || index}>
-                    <CTableDataCell>{index + 1}</CTableDataCell>
-                    <CTableDataCell>
-                      <CBadge color="info">₹{range.minAmount}</CBadge>
+              </CTableHead>
+              <CTableBody>
+                {!currentRecords?.length ? (
+                  <CTableRow>
+                    <CTableDataCell colSpan={showActionColumn ? "4" : "3"} className="text-center">
+                      <CBadge color="secondary">No commission ranges available</CBadge>
                     </CTableDataCell>
-                    <CTableDataCell>
-                      <CBadge color="success">₹{range.maxAmount}</CBadge>
-                    </CTableDataCell>
-                    {showActionColumn && (
+                  </CTableRow>
+                ) : (
+                  currentRecords.map((range, index) => (
+                    <CTableRow key={range._id || range.id || index}>
+                      <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>
-                        {hasDeletePermission && (
+                        ₹{range.minAmount}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                      ₹{range.maxAmount}
+                      </CTableDataCell>
+                      {showActionColumn && (
+                        <CTableDataCell>
                           <CButton
                             size="sm"
-                            color="danger"
-                            className='action-btn'
-                            onClick={() => handleDelete(range._id)}
-                            title="Delete commission range"
+                            className='option-button btn-sm'
+                            onClick={(event) => handleClick(event, range._id || range.id)}
                           >
-                            <CIcon icon={cilTrash} className="me-1" />
-                            Delete
+                            <CIcon icon={cilSettings} />
+                            Options
                           </CButton>
-                        )}
-                      </CTableDataCell>
-                    )}
-                  </CTableRow>
-                ))
-              )}
-            </CTableBody>
-          </CTable>
-        </div>
-      </CCardBody>
-    </CCard>
+                          <Menu 
+                            id={`action-menu-${range._id || range.id}`} 
+                            anchorEl={anchorEl} 
+                            open={menuId === (range._id || range.id)} 
+                            onClose={handleClose}
+                          >
+                            {/* {hasEditPermission && (
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(range)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />
+                                Edit
+                              </MenuItem>
+                            )} */}
+                            {hasDeletePermission && (
+                              <MenuItem onClick={() => handleDelete(range._id || range.id)}>
+                                <CIcon icon={cilTrash} className="me-2" />
+                                Delete
+                              </MenuItem>
+                            )}
+                          </Menu>
+                        </CTableDataCell>
+                      )}
+                    </CTableRow>
+                  ))
+                )}
+              </CTableBody>
+            </CTable>
+          </div>
+        </CCardBody>
+      </CCard>
+
+      <BrokerRange
+        show={showModal}
+        onClose={handleCloseModal}
+        onRangeSaved={handleRangeSaved}
+        editingRange={editingRange}
+      />
+    </div>
   );
 };
 

@@ -381,7 +381,7 @@ const BookingList = () => {
               <CTableHeaderCell scope="col">Color</CTableHeaderCell>
               <CTableHeaderCell scope="col">Fullname</CTableHeaderCell>
               <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+              {/* <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell> */}
               {tabIndex != 2 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
               {tabIndex != 2 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>
@@ -410,7 +410,7 @@ const BookingList = () => {
                   <CTableDataCell>{booking.color?.name || ''}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.name || ''}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>
-                  <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell>
+                  {/* <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell> */}
                   {tabIndex != 2 && (
                     <CTableDataCell>
                       {booking.payment.type === 'FINANCE' && (
@@ -652,7 +652,7 @@ const BookingList = () => {
                 </CButton>
               </Link>
             )}
-            <CButton 
+            {/* <CButton 
               size="sm" 
               className="action-btn me-1"
               onClick={() => {
@@ -669,7 +669,7 @@ const BookingList = () => {
               >
                 <CIcon icon={cilZoomOut} className='icon' /> Reset Search
               </CButton>
-            )}
+            )} */}
           </div>
         </CCardHeader>
         

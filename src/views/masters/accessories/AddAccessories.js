@@ -139,14 +139,11 @@ function AddAccessories() {
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h4>{id ? 'Edit' : 'Add'} Accessories</h4>
-      <div className="form-container">
-        <div className="page-header">
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">

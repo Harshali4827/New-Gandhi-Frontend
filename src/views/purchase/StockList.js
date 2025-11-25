@@ -38,12 +38,12 @@ import { CFormLabel } from '@coreui/react';
 import axiosInstance from 'src/axiosInstance';
 import { confirmDelete, showSuccess, showError } from 'src/utils/sweetAlerts';
 import QRCode from 'react-qr-code';
+import ImportInwardCSV from '../csv/ImportInwardCSV';
 
 const StockList = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [exportModalVisible, setExportModalVisible] = useState(false);
@@ -118,45 +118,8 @@ const StockList = () => {
     fetchBranches();
   }, []);
 
-  const handleSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-
-    const sortedVehicles = [...vehicles].sort((a, b) => {
-      let aValue = a;
-      let bValue = b;
-      
-      if (key.includes('.')) {
-        const keys = key.split('.');
-        aValue = keys.reduce((obj, k) => obj && obj[k], a);
-        bValue = keys.reduce((obj, k) => obj && obj[k], b);
-      } else {
-        aValue = a[key];
-        bValue = b[key];
-      }
-      
-      if (aValue < bValue) {
-        return direction === 'ascending' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === 'ascending' ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setVehicles(sortedVehicles);
-  };
-
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) {
-      return null;
-    }
-    return sortConfig.direction === 'ascending'
-      ? <CIcon icon={cilArrowTop} className="ms-1" />
-      : <CIcon icon={cilArrowBottom} className="ms-1" />;
+  const handleImportSuccess = () => {
+    fetchData();
   };
 
   const handleSearch = (searchData) => {
@@ -294,11 +257,13 @@ const StockList = () => {
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasCreatePermission && (
+              <>
               <Link to='/inward-stock'>
                 <CButton size="sm" className="action-btn me-1">
                   <CIcon icon={cilPlus} className='icon'/> New Stock
                 </CButton>
               </Link>
+              </>
             )}
             
             <CButton 
@@ -306,19 +271,8 @@ const StockList = () => {
               className="action-btn me-1"
               onClick={() => setFilterModalVisible(true)}
             >
-              <CIcon icon={cilFilter} className='icon' /> Filter
+              <CIcon icon={cilSearch} className='icon' /> Search
             </CButton>
-
-            {hasCreatePermission && (
-              <CButton 
-                size="sm" 
-                className="action-btn me-1"
-                onClick={() => setExportModalVisible(true)}
-              >
-                Export Excel
-              </CButton>
-            )}
-
             {(activeSearch.type || activeSearch.branch || activeSearch.search) && (
               <CButton 
                 size="sm" 
@@ -330,20 +284,24 @@ const StockList = () => {
                 Reset Search
               </CButton>
             )}
+            {hasCreatePermission && (
+              <CButton 
+                size="sm" 
+                className="action-btn me-1"
+                onClick={() => setExportModalVisible(true)}
+              >
+                Export Excel
+              </CButton>
+            )}
+             {hasCreatePermission && (
+              <>
+                <ImportInwardCSV endpoint="/vehicles/import-excel" onSuccess={handleImportSuccess} buttonText="Import Excel" />
+              </>
+            )}
           </div>
         </CCardHeader>
         
         <CCardBody>
-          {/* Filter Status Display */}
-          {isFilterApplied && (
-            <div className="alert alert-info mb-3">
-              <span>Applied Filters: </span>
-              <span className="fw-bold">
-                Type: {activeSearch.type}, Branch: {branches.find((b) => b._id === activeSearch.branch)?.name || ''}
-              </span>
-            </div>
-          )}
-
           <div className="d-flex justify-content-between mb-3">
             <div></div>
             <div className='d-flex'>
@@ -356,7 +314,6 @@ const StockList = () => {
                   setSearchTerm(e.target.value);
                   handleSearch({ ...activeSearch, search: e.target.value });
                 }}
-                placeholder="Search vehicles..."
               />
             </div>
           </div>
@@ -492,15 +449,14 @@ const StockList = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setFilterModalVisible(false)}>
-            Cancel
+            Close
           </CButton>
-          <CButton color="primary" onClick={applyFilter}>
-            Apply Filter
+          <CButton className='submit-button' onClick={applyFilter}>
+            Search
           </CButton>
         </CModalFooter>
       </CModal>
 
-      {/* Export Modal */}
       <CModal visible={exportModalVisible} onClose={() => setExportModalVisible(false)}>
         <CModalHeader>
           <CModalTitle>Export Excel</CModalTitle>
@@ -535,9 +491,9 @@ const StockList = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setExportModalVisible(false)}>
-            Cancel
+          Close
           </CButton>
-          <CButton color="primary" onClick={handleExportExcel}>
+          <CButton className='submit-button' onClick={handleExportExcel}>
             Export
           </CButton>
         </CModalFooter>

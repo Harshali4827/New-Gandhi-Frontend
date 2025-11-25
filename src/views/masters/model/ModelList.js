@@ -1,5 +1,6 @@
 import ImportCSV from '../../../views/csv/ImportCSV';
 import '../../../css/table.css';
+import '../../../css/form.css';
 import {
   React,
   useState,
@@ -7,21 +8,15 @@ import {
   Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
-  FontAwesomeIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
   axiosInstance,
-  // FaCheckCircle,
-  // FaTimesCircle,
   confirmDelete,
   showError,
   showSuccess
 } from '../../../utils/tableImports';
-import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { useParams } from 'react-router-dom';
-import { ClearIcon } from '@mui/x-date-pickers';
 import { hasPermission } from '../../../utils/permissionUtils';
 import { 
   CButton, 
@@ -46,7 +41,7 @@ import {
   CFormSelect
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilFilter } from '@coreui/icons';
+import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilFilter, cilSearch, cilZoomOut } from '@coreui/icons';
 
 const ModelList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -292,10 +287,10 @@ const ModelList = () => {
             
             <CButton 
               size="sm" 
-              className={`action-btn me-1 ${isFiltered ? 'btn-primary' : 'btn-secondary'}`}
+              className="action-btn me-1"
               onClick={handleBranchFilter}
             >
-              <CIcon icon={cilFilter} className='icon' /> Filter
+              <CIcon icon={cilSearch} className='icon' /> Search
             </CButton>
 
             {(selectedBranch || selectedSubdealer) && (
@@ -305,8 +300,8 @@ const ModelList = () => {
                 className="action-btn me-1"
                 onClick={clearFilters}
               >
-                <ClearIcon className='icon' />
-                Clear Filter
+                <CIcon icon={cilZoomOut} className='icon' /> 
+               Reset Search
               </CButton>
             )}
 
@@ -486,7 +481,7 @@ const ModelList = () => {
           <CButton color="secondary" onClick={handleCancelBranchFilter}>
             Cancel
           </CButton>
-          <CButton color="primary" onClick={handleApplyBranchFilter}>
+          <CButton className='submit-button' onClick={handleApplyBranchFilter}>
             Apply Filter
           </CButton>
         </CModalFooter>

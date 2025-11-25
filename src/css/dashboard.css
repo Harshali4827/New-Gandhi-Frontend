@@ -1,33 +1,4 @@
-/* 
-.dashboard-card {
-    height: 80%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .dashboard-card .card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .bg-primary.bg-opacity-10 .text-primary,
-  .bg-success.bg-opacity-10 .text-success,
-  .bg-info.bg-opacity-10 .text-info {
-    opacity: 1 !important;
-  }
-
-  .text-uppercase {
-    letter-spacing: 0.5px;
-  }
-  
-  .fw-medium {
-    font-weight: 500;
-  } */
-
-
-
-  .account-dashboard {
+.account-dashboard {
     padding: 20px 0;
   }
 
@@ -147,3 +118,99 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /**************************** insurance dashboard  ********************/
+
+.insurance-dashboard {
+  padding: 20px 0;
+}
+
+.insurance-breakdown .status-indicator,
+.status-breakdown .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.timeline-stats,
+.document-stats {
+  font-size: 0.9rem;
+}
+
+.quick-stats .col-4 {
+  border-right: 1px solid #e9ecef;
+}
+
+.quick-stats .col-4:last-child {
+  border-right: none;
+}
+
+.metric-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shadow-hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.metric-icon {
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover .metric-icon {
+  transform: scale(1.1);
+}
+
+.progress {
+  background-color: #e9ecef;
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+}
+
+.badge {
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .insurance-dashboard {
+    padding: 10px;
+  }
+  
+  .metric-card {
+    margin-bottom: 1rem;
+  }
+  
+  .quick-stats .col-4 {
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .quick-stats .col-4:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.alert {
+  border-radius: 10px;
+  border: none;
+}

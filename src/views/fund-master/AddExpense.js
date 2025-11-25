@@ -1,97 +1,143 @@
-// AddExpense.js
 import React, { useState, useEffect } from 'react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CButton,
+  CSpinner,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../utils/tableImports';
 import '../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilUser } from '@coreui/icons';
-import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
-import axiosInstance from '../../axiosInstance';
-import ExpenseList from './ExpenseList';
-import { hasPermission } from '../../utils/permissionUtils';
 
-function AddExpense() {
-  const [formData, setFormData] = useState({ name: '' });
-  const [errors, setErrors] = useState({});
-  const [expenses, setExpenses] = useState([]);
+const AddExpense = ({ show, onClose, onExpenseSaved, editingExpense }) => {
+  const [formData, setFormData] = useState({
+    name: ''
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    if (editingExpense) {
+      setFormData({
+        name: editingExpense.name || ''
+      });
+    } else {
+      resetForm();
+    }
+  }, [editingExpense, show]);
 
-  const fetchExpenses = async () => {
-    try {
-      const response = await axiosInstance.get('/expense-accounts');
-      setExpenses(response.data.data.expenseAccounts);
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Expense name is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.name) formErrors.name = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      await axiosInstance.post('/expense-accounts', formData);
-      await showFormSubmitToast('Expense added successfully!');
-      setFormData({ name: '' });
-      fetchExpenses();
+      if (editingExpense) {
+        await axiosInstance.put(`/expense-accounts/${editingExpense.id}`, formData);
+        onExpenseSaved('Expense updated successfully');
+      } else {
+        await axiosInstance.post('/expense-accounts', formData);
+        onExpenseSaved('Expense added successfully');
+      }
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving expense:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      name: ''
+    });
+    setFormErrors({});
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>Expense Account Master</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Name</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="text" name="name" value={formData.name} onChange={handleChange} />
-                </CInputGroup>
-                {errors.name && <p className="error">{errors.name}</p>}
-              </div>
-              <div className="button-row">
-                {hasPermission('EXPENSE_ACCOUNT', 'CREATE') && (
-                  <button type="submit" className="simple-button primary-button">
-                    Save
-                  </button>
+    <CModal size='lg' visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="name">Expense Name <span className="required">*</span></CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  invalid={!!formErrors.name}
+                />
+                {formErrors.name && (
+                  <div className="error-text">
+                    {formErrors.name}
+                  </div>
                 )}
               </div>
-            </div>
-          </form>
-        </div>
-      </div>
-      <ExpenseList expenses={expenses} onDelete={fetchExpenses} />
-    </div>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingExpense ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
 
 export default AddExpense;

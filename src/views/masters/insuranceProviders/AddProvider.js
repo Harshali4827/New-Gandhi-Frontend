@@ -1,102 +1,146 @@
 import React, { useState, useEffect } from 'react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CButton,
+  CSpinner,
+  CInputGroup,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../../utils/tableImports';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilUser } from '@coreui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
-import axiosInstance from '../../../axiosInstance';
-import FormButtons from '../../../utils/FormButtons';
 
-function AddProvider() {
+const AddProvider = ({ show, onClose, onProviderSaved, editingProvider }) => {
   const [formData, setFormData] = useState({
     provider_name: ''
   });
-  const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchInsuranceProvider(id);
+    if (editingProvider) {
+      setFormData({
+        provider_name: editingProvider.provider_name || ''
+      });
+    } else {
+      resetForm();
     }
-  }, [id]);
-  const fetchInsuranceProvider = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/insurance-providers/${id}`);
-      setFormData(res.data.data);
-    } catch (error) {
-      console.error('Error fetching insurance providers:', error);
+  }, [editingProvider, show]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.provider_name.trim()) {
+      errors.provider_name = 'Provider name is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.provider_name) formErrors.provider_name = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      if (id) {
-        await axiosInstance.put(`/insurance-providers/${id}`, formData);
-        await showFormSubmitToast('Insurance Provider updated successfully!', () => navigate('/insurance-provider/provider-list'));
-
-        navigate('/insurance-provider/provider-list');
+      if (editingProvider) {
+        await axiosInstance.put(`/insurance-providers/${editingProvider.id}`, formData);
+        onProviderSaved('Insurance provider updated successfully');
       } else {
         await axiosInstance.post('/insurance-providers', formData);
-        await showFormSubmitToast('Insurance Provider added successfully!', () => navigate('/insurance-provider/provider-list'));
-
-        navigate('/insurance-provider/provider-list');
+        onProviderSaved('Insurance provider added successfully');
       }
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving insurance provider:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/insurance-provider/provider-list');
+  const resetForm = () => {
+    setFormData({
+      provider_name: ''
+    });
+    setFormErrors({});
   };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Insurance Provider</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Name</span>
-                  <span className="required">*</span>
-                </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="text" name="provider_name" value={formData.provider_name} onChange={handleChange} />
-                </CInputGroup>
-                {errors.provider_name && <p className="error">{errors.provider_name}</p>}
+    <CModal size='lg' visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingProvider ? 'Edit Insurance Provider' : 'Add New Insurance Provider'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+        <CRow className="mb-3">
+        <CCol md={6}>
+          <div className="mb-3">
+            <CFormLabel htmlFor="provider_name">Provider Name <span className="required">*</span></CFormLabel>
+            <CInputGroup>
+              <CFormInput
+                type="text"
+                id="provider_name"
+                name="provider_name"
+                value={formData.provider_name}
+                onChange={handleInputChange}
+                invalid={!!formErrors.provider_name}
+              />
+            </CInputGroup>
+            {formErrors.provider_name && (
+              <div className="error-text">
+                {formErrors.provider_name}
               </div>
-              <FormButtons onCancel={handleCancel} />
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            )}
+          </div>
+          </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingProvider ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
+
 export default AddProvider;

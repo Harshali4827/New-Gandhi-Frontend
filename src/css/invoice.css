@@ -1,10 +1,11 @@
 
 .invoice-container {
-    max-width: 1100px;
+    /* max-width: 1100px; */
+    max-width: 850px;
     margin: 20px auto;
     padding: 20px;
     background: #fff;
-    border-radius: 12px;
+    /* border-radius: 12px; */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
   .container-table{
@@ -55,11 +56,11 @@
     color: #243c7c;
   }
   
-  .input-group-text {
+  /* .input-group-text {
     background-color: #243c7c;
     color: #fff;
     border: none;
-  }
+  } */
 
   .form-control:focus {
     border-color: #243c7c;

@@ -70,14 +70,11 @@ function AddDeclaration() {
     navigate('/declaration-master');
   };
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Declaration</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className="title">{id ? 'Edit' : 'Add'} Declaration</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <span className="details">Title</span>

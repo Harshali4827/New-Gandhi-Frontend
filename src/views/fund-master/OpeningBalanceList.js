@@ -3,14 +3,12 @@ import {
   React,
   useState,
   useEffect,
-  Link,
   Menu,
   MenuItem,
   useTableFilter,
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance,
   getDefaultSearchFields
 } from '../../utils/tableImports';
@@ -34,21 +32,25 @@ import {
   CModalHeader,
   CModalTitle,
   CModalBody,
-  CModalFooter
+  CModalFooter,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash, cilInfo } from '@coreui/icons';
-import { useNavigate } from 'react-router-dom';
+import AddOpeningBalance from './AddOpeningBalance';
 
 const OpeningBalanceList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-  const { currentRecords, PaginationOptions } = usePagination(filteredData);
+  const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;
@@ -58,7 +60,6 @@ const OpeningBalanceList = () => {
   const hasDeletePermission = hasPermission('VEHICLE_INWARD', 'DELETE');
   const hasCreatePermission = hasPermission('VEHICLE_INWARD', 'CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -112,15 +113,34 @@ const OpeningBalanceList = () => {
       try {
         await axiosInstance.delete(`/branches/${id}/opening-balance`);
         fetchData();
-        showSuccess(`Opening balance for ${branch.name} has been reset`);
+        setSuccessMessage(`Opening balance for ${branch.name} has been reset`);
+        setTimeout(() => setSuccessMessage(''), 3000);
       } catch (error) {
         showError(error.response?.data?.message || 'Failed to reset balance');
       }
     }
   };
 
-  const addNew = () => {
-    navigate('/add-balance');
+  const handleShowAddModal = () => {
+    setEditingBranch(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (branch) => {
+    setEditingBranch(branch);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingBranch(null);
+  };
+
+  const handleBalanceSaved = (message) => {
+    fetchData();
+    handleCloseModal();
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   const handleSearch = (value) => {
@@ -149,7 +169,13 @@ const OpeningBalanceList = () => {
 
   return (
     <div>
-      <div className='title'>Add Opening Balance</div>
+      <div className='title'>Opening Balance</div>
+      
+      {successMessage && (
+        <CAlert color="success" className="mb-3">
+          {successMessage}
+        </CAlert>
+      )}
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
@@ -158,7 +184,7 @@ const OpeningBalanceList = () => {
               <CButton 
                 size="sm" 
                 className="action-btn me-1"
-                onClick={addNew}
+                onClick={handleShowAddModal}
               >
                 <CIcon icon={cilPlus} className='icon' /> New
               </CButton>
@@ -190,10 +216,10 @@ const OpeningBalanceList = () => {
                 </CTableRow>
               </CTableHead>
               <CTableBody>
-                {currentRecords.length === 0 ? (
+                {!currentRecords?.length ? (
                   <CTableRow>
                     <CTableDataCell colSpan={showActionColumn ? "4" : "3"} className="text-center">
-                      No branches available
+                      <CBadge color="secondary">No branches available</CBadge>
                     </CTableDataCell>
                   </CTableRow>
                 ) : (
@@ -233,15 +259,22 @@ const OpeningBalanceList = () => {
                             open={menuId === branch.id} 
                             onClose={handleClose}
                           >
-                            <Link className="Link" to={`/update-balance/${branch.id}`}>
-                              <MenuItem style={{ color: 'black' }}><CIcon icon={cilPencil} className="me-2" />Edit</MenuItem>
-                            </Link>
+                            {hasEditPermission && (
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(branch)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />Edit
+                              </MenuItem>
+                            )}
                             <MenuItem onClick={() => handleViewHistory(branch.id)}>
                               <CIcon icon={cilInfo} className="me-2" />View History
                             </MenuItem>
-                            <MenuItem onClick={() => handleDelete(branch.id)}>
-                              <CIcon icon={cilTrash} className="me-2" />Reset Balance
-                            </MenuItem>
+                            {hasDeletePermission && (
+                              <MenuItem onClick={() => handleDelete(branch.id)}>
+                                <CIcon icon={cilTrash} className="me-2" />Reset Balance
+                              </MenuItem>
+                            )}
                           </Menu>
                         </CTableDataCell>
                       )}
@@ -254,7 +287,12 @@ const OpeningBalanceList = () => {
         </CCardBody>
       </CCard>
 
-      {/* History Modal */}
+      <AddOpeningBalance
+        show={showModal}
+        onClose={handleCloseModal}
+        onBalanceSaved={handleBalanceSaved}
+        editingBranch={editingBranch}
+      />
       <CModal alignment="center" visible={historyModalOpen} onClose={closeHistoryModal}>
         <CModalHeader>
           <CModalTitle>

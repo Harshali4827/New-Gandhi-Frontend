@@ -179,9 +179,6 @@ function StockTransfer() {
       <div className="form-card">
         <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">
@@ -227,11 +224,20 @@ function StockTransfer() {
 
               {errors.vehicles && <div className="alert alert-danger">{errors.vehicles}</div>}
 
-              <div className="button-row">
-                <button type="submit" className="submit-button" disabled={isSubmitting}>
+              <div className="form-footer">
+                <button 
+                  type="submit" 
+                  className="submit-button" 
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Transferring...' : 'Transfer'}
                 </button>
-                <button type="button"  className="reset-button" onClick={handleCancel} disabled={isSubmitting}>
+                <button 
+                  type="button" 
+                  className="cancel-button" 
+                  onClick={handleCancel} 
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </button>
               </div>
@@ -249,7 +255,6 @@ function StockTransfer() {
                       <CIcon icon={cilSearch} style={{ width: '20px' }} />
                     </CInputGroupText>
                     <CFormInput
-                      placeholder="Search vehicles by chassis, model, engine, etc..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -261,23 +266,19 @@ function StockTransfer() {
                 <CTableHead className="table-header-fixed">
                   <CTableRow>
                     <CTableHeaderCell>
-                      {/* <CFormCheck
-                        onChange={handleSelectAll}
-                        checked={selectedVehicles.length === filteredVehicles.length && filteredVehicles.length > 0}
-                      /> */}
                     </CTableHeaderCell>
                     <CTableHeaderCell>Sr. No</CTableHeaderCell>
                     <CTableHeaderCell>Unload Location</CTableHeaderCell>
                     <CTableHeaderCell>Inward Date</CTableHeaderCell>
                     <CTableHeaderCell>Type</CTableHeaderCell>
                     <CTableHeaderCell>Vehicle Model</CTableHeaderCell>
-                    <CTableHeaderCell>Color</CTableHeaderCell>
-                    <CTableHeaderCell>Battery No</CTableHeaderCell>
-                    <CTableHeaderCell>Key No</CTableHeaderCell>
+                   <CTableHeaderCell>Color</CTableHeaderCell>
+                     {/* <CTableHeaderCell>Battery No</CTableHeaderCell>
+                    <CTableHeaderCell>Key No</CTableHeaderCell> */}
                     <CTableHeaderCell>Chassis No</CTableHeaderCell>
-                    <CTableHeaderCell>Engine No</CTableHeaderCell>
+                    {/* <CTableHeaderCell>Engine No</CTableHeaderCell>
                     <CTableHeaderCell>Motor No</CTableHeaderCell>
-                    <CTableHeaderCell>Charger No</CTableHeaderCell>
+                    <CTableHeaderCell>Charger No</CTableHeaderCell> */}
                     <CTableHeaderCell>Current Status</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -297,12 +298,12 @@ function StockTransfer() {
                         <CTableDataCell>{vehicle.type}</CTableDataCell>
                         <CTableDataCell>{vehicle.modelName || ''}</CTableDataCell>
                         <CTableDataCell>{vehicle.color?.name || ''}</CTableDataCell>
-                        <CTableDataCell>{vehicle.batteryNumber || ''}</CTableDataCell>
-                        <CTableDataCell>{vehicle.keyNumber || ''}</CTableDataCell>
+                        {/* <CTableDataCell>{vehicle.batteryNumber || ''}</CTableDataCell>
+                        <CTableDataCell>{vehicle.keyNumber || ''}</CTableDataCell> */}
                         <CTableDataCell>{vehicle.chassisNumber}</CTableDataCell>
-                        <CTableDataCell>{vehicle.engineNumber || ''}</CTableDataCell>
+                        {/* <CTableDataCell>{vehicle.engineNumber || ''}</CTableDataCell>
                         <CTableDataCell>{vehicle.motorNumber || ''}</CTableDataCell>
-                        <CTableDataCell>{vehicle.chargerNumber || ''}</CTableDataCell>
+                        <CTableDataCell>{vehicle.chargerNumber || ''}</CTableDataCell> */}
                         <CTableDataCell>{vehicle.status}</CTableDataCell>
                       </CTableRow>
                     ))

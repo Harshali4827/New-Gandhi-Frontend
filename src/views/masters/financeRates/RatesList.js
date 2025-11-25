@@ -4,16 +4,13 @@ import {
   React,
   useState,
   useEffect,
-  Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance
 } from '../../../utils/tableImports';
 import { 
@@ -30,10 +27,13 @@ import {
   CTableRow,
   CTableDataCell,
   CSpinner,
-  CBadge
+  CBadge,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
+import AddRates from './AddRates';
+
 
 const RatesList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,6 +41,9 @@ const RatesList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRate, setEditingRate] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
@@ -96,7 +99,8 @@ const RatesList = () => {
         await axiosInstance.delete(`/financers/rates/${id}`);
         setData(data.filter((financer) => financer.id !== id));
         fetchData();
-        showSuccess();
+        setSuccessMessage('Finance rate deleted successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } catch (error) {
         console.log(error);
         showError(error);
@@ -107,6 +111,28 @@ const RatesList = () => {
   const handleSearch = (value) => {
     setSearchTerm(value);
     handleFilter(value, getDefaultSearchFields('finance_rates'));
+  };
+
+  const handleShowAddModal = () => {
+    setEditingRate(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (rate) => {
+    setEditingRate(rate);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingRate(null);
+  };
+
+  const handleRateSaved = (message) => {
+    fetchData();
+    handleCloseModal();
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   if (loading) {
@@ -128,16 +154,25 @@ const RatesList = () => {
   return (
     <div>
       <div className='title'>Finance Rates</div>
+      
+      {/* Success Alert */}
+      {successMessage && (
+        <CAlert color="success" className="mb-3">
+          {successMessage}
+        </CAlert>
+      )}
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasCreatePermission && (
-              <Link to="/financer-rates/add-rates">
-                <CButton size="sm" className="action-btn me-1">
-                  <CIcon icon={cilPlus} className='icon'/> New Rates
-                </CButton>
-              </Link>
+              <CButton 
+                size="sm" 
+                className="action-btn me-1"
+                onClick={handleShowAddModal}
+              >
+                <CIcon icon={cilPlus} className='icon'/> New Rates
+              </CButton>
             )}
           </div>
         </CCardHeader>
@@ -175,44 +210,45 @@ const RatesList = () => {
                     </CTableDataCell>
                   </CTableRow>
                 ) : (
-                  currentRecords.map((financer, index) => (
-                    <CTableRow key={financer.id || index}>
+                  currentRecords.map((rate, index) => (
+                    <CTableRow key={rate.id || index}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>
-                       {financer.branchDetails?.name || ''}
+                       {rate.branchDetails?.name || ''}
                       </CTableDataCell>
                       <CTableDataCell>
-                       {financer.financeProviderDetails?.name || ''}
+                       {rate.financeProviderDetails?.name || ''}
                       </CTableDataCell>
                       <CTableDataCell>
-                      {financer.gcRate || ''}
+                      {rate.gcRate || ''}
                       </CTableDataCell>
                       {showActionColumn && (
                         <CTableDataCell>
                           <CButton
                             size="sm"
                             className='option-button btn-sm'
-                            onClick={(event) => handleClick(event, financer.id)}
+                            onClick={(event) => handleClick(event, rate.id)}
                           >
                             <CIcon icon={cilSettings} />
                             Options
                           </CButton>
                           <Menu 
-                            id={`action-menu-${financer.id}`} 
+                            id={`action-menu-${rate.id}`} 
                             anchorEl={anchorEl} 
-                            open={menuId === financer.id} 
+                            open={menuId === rate.id} 
                             onClose={handleClose}
                           >
                             {hasEditPermission && (
-                              <Link className="Link" to={`/financer-rates/update-rates/${financer.id}`}>
-                                <MenuItem style={{ color: 'black' }}>
-                                  <CIcon icon={cilPencil} className="me-2" />
-                                  Edit
-                                </MenuItem>
-                              </Link>
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(rate)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />
+                                Edit
+                              </MenuItem>
                             )}
                             {hasDeletePermission && (
-                              <MenuItem onClick={() => handleDelete(financer.id)}>
+                              <MenuItem onClick={() => handleDelete(rate.id)}>
                                 <CIcon icon={cilTrash} className="me-2" />
                                 Delete
                               </MenuItem>
@@ -228,6 +264,13 @@ const RatesList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      <AddRates
+        show={showModal}
+        onClose={handleCloseModal}
+        onRateSaved={handleRateSaved}
+        editingRate={editingRate}
+      />
     </div>
   );
 };

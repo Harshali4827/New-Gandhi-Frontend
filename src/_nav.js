@@ -196,12 +196,12 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Dashboard',
-        to: '/sales-report',
+        to: '/insurance-dashboard',
       },
       {
         component: CNavItem,
-        name: 'Add Insurance',
-        to: '/periodic-report',
+        name: 'Insurance Details',
+        to: '/insurance-details',
       },
     ],
   },
@@ -431,25 +431,25 @@ const _nav = [
     to: '/all-customers',
     icon: <CIcon icon={cilDrop} customClassName="nav-icon" />,
   },
-  {
-    component: CNavGroup,
-    name: 'Incentive',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Add Incentive',
-        to: '/sales-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Calculate Incentive',
-        to: '/periodic-report',
-      },
-    ],
-  },
+  // {
+  //   component: CNavGroup,
+  //   name: 'Incentive',
+  //   to: '/purchase',
+  //   icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+  //   visible: true,
+  //   items: [
+  //     {
+  //       component: CNavItem,
+  //       name: 'Add Incentive',
+  //       to: '/sales-report',
+  //     },
+  //     {
+  //       component: CNavItem,
+  //       name: 'Calculate Incentive',
+  //       to: '/periodic-report',
+  //     },
+  //   ],
+  // },
   {
     component: CNavTitle,
     name: 'SUBDEALER',
@@ -676,18 +676,6 @@ const _nav = [
   {
     component: CNavTitle,
     name: 'Extras',
-  },
-  {
-    component: CNavGroup,
-    name: 'Pages',
-    icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Login',
-        to: '/login',
-      },
-    ],
   },
 ]
 

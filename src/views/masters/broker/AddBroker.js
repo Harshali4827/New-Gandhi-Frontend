@@ -105,7 +105,6 @@ function AddBroker() {
     fetchBranches();
   }, []);
 
-  // Format commission range for display
   const formatCommissionRange = (range) => {
     if (range.maxAmount) {
       return `${range.minAmount} - ${range.maxAmount}`;
@@ -250,8 +249,6 @@ function AddBroker() {
       setErrors(formErrors);
       return;
     }
-
-    // Prepare the payload according to your API structure
     const payload = {
       name: formData.name,
       mobile: formData.mobile,
@@ -267,7 +264,7 @@ function AddBroker() {
             }),
             ...(branch.commissionType === 'VARIABLE' && {
               commissionRanges: branch.commissionRanges.map((range) => ({
-                commissionRangeMaster: range.range, // This should be the ID of the commission range
+                commissionRangeMaster: range.range,
                 amount: range.amount
               }))
             })
@@ -296,16 +293,12 @@ function AddBroker() {
   };
 
   return (
-    <div className="container-fluid">
+    <div  className="form-container">
       <h4 className="mb-4">{id ? 'Edit' : 'Add'} Broker</h4>
 
-      <div className="form-container">
+      <div className="form-Card">
         <CCard className="mb-4">
           <CCardBody>
-            <div className="form-note mb-3">
-              <span className="required">*</span> Indicates a required field
-            </div>
-
             <form onSubmit={handleSubmit}>
               <CRow className="mb-3">
                 <CCol md={6}>

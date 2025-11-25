@@ -312,7 +312,7 @@ function RTOTax() {
       <div className='title'>RTO Tax Management</div>
       
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {activeTab === 0 && (
               <div className="d-flex align-items-center gap-2">
@@ -353,7 +353,7 @@ function RTOTax() {
               </CButton>
             )}
           </div>
-        </CCardHeader>
+        </CCardHeader> */}
         
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">

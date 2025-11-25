@@ -15,7 +15,7 @@ import {
   CAlert
 } from '@coreui/react';
 import axiosInstance from '../../axiosInstance';
-
+import '../../css/form.css';
 const ExchangeLedgerModel = ({ show, onClose, brokerData, refreshData }) => {
   const branchId = brokerData?.branchId;
 
@@ -252,8 +252,8 @@ const ExchangeLedgerModel = ({ show, onClose, brokerData, refreshData }) => {
     <>
       <CBackdrop visible={show} className="modal-backdrop" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
       <CModal visible={show} onClose={onClose} size="lg" alignment="center">
-        <CModalHeader className="text-white" style={{ backgroundColor: '#243c7c' }}>
-          <CModalTitle className="text-white">Broker: {brokerData?.broker?.name || ''}</CModalTitle>
+        <CModalHeader>
+          <CModalTitle>Add Balance</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {error && <CAlert color="danger">{error}</CAlert>}
@@ -331,7 +331,7 @@ const ExchangeLedgerModel = ({ show, onClose, brokerData, refreshData }) => {
             </CRow>
           </CForm>
         </CModalBody>
-        <CModalFooter className="d-flex justify-content-between">
+        <CModalFooter>
           <div>
             <CButton color="primary" onClick={handleSubmit} className="me-2" disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Save Payment'}

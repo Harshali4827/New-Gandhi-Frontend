@@ -10,7 +10,9 @@
   min-height: 100vh;
 
 }
-
+.required {
+  color: #a94442;;
+}
 .form-card {
   background-color: white;
   border-radius: 2px;
@@ -93,6 +95,10 @@
     font-size: 15px;
     border-color: #761c19;
   }
+  .cancel-button:hover{
+    background-color: #ac2925;
+    color: white;
+  }
   .submit-button {
     padding: 8px 16px;
     background-color: #2759a2;;
@@ -101,6 +107,10 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 15px;
+  }
+  .submit-button:hover{
+    background-color: #2759a2;
+    color: white;
   }
   .input-box label {
     font-size: 15px;

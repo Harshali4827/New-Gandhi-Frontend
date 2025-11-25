@@ -166,21 +166,17 @@ function AddCustomer() {
   };
 
   return (
-    <div>
-      <h4>Add New</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+    <div className="title">Add New</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-
             {activeTab === 1 && (
               <>
                 <div>
                   <div className="full-width">
                     <div className="details-container">
-                      <span className="details">Select Models (Max 2)</span>
+                      <span className="details"><strong>Select Models (Max 2)</strong></span>
                       <span className="required">*</span>
                     </div>
                     <div className="models-list">
@@ -198,11 +194,11 @@ function AddCustomer() {
                     </div>
                   </div>
                 </div>
-                <div className="button-row">
-                  <button style={{ marginRight: '10px' }} type="button" className="btn btn-secondary" onClick={handleCancel}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={handleCancel}>
                     Cancel
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -332,11 +328,11 @@ function AddCustomer() {
                   </div>
                 </div>
 
-                <div className="button-row">
-                  <button style={{ marginRight: '10px' }} type="button" className="btn btn-secondary" onClick={handlePrevTab}>
+                <div className="form-footer">
+                  <button type="button"className="cancel-button" onClick={handlePrevTab}>
                     Back
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="submit-button">
                     {id ? 'Update' : 'Submit'}
                   </button>
                 </div>

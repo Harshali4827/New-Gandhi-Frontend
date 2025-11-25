@@ -101,14 +101,11 @@ function CashVoucher() {
     navigate('/cash-receipt');
   };
   return (
-    <div>
-      <h4>Cash Voucher</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+     <div className="title">Cash Voucher</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">

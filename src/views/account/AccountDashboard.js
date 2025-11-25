@@ -71,11 +71,6 @@ const AccountDashboard = () => {
             <div>
               <h2 className="fw-bold text-dark mb-1">PF/NPF Account Dashboard</h2>
             </div>
-            <div className="text-end">
-              <Badge bg="light" text="dark" className="px-3 py-2">
-                Real-time Data
-              </Badge>
-            </div>
           </div>
         </Col>
       </Row>

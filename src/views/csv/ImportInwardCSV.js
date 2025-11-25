@@ -1,10 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
-// import axiosInstance from 'axiosInstance';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faFileImport } from '@fortawesome/free-solid-svg-icons';
 import '../../css/importCsv.css';
 import { showError, showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import axiosInstance from '../../axiosInstance';
+import { CButton, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CFormSelect } from '@coreui/react';
 
 const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFiles = '.csv' }) => {
   const fileInputRef = useRef(null);
@@ -81,11 +79,6 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
       return;
     }
 
-    // if (!file.name.toLowerCase().endsWith('.xlsx')) {
-    //   showFormSubmitError({ response: { status: 400, data: { message: 'Please upload a Excel file file.' } } });
-    //   return;
-    // }
-
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -126,59 +119,65 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
 
   return (
     <div className="import-csv-container">
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept={acceptedFiles} style={{ display: 'none' }} />
-      <button className="import-csv-button" onClick={handleButtonClick} disabled={isLoading || branches.length === 0}>
-        {isLoading ? (
-          'Uploading...'
-        ) : (
-          <>
-            {/* <FontAwesomeIcon icon={faFileImport} className="import-icon" /> */}
-            {buttonText}
-          </>
-        )}
-      </button>
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept={acceptedFiles} 
+        style={{ display: 'none' }} 
+      />
+      
+      <CButton 
+        className="action-btn me-1" 
+        onClick={handleButtonClick} 
+        disabled={isLoading || branches.length === 0}
+      >
+        {isLoading ? 'Uploading...' : buttonText}
+      </CButton>
 
-      {showModal && (
-        <div className="custom-modal">
-          <div className="custom-modal-content">
-            <div className="custom-modal-header">
-              <h3 className="custom-modal-title">Import CSV</h3>
-            </div>
-            <div className="custom-modal-body">
-              <div className="form-group">
-                <label>Branch</label>
-                <select className="custom-modal-select" value={selectedBranchId} onChange={(e) => setSelectedBranchId(e.target.value)}>
-                  <option value="">-- Select Branch --</option>
-                  {branches.map((b) => (
-                    <option key={b._id} value={b._id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                {branchError && <div className="custom-modal-error">{branchError}</div>}
-              </div>
-
-              <div className="form-group">
-                <label>Vehicle Type</label>
-                <select className="custom-modal-select" value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
-                  <option value="">-- Select Type --</option>
-                  <option value="EV">EV</option>
-                  <option value="ICE">ICE</option>
-                </select>
-                {typeError && <div className="custom-modal-error">{typeError}</div>}
-              </div>
-            </div>
-            <div className="custom-modal-footer">
-              <button className="custom-modal-button custom-modal-button-cancel" onClick={handleModalCancel}>
-                Cancel
-              </button>
-              <button className="custom-modal-button custom-modal-button-confirm" onClick={handleModalConfirm}>
-                Continue
-              </button>
-            </div>
+      <CModal visible={showModal} onClose={handleModalCancel}>
+        <CModalHeader>
+          <CModalTitle>Import Excel</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <div className="mb-3">
+            <label className="form-label">Branch:</label>
+            <CFormSelect
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+            >
+              <option value="">-- Select Branch --</option>
+              {branches.map((branch) => (
+                <option key={branch._id} value={branch._id}>
+                  {branch.name}
+                </option>
+              ))}
+            </CFormSelect>
+            {branchError && <div className="text-danger small mt-1">{branchError}</div>}
           </div>
-        </div>
-      )}
+
+          <div className="mb-3">
+            <label className="form-label">Vehicle Type:</label>
+            <CFormSelect
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+            >
+              <option value="">-- Select Vehicle Type --</option>
+              <option value="EV">EV</option>
+              <option value="ICE">ICE</option>
+            </CFormSelect>
+            {typeError && <div className="text-danger small mt-1">{typeError}</div>}
+          </div>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleModalCancel}>
+            Close
+          </CButton>
+          <CButton className='submit-button' onClick={handleModalConfirm}>
+            Continue
+          </CButton>
+        </CModalFooter>
+      </CModal>
     </div>
   );
 };

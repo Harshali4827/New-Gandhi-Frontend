@@ -176,15 +176,12 @@ const BranchList = () => {
                   <CTableHeaderCell>Sr.no</CTableHeaderCell>
                   <CTableHeaderCell>Branch name</CTableHeaderCell>
                   <CTableHeaderCell>Address</CTableHeaderCell>
-                  <CTableHeaderCell>City</CTableHeaderCell>
-                  <CTableHeaderCell>State</CTableHeaderCell>
-                  <CTableHeaderCell>Pincode</CTableHeaderCell>
                   <CTableHeaderCell>Phone</CTableHeaderCell>
                   <CTableHeaderCell>Email</CTableHeaderCell>
                   <CTableHeaderCell>GST Number</CTableHeaderCell>
-                  <CTableHeaderCell>Logo1</CTableHeaderCell>
-                  <CTableHeaderCell>Logo2</CTableHeaderCell>
-                  <CTableHeaderCell>Is active</CTableHeaderCell>
+                  {/* <CTableHeaderCell>Logo1</CTableHeaderCell>
+                  <CTableHeaderCell>Logo2</CTableHeaderCell> */}
+                  <CTableHeaderCell>Status</CTableHeaderCell>
                   {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
                 </CTableRow>
               </CTableHead>
@@ -200,14 +197,11 @@ const BranchList = () => {
                     <CTableRow key={branch.id || index}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>{branch.name}</CTableDataCell>
-                      <CTableDataCell>{branch.address}</CTableDataCell>
-                      <CTableDataCell>{branch.city}</CTableDataCell>
-                      <CTableDataCell>{branch.state}</CTableDataCell>
-                      <CTableDataCell>{branch.pincode}</CTableDataCell>
+                      <CTableDataCell>{branch.address},{branch.city},{branch.state},{branch.pincode}</CTableDataCell>
                       <CTableDataCell>{branch.phone}</CTableDataCell>
                       <CTableDataCell>{branch.email}</CTableDataCell>
                       <CTableDataCell>{branch.gst_number}</CTableDataCell>
-                      <CTableDataCell>
+                      {/* <CTableDataCell>
                         {branch.logo1 && (
                           <img 
                             src={`${config.baseURL || ''}${branch.logo1}`} 
@@ -224,7 +218,7 @@ const BranchList = () => {
                             style={{ maxWidth: '100px', maxHeight: '50px', objectFit: 'contain' }} 
                           />
                         )}
-                      </CTableDataCell>
+                      </CTableDataCell> */}
                       <CTableDataCell>
                         <CBadge color={branch.is_active ? 'success' : 'secondary'}>
                           {branch.is_active ? (

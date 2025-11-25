@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/invoice.css';
-import { CFormInput, CInputGroup, CInputGroupText, CButton, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react';
+import '../../css/form.css';
+import { CFormInput, CInputGroup, CInputGroupText, CButton } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilCarAlt, cilDollar, cilPrint, cilReload } from '@coreui/icons';
+import { cilCarAlt, cilPrint, cilReload } from '@coreui/icons';
 import axiosInstance from '../../axiosInstance';
 
 function Invoice() {
-  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
     chassisNumber: '',
     amount: ''
@@ -110,32 +110,6 @@ function Invoice() {
 
     const currentDate = new Date().toLocaleDateString('en-GB');
     const dob = data.customerDetails.dob ? new Date(data.customerDetails.dob).toLocaleDateString('en-GB') : 'N/A';
-
-    // const priceComponentsWithGST = data.priceComponents.map((component) => {
-    //   const gstRate = parseFloat(component.header.metadata.gst_rate) / 100 || 0;
-
-    //   const unitCost = component.originalValue;
-    //   const taxableValue = unitCost / (1 + gstRate);
-    //   const totalGST = unitCost - taxableValue;
-    //   const cgstAmount = totalGST / 2;
-    //   const sgstAmount = totalGST / 2;
-    //   const discount = component.discountedValue < component.originalValue ? component.originalValue - component.discountedValue : 0;
-    //   const lineTotal = component.discountedValue;
-    //   const gstAmount = cgstAmount + sgstAmount;
-
-    //   return {
-    //     ...component,
-    //     unitCost,
-    //     taxableValue,
-    //     cgstAmount,
-    //     sgstAmount,
-    //     gstAmount,
-    //     gstRate,
-    //     discount,
-    //     lineTotal
-    //   };
-    // });
-
     const filteredPriceComponents = data.priceComponents.filter((comp) => {
       const headerKey = comp.header.header_key.toUpperCase();
 
@@ -172,19 +146,6 @@ function Invoice() {
         lineTotal
       };
     });
-
-    // const insuranceComponent = data.priceComponents.find(
-    //   (comp) => comp.header.header_key === 'INSURCANCE 4+1 INCLUSIVE OF ADDITIONAL COVERS'
-    // );
-    // const insuranceCharges = insuranceComponent ? insuranceComponent.originalValue : 0;
-
-    // const rtoComponent = data.priceComponents.find((comp) => comp.header.header_key === 'RTO TAX & REGISTRATION');
-    // const rtoCharges = rtoComponent ? rtoComponent.originalValue : 0;
-    // const hpCharges = data.hypothecationCharges || 0;
-    // const totalA = priceComponentsWithGST.reduce((sum, item) => sum + item.lineTotal, 0);
-    // const totalB = insuranceCharges + rtoCharges + hpCharges;
-    // const grandTotal = totalA + totalB;
-
     const findComponentByKeywords = (keywords) => {
       return data.priceComponents.find((comp) => {
         const headerKey = comp.header.header_key.toUpperCase();
@@ -541,180 +502,50 @@ function Invoice() {
       return;
     }
     const printWindow = window.open('', '_blank');
-    if (activeTab === 3) {
-      printWindow.document.write(generateHelmetInvoiceHTML(invoiceData));
-    } else {
-      printWindow.document.write(generateInvoiceHTML(invoiceData));
-    }
+    printWindow.document.write(generateInvoiceHTML(invoiceData));
     printWindow.document.close();
     printWindow.focus();
   };
+
   return (
     <div className="invoice-container">
       <h4 className="mb-4">Invoice</h4>
 
-      <CNav variant="tabs">
-        <CNavItem>
-          <CNavLink active={activeTab === 0} onClick={() => setActiveTab(0)}>
-            Customer GST Invoice
-          </CNavLink>
-        </CNavItem>
-        {/* <CNavItem>
-          <CNavLink active={activeTab === 1} onClick={() => setActiveTab(1)}>
-            RTO Invoice
-          </CNavLink>
-        </CNavItem>
-        <CNavItem>
-          <CNavLink active={activeTab === 2} onClick={() => setActiveTab(2)}>
-            Downpayment Receipt
-          </CNavLink>
-        </CNavItem> */}
-      </CNav>
-
-      <CTabContent>
-        <CTabPane visible={activeTab === 0} className="p-3">
-          <h5>Customer GST Invoice</h5>
-          <CInputGroup className="mb-3">
+      <div className="p-3">
+        <h5>Customer GST Invoice</h5>
+        <CInputGroup className="mb-3">
+          <CInputGroupText>
+            <CIcon className="icon" icon={cilCarAlt} />
+          </CInputGroupText>
+          <CFormInput
+            placeholder="Enter Chassis Number"
+            name="chassisNumber"
+            value={formData.chassisNumber}
+            onChange={handleChange}
+            disabled={loading}
+          />
+          {loading && (
             <CInputGroupText>
-              <CIcon className="icon" icon={cilCarAlt} />
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
             </CInputGroupText>
-            <CFormInput
-              placeholder="Enter Chassis Number"
-              name="chassisNumber"
-              value={formData.chassisNumber}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {loading && (
-              <CInputGroupText>
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </CInputGroupText>
-            )}
-          </CInputGroup>
+          )}
+        </CInputGroup>
 
-          {error && <div className="text-danger mb-3">{error}</div>}
+        {error && <div className="text-danger mb-3">{error}</div>}
 
-          <div className="d-flex gap-2">
-            <CButton color="primary" onClick={handlePrint} disabled={!invoiceData || loading}>
-              <CIcon icon={cilPrint} className="me-2" />
-              Print
-            </CButton>
-            <CButton color="secondary" onClick={handleClear} disabled={loading}>
-              <CIcon icon={cilReload} className="me-2" />
-              Clear
-            </CButton>
-          </div>
-        </CTabPane>
-
-        <CTabPane visible={activeTab === 1} className="p-3">
-          <h5>RTO Invoice</h5>
-          <CInputGroup className="mb-3">
-            <CInputGroupText>
-              <CIcon className="icon" icon={cilCarAlt} />
-            </CInputGroupText>
-            <CFormInput
-              placeholder="Enter Chassis Number"
-              name="chassisNumber"
-              value={formData.chassisNumber}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {loading && (
-              <CInputGroupText>
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </CInputGroupText>
-            )}
-          </CInputGroup>
-
-          {error && <div className="text-danger mb-3">{error}</div>}
-
-          <div className="d-flex gap-2">
-            <CButton color="primary" onClick={handlePrint} disabled={!invoiceData || loading}>
-              <CIcon icon={cilPrint} className="me-2" />
-              Print
-            </CButton>
-            <CButton color="secondary" onClick={handleClear} disabled={loading}>
-              <CIcon icon={cilReload} className="me-2" />
-              Clear
-            </CButton>
-          </div>
-        </CTabPane>
-        <CTabPane visible={activeTab === 2} className="p-3">
-          <h5>Downpayment Receipt</h5>
-          <CInputGroup className="mb-3">
-            <CInputGroupText>
-              <CIcon className="icon" icon={cilCarAlt} />
-            </CInputGroupText>
-            <CFormInput
-              placeholder="Enter Chassis Number"
-              name="chassisNumber"
-              value={formData.chassisNumber}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {loading && (
-              <CInputGroupText>
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </CInputGroupText>
-            )}
-          </CInputGroup>
-          <CInputGroup className="mb-3">
-            <CInputGroupText>
-              <CIcon className="icon" icon={cilDollar} />
-            </CInputGroupText>
-            <CFormInput placeholder="Enter Amount" name="amount" value={formData.amount} onChange={handleChange} />
-          </CInputGroup>
-          <div className="d-flex gap-2">
-            <CButton color="primary" onClick={handlePrint} disabled={!invoiceData || loading}>
-              <CIcon icon={cilPrint} className="me-2" />
-              Print
-            </CButton>
-            <CButton color="secondary" onClick={handleClear} disabled={loading}>
-              <CIcon icon={cilReload} className="me-2" />
-              Clear
-            </CButton>
-          </div>
-        </CTabPane>
-
-        <CTabPane visible={activeTab === 3} className="p-3">
-          <h5>Helmet Invoice</h5>
-          <CInputGroup className="mb-3">
-            <CInputGroupText>
-              <CIcon className="icon" icon={cilCarAlt} />
-            </CInputGroupText>
-            <CFormInput
-              placeholder="Enter Chassis Number"
-              name="chassisNumber"
-              value={formData.chassisNumber}
-              onChange={handleChange}
-              disabled={loading}
-            />
-            {loading && (
-              <CInputGroupText>
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </CInputGroupText>
-            )}
-          </CInputGroup>
-          <div className="d-flex gap-2">
-            <CButton color="primary" onClick={handlePrint} disabled={!invoiceData || loading}>
-              <CIcon icon={cilPrint} className="me-2" />
-              Print
-            </CButton>
-            <CButton color="secondary" onClick={handleClear} disabled={loading}>
-              <CIcon icon={cilReload} className="me-2" />
-              Clear
-            </CButton>
-          </div>
-        </CTabPane>
-      </CTabContent>
+        <div className="d-flex gap-2">
+          <CButton className='submit-button' onClick={handlePrint}>
+            <CIcon icon={cilPrint} className="me-2" />
+            Print
+          </CButton>
+          <CButton className='cancel-button' onClick={handleClear} disabled={loading}>
+            <CIcon icon={cilReload} className="me-2" />
+            Clear
+          </CButton>
+        </div>
+      </div>
     </div>
   );
 }

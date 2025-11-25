@@ -55,7 +55,7 @@ const VerifyOTP = () => {
             role: userRole
           });
   
-          navigate('/home');
+          navigate('/dashboard');
         } else {
           setErrorMessage('Invalid OTP. Please try again.');
         }

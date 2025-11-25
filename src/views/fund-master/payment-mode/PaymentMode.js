@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilUser } from '@coreui/icons';
-import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
-import axiosInstance from '../../../axiosInstance';
-import PaymentModeList from './PaymentModeList';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CButton,
+  CSpinner,
+  CInputGroup,
+  CAlert,
+  CRow,
+  CCol
+} from '@coreui/react';
+import { showError, axiosInstance } from '../../../utils/tableImports';
 import { hasPermission } from '../../../utils/permissionUtils';
+import PaymentModeList from './PaymentModeList';
+import '../../../css/form.css';
 
 function PaymentMode() {
   const [formData, setFormData] = useState({ payment_mode: '' });
-  const [errors, setErrors] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const [payments, setPayments] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchPayments();
@@ -27,75 +43,142 @@ function PaymentMode() {
     }
   };
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.payment_mode.trim()) {
+      errors.payment_mode = 'Payment mode is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.payment_mode) formErrors.payment_mode = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      await axiosInstance.post('/banksubpaymentmodes', formData);
-      await showFormSubmitToast('Payment mode added successfully!');
-      setFormData({ payment_mode: '' });
-      fetchPayments();
+      if (editingPayment) {
+        await axiosInstance.put(`/banksubpaymentmodes/${editingPayment.id}`, formData);
+        setSuccessMessage('Payment mode updated successfully');
+      } else {
+        await axiosInstance.post('/banksubpaymentmodes', formData);
+        setSuccessMessage('Payment mode added successfully');
+      }
+      
+      setTimeout(() => {
+        setSuccessMessage('');
+        resetForm();
+        fetchPayments();
+        handleCloseModal();
+      }, 1500);
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving payment mode:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+      setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({ payment_mode: '' });
+    setFormErrors({});
+    setEditingPayment(null);
+  };
+
+  const handleShowAddModal = () => {
+    setEditingPayment(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (payment) => {
+    setEditingPayment(payment);
+    setFormData({ payment_mode: payment.payment_mode || '' });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    resetForm();
   };
 
   return (
     <div>
-      <h4>Payment Mode Master</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Payment Mode</span>
-                  <span className="required">*</span>
+      <div className='title'>Payment Mode Master</div>
+
+      <PaymentModeList 
+        payments={payments} 
+        onDelete={fetchPayments}
+        onEdit={handleShowEditModal}
+        onAddNew={handleShowAddModal}
+      />
+      <CModal size="lg" visible={showModal} onClose={handleCloseModal}>
+        <CModalHeader>
+          <CModalTitle>{editingPayment ? 'Edit Payment Mode' : 'Add New Payment Mode'}</CModalTitle>
+        </CModalHeader>
+        <CForm onSubmit={handleSubmit}>
+          <CModalBody>
+            {successMessage && (
+              <CAlert color="success" className="mb-3">
+                {successMessage}
+              </CAlert>
+            )}
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="payment_mode">Payment Mode <span className="required">*</span></CFormLabel>
+                  <CInputGroup>
+                    <CFormInput
+                      type="text"
+                      id="payment_mode"
+                      name="payment_mode"
+                      value={formData.payment_mode}
+                      onChange={handleInputChange}
+                      invalid={!!formErrors.payment_mode}
+                    />
+                  </CInputGroup>
+                  {formErrors.payment_mode && (
+                    <div className="error-text">
+                      {formErrors.payment_mode}
+                    </div>
+                  )}
                 </div>
-                <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="text"
-                    name="payment_mode"
-                    value={formData.payment_mode}
-                    onChange={handleChange}
-                    placeholder="Enter payment mode"
-                  />
-                </CInputGroup>
-                {errors.payment_mode && <p className="error">{errors.payment_mode}</p>}
-              </div>
-              {hasPermission('BANK_SUB_PAYMENT_MODE', 'CREATE') && (
-                <div className="button-row">
-                  <button type="submit" className="simple-button primary-button">
-                    Save
-                  </button>
-                </div>
-              )}
-            </div>
-          </form>
-        </div>
-      </div>
-      <PaymentModeList payments={payments} onDelete={fetchPayments} />
+              </CCol>
+            </CRow>
+          </CModalBody>
+          <CModalFooter>
+            <CButton 
+              className='submit-button'
+              type="submit"
+              disabled={submitting || !!successMessage}
+            >
+              {submitting ? <CSpinner size="sm" /> : (editingPayment ? 'Update' : 'Submit')}
+            </CButton>
+          </CModalFooter>
+        </CForm>
+      </CModal>
     </div>
   );
 }

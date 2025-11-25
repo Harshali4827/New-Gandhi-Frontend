@@ -3,14 +3,12 @@ import {
   React,
   useState,
   useEffect,
-  Link,
   Menu,
   MenuItem,
   useTableFilter,
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance,
   getDefaultSearchFields
 } from '../../utils/tableImports';
@@ -33,7 +31,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilXCircle, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
-import { useNavigate } from 'react-router-dom';
+import AddCash from './AddCash';
 
 const CashList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,6 +39,8 @@ const CashList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingCash, setEditingCash] = useState(null);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
 
@@ -51,7 +51,6 @@ const CashList = () => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;
   const userRole = localStorage.getItem('userRole');
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -95,7 +94,6 @@ const CashList = () => {
         await axiosInstance.delete(`/cash-locations/${id}`);
         setData(data.filter((cash) => cash.id !== id));
         fetchData();
-        showSuccess();
       } catch (error) {
         console.log(error);
         showError(error);
@@ -117,15 +115,30 @@ const CashList = () => {
       setData((prev) => updateStatus(prev));
       setFilteredData((prev) => updateStatus(prev));
 
-      showSuccess(`Cash Location ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
       handleClose();
     } catch (error) {
       showError(error.message || 'Failed to update cash location status');
     }
   };
 
-  const addNew = () => {
-    navigate('/add-cash');
+  const handleShowAddModal = () => {
+    setEditingCash(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (cash) => {
+    setEditingCash(cash);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingCash(null);
+  };
+
+  const handleCashSaved = () => {
+    fetchData();
+    handleCloseModal();
   };
 
   const handleSearch = (value) => {
@@ -160,7 +173,7 @@ const CashList = () => {
               <CButton 
                 size="sm" 
                 className="action-btn me-1"
-                onClick={addNew}
+                onClick={handleShowAddModal}
               >
                 <CIcon icon={cilPlus} className='icon' /> New 
               </CButton>
@@ -237,9 +250,12 @@ const CashList = () => {
                             onClose={handleClose}
                           >
                             {hasEditPermission && (
-                              <Link className="Link" to={`/update-cash/${cash.id}`}>
-                                <MenuItem style={{ color: 'black' }}><CIcon icon={cilPencil} className="me-2" />Edit</MenuItem>
-                              </Link>
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(cash)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />Edit
+                              </MenuItem>
                             )}
                             {hasEditPermission && (
                               <MenuItem onClick={() => handleToggleStatus(cash.id, cash.status)}>
@@ -263,6 +279,13 @@ const CashList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      <AddCash
+        show={showModal}
+        onClose={handleCloseModal}
+        onCashSaved={handleCashSaved}
+        editingCash={editingCash}
+      />
     </div>
   );
 };

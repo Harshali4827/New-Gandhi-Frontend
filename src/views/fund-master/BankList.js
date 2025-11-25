@@ -3,14 +3,12 @@ import {
   React,
   useState,
   useEffect,
-  Link,
   Menu,
   MenuItem,
   useTableFilter,
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance,
   getDefaultSearchFields
 } from '../../utils/tableImports';
@@ -33,7 +31,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilXCircle, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
-import { useNavigate } from 'react-router-dom';
+import AddBank from './AddBank';
 
 const BankList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,6 +39,8 @@ const BankList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingBank, setEditingBank] = useState(null);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
 
@@ -52,7 +52,6 @@ const BankList = () => {
   const hasDeletePermission = hasPermission('BANK', 'DELETE');
   const hasCreatePermission = hasPermission('BANK', 'CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -89,7 +88,6 @@ const BankList = () => {
         await axiosInstance.delete(`/banks/${id}`);
         setData(data.filter((bank) => bank.id !== id));
         fetchData();
-        showSuccess();
       } catch (error) {
         console.log(error);
         showError(error);
@@ -111,15 +109,30 @@ const BankList = () => {
       setData((prev) => updateStatus(prev));
       setFilteredData((prev) => updateStatus(prev));
 
-      showSuccess(`Bank ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
       handleClose();
     } catch (error) {
       showError(error.message || 'Failed to update bank status');
     }
   };
 
-  const addNew = () => {
-    navigate('/add-bank');
+  const handleShowAddModal = () => {
+    setEditingBank(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (bank) => {
+    setEditingBank(bank);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingBank(null);
+  };
+
+  const handleBankSaved = () => {
+    fetchData();
+    handleCloseModal();
   };
 
   const handleSearch = (value) => {
@@ -154,7 +167,7 @@ const BankList = () => {
               <CButton 
                 size="sm" 
                 className="action-btn me-1"
-                onClick={addNew}
+                onClick={handleShowAddModal}
               >
                 <CIcon icon={cilPlus} className='icon' /> New 
               </CButton>
@@ -231,9 +244,12 @@ const BankList = () => {
                             onClose={handleClose}
                           >
                             {hasEditPermission && (
-                              <Link className="Link" to={`/update-bank/${bank.id}`}>
-                                <MenuItem style={{ color: 'black' }}><CIcon icon={cilPencil} className="me-2" />Edit</MenuItem>
-                              </Link>
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(bank)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />Edit
+                              </MenuItem>
                             )}
                             {hasEditPermission && (
                               <MenuItem onClick={() => handleToggleStatus(bank.id, bank.status)}>
@@ -257,6 +273,13 @@ const BankList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      <AddBank
+        show={showModal}
+        onClose={handleCloseModal}
+        onBankSaved={handleBankSaved}
+        editingBank={editingBank}
+      />
     </div>
   );
 };

@@ -7,7 +7,6 @@ import {
   Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
@@ -15,8 +14,6 @@ import {
   showError,
   showSuccess,
   axiosInstance,
-  // FaTimesCircle,
-  // FaCheckCircle
 } from '../../../utils/tableImports';
 import { 
   CButton, 
@@ -123,13 +120,13 @@ const DocumentList = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
-            {hasCreatePermission && (
+            {/* {hasCreatePermission && ( */}
               <Link to="/documents/add-document">
                 <CButton size="sm" className="action-btn me-1">
                   <CIcon icon={cilPlus} className='icon'/> New Document
                 </CButton>
               </Link>
-            )}
+            {/* )} */}
           </div>
         </CCardHeader>
         
@@ -155,7 +152,9 @@ const DocumentList = () => {
                   <CTableHeaderCell>Document name</CTableHeaderCell>
                   <CTableHeaderCell>Description</CTableHeaderCell>
                   <CTableHeaderCell>Is required</CTableHeaderCell>
-                  {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
+                  {/* {showActionColumn && */}
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                  {/* } */}
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -186,7 +185,7 @@ const DocumentList = () => {
                           )}
                         </CBadge>
                       </CTableDataCell>
-                      {showActionColumn && (
+                      {/* {showActionColumn && ( */}
                         <CTableDataCell>
                           <CButton
                             size="sm"
@@ -202,23 +201,23 @@ const DocumentList = () => {
                             open={menuId === document._id} 
                             onClose={handleClose}
                           >
-                            {hasEditPermission && (
+                            {/* {hasEditPermission && ( */}
                               <Link className="Link" to={`/documents/update-document/${document._id}`}>
                                 <MenuItem style={{ color: 'black' }}>
                                   <CIcon icon={cilPencil} className="me-2" />
                                   Edit
                                 </MenuItem>
                               </Link>
-                            )}
-                            {hasDeletePermission && (
+                            {/* )} */}
+                            {/* {hasDeletePermission && ( */}
                               <MenuItem onClick={() => handleDelete(document._id)}>
                                 <CIcon icon={cilTrash} className="me-2" />
                                 Delete
                               </MenuItem>
-                            )}
+                            {/* )} */}
                           </Menu>
                         </CTableDataCell>
-                      )}
+                      {/* )} */}
                     </CTableRow>
                   ))
                 )}

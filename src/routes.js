@@ -1,6 +1,3 @@
-
-import { AddCardSharp } from '@mui/icons-material'
-import { element } from 'prop-types'
 import React from 'react'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
@@ -63,6 +60,7 @@ const UploadDealForm = React.lazy(() => import('./views/sales/UploadDealForm'))
 //Sales Report
 const SalesReport = React.lazy(() => import('./views/sales-report/SalesReport'))
 const PeriodicReport = React.lazy(() => import('./views/sales-report/PeriodicReport'))
+
 //Account
 const AccountDashboard = React.lazy(() => import('./views/account/AccountDashboard'))
 const Receipts = React.lazy(() => import('./views/account/Receipt'))
@@ -117,14 +115,19 @@ const PaymentModeList = React.lazy(() => import('./views/fund-master/payment-mod
 const AddQuotation = React.lazy(() => import('./views/quotation/AddQuotation'))
 const QuotationList = React.lazy(() => import('./views/quotation/QuotationList'))
 
+//insurance
+
+const InsuranceDashboard = React.lazy(() => import('./views/insurance/insurance-dashboard/InsuranceDashboard'))
+const InsuranceDetails = React.lazy(() => import('./views/insurance/insurance-details/InsuranceReport'))
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   
   //purchase
+
   { path: '/inward-stock', name: 'Inward Stock', element: InwardStock},
-  { path: '/inward-list', name: 'Stock List', element: StockList},
-  { path: '/inward-stock', name: 'Inward Stock', element: InwardStock},
+  { path: '/update-inward/:id', name: 'Update Inward Stock', element: InwardStock},
   { path: '/inward-list', name: 'Stock List', element: StockList},
   { path:'/stock-verification',name: 'Stock Verification', element: StockVerification},
   { path:'/stock-transfer',name: 'Stock Transfer', element: StockTransfer},
@@ -134,9 +137,11 @@ const routes = [
   //Masters
   { path:'/branch/branch-list',name: 'Branch List', element: BranchList},
   { path:'/branch/add-branch',name: 'Add Branch', element: AddBranch},
-  
+  { path:'/branch/update-branch/:id',name: 'Add Branch', element: AddBranch},
+
   { path:'/headers/headers-list', name:'Headers List', element:HeadersList},
   { path:'/headers/add-header', name:'Add Headers', element:AddHeader},
+  { path:'/headers/update-header/:id', name:'Add Headers', element:AddHeader},
   { path:'/model/model-list', name:"model List", element:ModelList},
   { path:'/model/add-model', name:"Add Model", element:AddModel},
   { path:'/model/update-model/:id', name:'Update Model', element:UpdateModel},
@@ -192,6 +197,7 @@ const routes = [
 
   //Sales
   { path:'/new-booking', name:'New Booking', element:NewBooking},
+  { path:'/booking-form/:id', name:'Edit Booking', element:NewBooking},
   { path:'/booking-list', name:'Booking List', element:BookingList},
   { path:'/update-booking/:id', name:'Edit Booking', element:NewBooking},
 
@@ -239,7 +245,7 @@ const routes = [
   { path:'/add-bank', name:'Add Bank Location', element:AddBank},
   { path:'/bank-master', name:'Cash Receipt', element:BankList},
   { path:'/payment-mode', name:'Cash Book', element:AddPaymentMode},
-  { path:'/expense', name:'Expense List', element:AddExpense},
+  { path:'/expense', name:'Expense List', element:ExpenseList},
   { path:'/opening-balance', name:'Add Opening Balance', element:OpeningBalanceList},
   { path:'/add-balance', name:'Add Balance', element:AddOpeningBalance},
   { path:'/payment-mode', name:'Payment Mode', element:PaymentModeList},
@@ -250,6 +256,9 @@ const routes = [
   { path:'/add-quotation', name:'Add Quotation', element:AddQuotation},
   { path:'/quotation-list', name:'Quotation List', element:QuotationList},
 
+  //insurance
+  { path:'/insurance-dashboard', name:'Insurance Dashboard', element:InsuranceDashboard},
+  { path:'/insurance-details', name:'Insurance Details', element:InsuranceDetails},
   { path: '/widgets', name: 'Widgets', element: Widgets },
 ]
 

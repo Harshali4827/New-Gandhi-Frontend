@@ -2,20 +2,41 @@ import { hasPermission } from '../../../utils/permissionUtils';
 import '../../../css/table.css';
 import {
   React,
+  useState,
   useEffect,
-  SearchOutlinedIcon,
+  Menu,
+  MenuItem,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
-  axiosInstance,
   confirmDelete,
-  showSuccess,
-  showError
+  showError,
+  axiosInstance
 } from '../../../utils/tableImports';
+import { 
+  CButton, 
+  CCard, 
+  CCardBody, 
+  CCardHeader, 
+  CFormInput, 
+  CFormLabel, 
+  CTable, 
+  CTableBody, 
+  CTableHead, 
+  CTableHeaderCell, 
+  CTableRow,
+  CTableDataCell,
+  CBadge
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilSettings, cilPencil, cilTrash, cilPlus } from '@coreui/icons';
 
-const PaymentModeList = ({ payments, onDelete }) => {
+const PaymentModeList = ({ payments, onDelete, onEdit, onAddNew }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const paymentData = Array.isArray(payments) ? payments : [];
@@ -23,13 +44,22 @@ const PaymentModeList = ({ payments, onDelete }) => {
     setFilteredData(paymentData);
   }, [payments]);
 
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
+
   const handleDelete = async (id) => {
     const result = await confirmDelete();
     if (result.isConfirmed) {
       try {
         await axiosInstance.delete(`/banksubpaymentmodes/${id}`);
         onDelete();
-        showSuccess('Payment mode deleted successfully!');
       } catch (error) {
         console.log('Delete error:', error);
         showError(error.response?.data?.message || 'Failed to delete payment mode');
@@ -37,62 +67,111 @@ const PaymentModeList = ({ payments, onDelete }) => {
     }
   };
 
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    handleFilter(value, getDefaultSearchFields('payment_mode'));
+  };
+
+  const hasCreatePermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'CREATE');
+  const hasEditPermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'UPDATE');
+  const hasDeletePermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'DELETE');
+  const showActionColumn = hasEditPermission || hasDeletePermission;
+
   return (
-    <div className="table-container" style={{ marginTop: '20px' }}>
-      {' '}
-      <div className="table-header">
-        <div className="search-icon-data">
-          <input
-            type="text"
-            placeholder="Search payment modes..."
-            onChange={(e) => handleFilter(e.target.value, getDefaultSearchFields('payment_mode'))}
-          />
-          <SearchOutlinedIcon />
+    <CCard className='table-container mt-4'>
+      <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+        <div>
+          {hasCreatePermission && (
+            <CButton 
+              size="sm" 
+              className="action-btn me-1"
+              onClick={onAddNew}
+            >
+              <CIcon icon={cilPlus} className='icon'/> New
+            </CButton>
+          )}
         </div>
-      </div>
-      <div className="table-responsive">
-        <div className="table-wrapper">
-          <table className="responsive-table">
-            <thead className="table-header-fixed">
-              <tr>
-                <th>Sr.no</th>
-                <th>Payment Mode</th>
-                {hasPermission('BANK_SUB_PAYMENT_MODE', 'DELETE') && <th>Action</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {currentRecords && currentRecords.length === 0 ? (
-                <tr>
-                  <td colSpan="3" style={{ color: 'red', textAlign: 'center' }}>
-                    {' '}
-                    No payment modes available
-                  </td>
-                </tr>
+      </CCardHeader>
+      
+      <CCardBody>
+        <div className="d-flex justify-content-between mb-3">
+            <div></div>
+            <div className='d-flex'>
+              <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
+              <CFormInput
+                type="text"
+                className="d-inline-block square-search"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        <div className="responsive-table-wrapper">
+          <CTable striped bordered hover className='responsive-table'>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>Sr.no</CTableHeaderCell>
+                <CTableHeaderCell>Payment Mode</CTableHeaderCell>
+                {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {!currentRecords?.length ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={showActionColumn ? "3" : "2"} className="text-center">
+                    <CBadge color="secondary">No payment modes available</CBadge>
+                  </CTableDataCell>
+                </CTableRow>
               ) : (
                 currentRecords.map((payment, index) => (
-                  <tr key={payment.id || index}>
-                    <td>{index + 1}</td>
-                    <td>{payment.payment_mode}</td>
-                    {hasPermission('BANK_SUB_PAYMENT_MODE', 'DELETE') && (
-                      <td>
-                        <button
-                          className="action-button delete-button"
-                          onClick={() => handleDelete(payment.id)}
-                          title="Delete payment mode"
+                  <CTableRow key={payment.id || index}>
+                    <CTableDataCell>{index + 1}</CTableDataCell>
+                    <CTableDataCell>{payment.payment_mode}</CTableDataCell>
+                    {showActionColumn && (
+                      <CTableDataCell>
+                        <CButton
+                          size="sm"
+                          className='option-button btn-sm'
+                          onClick={(event) => handleClick(event, payment.id)}
                         >
-                          Delete
-                        </button>
-                      </td>
+                          <CIcon icon={cilSettings} />
+                          Options
+                        </CButton>
+                        <Menu 
+                          id={`action-menu-${payment.id}`} 
+                          anchorEl={anchorEl} 
+                          open={menuId === payment.id} 
+                          onClose={handleClose}
+                        >
+                          {/* {hasEditPermission && (
+                            <MenuItem 
+                              onClick={() => {
+                                onEdit(payment);
+                                handleClose();
+                              }}
+                              style={{ color: 'black' }}
+                            >
+                              <CIcon icon={cilPencil} className="me-2" />
+                              Edit
+                            </MenuItem>
+                          )} */}
+                          {hasDeletePermission && (
+                            <MenuItem onClick={() => handleDelete(payment.id)}>
+                              <CIcon icon={cilTrash} className="me-2" />
+                              Delete
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </CTableDataCell>
                     )}
-                  </tr>
+                  </CTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </CTableBody>
+          </CTable>
         </div>
-      </div>
-      <PaginationOptions />
-    </div>
+      </CCardBody>
+    </CCard>
   );
 };
 

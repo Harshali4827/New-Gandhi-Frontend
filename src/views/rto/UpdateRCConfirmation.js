@@ -13,6 +13,7 @@ import {
   CAlert
 } from '@coreui/react';
 import '../../css/receipt.css';
+import '../../css/form.css';
 import axiosInstance from '../../axiosInstance';
 
 const UpdateRCConfirmation = ({ show, onClose, rcData, onUpdateSuccess }) => {
@@ -76,20 +77,12 @@ const UpdateRCConfirmation = ({ show, onClose, rcData, onUpdateSuccess }) => {
     <>
       <CBackdrop visible={show} className="modal-backdrop" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
       <CModal visible={show} onClose={onClose} size="lg" alignment="center">
-        <CModalHeader className="text-white" style={{ backgroundColor: '#243c7c' }}>
-          <CModalTitle className="text-white">RTO RC CONFIRMATION</CModalTitle>
+        <CModalHeader>
+          <CModalTitle>RTO RC CONFIRMATION</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {error && <CAlert color="danger">{error}</CAlert>}
           {success && <CAlert color="success">{success}</CAlert>}
-
-          <div className="booking-header mb-2 p-1 bg-light rounded">
-            <h5 className="mb-0">
-              Booking Number: <strong>{rcData?.bookingId?.bookingNumber || ''}</strong>
-            </h5>
-          </div>
-          <hr></hr>
-
           <CRow className="mb-3">
             <CCol md={6}>
               <label className="form-label">Customer Name</label>

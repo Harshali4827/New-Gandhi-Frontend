@@ -1,36 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import '../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CSpinner,
+  CInputGroup,
+  CInputGroupText,
+  CAlert,
+  CRow,
+  CCol
+} from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilLocationPin, cilUser } from '@coreui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
-import axiosInstance from '../../axiosInstance';
-import FormButtons from '../../utils/FormButtons';
+import { showError, axiosInstance } from '../../utils/tableImports';
+import '../../css/form.css';
 
-function AddBank() {
+const AddBank = ({ show, onClose, onBankSaved, editingBank }) => {
   const [formData, setFormData] = useState({
     name: '',
     branch: ''
   });
-  const [errors, setErrors] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const [branches, setBranches] = useState([]);
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    if (id) {
-      fetchBank(id);
+    if (editingBank) {
+      // Pre-fill form with existing data when editing
+      setFormData({
+        name: editingBank.name || '',
+        branch: editingBank.branch || ''
+      });
+    } else {
+      // Reset form when adding new
+      resetForm();
     }
-  }, [id]);
-  const fetchBank = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/banks/${id}`);
-      setFormData(res.data.data.bank);
-    } catch (error) {
-      console.error('Error fetching bank:', error);
-    }
-  };
+  }, [editingBank, show]);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -45,65 +58,107 @@ function AddBank() {
 
     fetchBranches();
   }, []);
-  const handleChange = (e) => {
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Account name is required';
+    }
+    
+    if (!formData.branch) {
+      errors.branch = 'Location is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formErrors = {};
-
-    if (!formData.name) formErrors.name = 'This field is required';
-    if (!formData.branch) formErrors.branch = 'This field is required';
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    
+    if (!validateForm()) {
       return;
     }
 
+    setSubmitting(true);
     try {
-      if (id) {
-        await axiosInstance.put(`/banks/${id}`, formData);
-        await showFormSubmitToast('Bank updated successfully!', () => navigate('/bank-master'));
-
-        navigate('/bank-master');
+      if (editingBank) {
+        await axiosInstance.put(`/banks/${editingBank.id}`, formData);
+        setSuccessMessage('Bank account updated successfully');
       } else {
         await axiosInstance.post('/banks', formData);
-        await showFormSubmitToast('Bank added successfully!', () => navigate('/bank-master'));
-
-        navigate('/bank-master');
+        setSuccessMessage('Bank account added successfully');
       }
+      
+      // Clear success message after 2 seconds and close modal
+      setTimeout(() => {
+        setSuccessMessage('');
+        onBankSaved();
+      }, 2000);
     } catch (error) {
-      console.error('Error details:', error);
-      showFormSubmitError(error);
+      console.error('Error saving bank account:', error);
+      showError(error);
+    
+      if (error.response?.data?.errors) {
+        setFormErrors(error.response.data.errors);
+      }
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/bank-master');
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      branch: ''
+    });
+    setFormErrors({});
+    setSuccessMessage('');
   };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Bank Account</h4>
-      <div className="form-container">
-        <div className="page-header">
-          <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            <div className="user-details">
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Location</span>
-                  <span className="required">*</span>
-                </div>
+    <CModal size="lg" visible={show} onClose={handleClose}>
+      <CModalHeader>
+        <CModalTitle>{editingBank ? 'Edit Bank Account' : 'Add New Bank Account'}</CModalTitle>
+      </CModalHeader>
+      <CForm onSubmit={handleSubmit}>
+        <CModalBody>
+          {successMessage && (
+            <CAlert color="success" className="mb-3">
+              {successMessage}
+            </CAlert>
+          )}
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="branch">Location <span className="required">*</span></CFormLabel>
                 <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilLocationPin} />
-                  </CInputGroupText>
-                  <CFormSelect name="branch" value={formData.branch} onChange={handleChange}>
+                  <CFormSelect 
+                    id="branch"
+                    name="branch" 
+                    value={formData.branch} 
+                    onChange={handleInputChange}
+                    invalid={!!formErrors.branch}
+                  >
                     <option value="">-Select Location-</option>
                     {branches.map((branch) => (
                       <option key={branch._id} value={branch._id}>
@@ -112,27 +167,47 @@ function AddBank() {
                     ))}
                   </CFormSelect>
                 </CInputGroup>
-                {errors.branch && <p className="error">{errors.branch}</p>}
+                {formErrors.branch && (
+                  <div className="error-text">
+                    {formErrors.branch}
+                  </div>
+                )}
               </div>
-              <div className="input-box">
-                <div className="details-container">
-                  <span className="details">Account Name</span>
-                  <span className="required">*</span>
-                </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="name">Account Name <span className="required">*</span></CFormLabel>
                 <CInputGroup>
-                  <CInputGroupText className="input-icon">
-                    <CIcon icon={cilUser} />
-                  </CInputGroupText>
-                  <CFormInput type="text" name="name" value={formData.name} onChange={handleChange} />
+                  <CFormInput
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    invalid={!!formErrors.name}
+                  />
                 </CInputGroup>
-                {errors.name && <p className="error">{errors.name}</p>}
+                {formErrors.name && (
+                  <div className="error-text">
+                    {formErrors.name}
+                  </div>
+                )}
               </div>
-              <FormButtons onCancel={handleCancel} />
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className='submit-button'
+            type="submit"
+            disabled={submitting || !!successMessage}
+          >
+            {submitting ? <CSpinner size="sm" /> : (editingBank ? 'Update' : 'Submit')}
+          </CButton>
+        </CModalFooter>
+      </CForm>
+    </CModal>
   );
-}
+};
+
 export default AddBank;

@@ -12,7 +12,6 @@ import {
   usePagination,
   confirmDelete,
   showError,
-  showSuccess,
   axiosInstance
 } from '../../../utils/tableImports';
 import { hasPermission } from '../../../utils/permissionUtils';
@@ -30,9 +29,12 @@ import {
   CTableRow,
   CTableDataCell,
   CSpinner,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash} from '@coreui/icons';
+import AddRto from './AddRto';
+
 
 const RtoList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -40,6 +42,9 @@ const RtoList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRto, setEditingRto] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
 
@@ -86,7 +91,8 @@ const RtoList = () => {
         is_active: newStatus
       });
       fetchData();
-      showSuccess(`RTO ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      setSuccessMessage(`RTO ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error updating RTO status:', error);
       showError(error);
@@ -100,7 +106,8 @@ const RtoList = () => {
         await axiosInstance.delete(`/rtos/${id}`);
         setData(data.filter((rto) => rto?.id !== id));
         fetchData();
-        showSuccess();
+        setSuccessMessage('RTO deleted successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } catch (error) {
         console.log(error);
         showError(error);
@@ -111,6 +118,28 @@ const RtoList = () => {
   const handleSearch = (value) => {
     setSearchTerm(value);
     handleFilter(value, getDefaultSearchFields('rto'));
+  };
+
+  const handleShowAddModal = () => {
+    setEditingRto(null);
+    setShowModal(true);
+  };
+
+  const handleShowEditModal = (rto) => {
+    setEditingRto(rto);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingRto(null);
+  };
+
+  const handleRtoSaved = (message) => {
+    fetchData();
+    handleCloseModal();
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   if (loading) {
@@ -132,16 +161,24 @@ const RtoList = () => {
   return (
     <div>
       <div className='title'>RTO</div>
+      
+      {successMessage && (
+        <CAlert color="success" className="mb-3">
+          {successMessage}
+        </CAlert>
+      )}
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasCreatePermission && (
-              <Link to="/rto/add-rto">
-                <CButton size="sm" className="action-btn me-1">
-                  <CIcon icon={cilPlus} className='icon'/> New RTO
-                </CButton>
-              </Link>
+              <CButton 
+                size="sm" 
+                className="action-btn me-1"
+                onClick={handleShowAddModal}
+              >
+                <CIcon icon={cilPlus} className='icon'/> New RTO
+              </CButton>
             )}
           </div>
         </CCardHeader>
@@ -210,12 +247,13 @@ const RtoList = () => {
                             onClose={handleClose}
                           >
                             {hasEditPermission && (
-                              <Link className="Link" to={`/rto/update-rto/${rto?.id}`}>
-                                <MenuItem style={{ color: 'black' }}>
-                                  <CIcon icon={cilPencil} className="me-2" />
-                                  Edit
-                                </MenuItem>
-                              </Link>
+                              <MenuItem 
+                                onClick={() => handleShowEditModal(rto)}
+                                style={{ color: 'black' }}
+                              >
+                                <CIcon icon={cilPencil} className="me-2" />
+                                Edit
+                              </MenuItem>
                             )}
                             {hasDeletePermission && (
                               <MenuItem onClick={() => handleDelete(rto?.id)}>
@@ -234,6 +272,13 @@ const RtoList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      <AddRto
+        show={showModal}
+        onClose={handleCloseModal}
+        onRtoSaved={handleRtoSaved}
+        editingRto={editingRto}
+      />
     </div>
   );
 };

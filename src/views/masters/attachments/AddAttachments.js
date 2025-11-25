@@ -54,7 +54,6 @@ function Attachments() {
         title: attachment.title || '',
         description: attachment.description || '',
         isForAllModels: attachment.isForAllModels || false,
-        // applicableModels: attachment.applicableModels || [],
         applicableModels: attachment.applicableModels.map((model) => model.id) || [],
         youtubeUrls: youtubeUrl,
         images: existingImages,
@@ -179,14 +178,11 @@ function Attachments() {
   };
 
   return (
-    <div>
-      <h4>Add New Attachments</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className="title">{id ? 'Edit' : 'Add'} Attachments</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">

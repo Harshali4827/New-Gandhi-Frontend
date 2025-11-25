@@ -21,13 +21,13 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CFormLabel,
   CSpinner
 } from '@coreui/react';
 import { axiosInstance, getDefaultSearchFields, Menu, MenuItem, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
+import '../../css/form.css';
 import Swal from 'sweetalert2';
 import CIcon from '@coreui/icons-react';
 import { cilSearch, cilZoomOut, cilSettings, cilCheckCircle, cilX } from '@coreui/icons';
@@ -392,7 +392,7 @@ function ContraApproval() {
       <div className='title'>Contra Voucher Approval</div>
       
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             <CButton 
               size="sm" 
@@ -411,7 +411,7 @@ function ContraApproval() {
               </CButton>
             )}
           </div>
-        </CCardHeader>
+        </CCardHeader> */}
         
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">
@@ -516,10 +516,10 @@ function ContraApproval() {
           <CButton color="secondary" onClick={() => setShowApprovalModal(false)}>
             Cancel
           </CButton>
-          <CButton color="danger" onClick={() => handleReject(selectedVoucher?._id)}>
+          {/* <CButton color="danger" onClick={() => handleReject(selectedVoucher?._id)}>
             <CIcon icon={cilX} className="me-1" />
             Reject
-          </CButton>
+          </CButton> */}
           <CButton color="primary" onClick={() => handleStatusUpdate('approved')}>
             <CIcon icon={cilCheckCircle} className="me-1" />
             Approve

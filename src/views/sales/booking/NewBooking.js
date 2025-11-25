@@ -903,10 +903,6 @@ function BookingForm() {
       <div className="form-card">
         <div className="form-body">
           <form onSubmit={handleSubmit} id="bookingForm">
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-
             {activeTab === 1 && (
               <>
                 <div className="user-details">

@@ -6,6 +6,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { faFileExcel, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import '../../css/table.css';
+import '../../css/form.css';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getDefaultSearchFields, useTableFilter } from '../../utils/tableFilters';
@@ -386,7 +387,7 @@ const CustomersList = () => {
             Cancel
           </CButton>
           <CButton 
-            color="primary" 
+           className="submit-button"
             onClick={() => handleExcelExport(true)}
             disabled={!startDate || !endDate || !selectedBranchId}
           >

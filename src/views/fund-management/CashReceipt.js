@@ -2,14 +2,33 @@ import '../../css/table.css';
 import {
   React,
   useEffect,
-  SearchOutlinedIcon,
-  getDefaultSearchFields,
+  useState,
   useTableFilter,
   usePagination,
-  axiosInstance
+  axiosInstance,
+  getDefaultSearchFields
 } from '../../utils/tableImports';
+import { 
+  CButton, 
+  CCard, 
+  CCardBody, 
+  CCardHeader, 
+  CFormInput, 
+  CFormLabel, 
+  CTable, 
+  CTableBody, 
+  CTableHead, 
+  CTableHeaderCell, 
+  CTableRow,
+  CTableDataCell,
+  CSpinner
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
 
 const CashReceipt = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
 
@@ -19,11 +38,15 @@ const CashReceipt = () => {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(`/vouchers`);
       setData(response.data.transactions);
       setFilteredData(response.data.transactions);
     } catch (error) {
       console.log('Error fetching data', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,72 +82,107 @@ const CashReceipt = () => {
     }
   };
 
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    handleFilter(value, getDefaultSearchFields('vouchers'));
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <CSpinner color="primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        Error loading cash receipts: {error}
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h4>Cash Receipt</h4>
-      <div className="table-container">
-        <div className="table-header">
-          <div className="search-icon-data">
-            <input type="text" placeholder="Search.." onChange={(e) => handleFilter(e.target.value, getDefaultSearchFields('vouchers'))} />
-            <SearchOutlinedIcon />
+      <div className='title'>Cash Receipt</div>
+    
+      <CCard className='table-container mt-4'>
+        
+        <CCardBody>
+          <div className="d-flex justify-content-between mb-3">
+            <div></div>
+            <div className='d-flex'>
+              <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
+              <CFormInput
+                type="text"
+                className="d-inline-block square-search"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
-        <div className="table-responsive">
-          <div className="table-wrapper">
-            <table className="responsive-table" style={{ overflow: 'auto' }}>
-              <thead className="table-header-fixed">
-                <tr>
-                  <th>Sr.no</th>
-                  <th>Voucher ID</th>
-                  <th>Recipient Name</th>
-                  <th>Date</th>
-                  <th>Voucher Type</th>
-                  <th>Voucher Category</th>
-                  <th>Type</th>
-                  <th>Debit</th>
-                  <th>Credit</th>
-                  <th>Payment Mode</th>
-                  <th>Bank Location</th>
-                  <th>Cash Location</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
+          
+          <div className="responsive-table-wrapper">
+            <CTable striped bordered hover className='responsive-table'>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell>Sr.no</CTableHeaderCell>
+                  <CTableHeaderCell>Voucher ID</CTableHeaderCell>
+                  <CTableHeaderCell>Recipient Name</CTableHeaderCell>
+                  <CTableHeaderCell>Date</CTableHeaderCell>
+                  <CTableHeaderCell>Voucher Type</CTableHeaderCell>
+                  <CTableHeaderCell>Voucher Category</CTableHeaderCell>
+                  <CTableHeaderCell>Type</CTableHeaderCell>
+                  <CTableHeaderCell>Debit</CTableHeaderCell>
+                  <CTableHeaderCell>Credit</CTableHeaderCell>
+                  <CTableHeaderCell>Payment Mode</CTableHeaderCell>
+                  <CTableHeaderCell>Bank Location</CTableHeaderCell>
+                  <CTableHeaderCell>Cash Location</CTableHeaderCell>
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
                 {currentRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan="13" style={{ color: 'red' }}>
+                  <CTableRow>
+                    <CTableDataCell colSpan="13" className="text-center">
                       No cash receipt available
-                    </td>
-                  </tr>
+                    </CTableDataCell>
+                  </CTableRow>
                 ) : (
                   currentRecords.map((item, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{item.receiptNo}</td>
-                      <td>{item.accountHead}</td>
-                      <td>{item.date ? new Date(item.date).toLocaleDateString('en-GB') : ''}</td>
-                      <td>{item.type}</td>
-                      <td>{item.voucherCategory}</td>
-                      <td>{getVoucherSpecificType(item)}</td>
-                      <td>{item.debit || ''}</td>
-                      <td>{item.credit || ''}</td>
-                      <td>{item.paymentMode || ''}</td>
-                      <td>{item.bankLocation || ''}</td>
-                      <td>{item.cashLocation || ''}</td>
-                      <td>
-                        <button className="action-button" onClick={() => handleViewPdf(item.id)}>
-                          VIEW
-                        </button>
-                      </td>
-                    </tr>
+                    <CTableRow key={item.id || index}>
+                      <CTableDataCell>{index + 1}</CTableDataCell>
+                      <CTableDataCell>{item.receiptNo}</CTableDataCell>
+                      <CTableDataCell>{item.accountHead}</CTableDataCell>
+                      <CTableDataCell>
+                        {item.date ? new Date(item.date).toLocaleDateString('en-GB') : ''}
+                      </CTableDataCell>
+                      <CTableDataCell>{item.type}</CTableDataCell>
+                      <CTableDataCell>{item.voucherCategory}</CTableDataCell>
+                      <CTableDataCell>{getVoucherSpecificType(item)}</CTableDataCell>
+                      <CTableDataCell>{item.debit || ''}</CTableDataCell>
+                      <CTableDataCell>{item.credit || ''}</CTableDataCell>
+                      <CTableDataCell>{item.paymentMode || ''}</CTableDataCell>
+                      <CTableDataCell>{item.bankLocation || ''}</CTableDataCell>
+                      <CTableDataCell>{item.cashLocation || ''}</CTableDataCell>
+                      <CTableDataCell>
+                        <CButton
+                          size="sm"
+                          className='option-button btn-sm'
+                          onClick={() => handleViewPdf(item.id)}
+                        >
+                          View PDF
+                        </CButton>
+                      </CTableDataCell>
+                    </CTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </CTableBody>
+            </CTable>
           </div>
-        </div>
-        <PaginationOptions />
-      </div>
+        </CCardBody>
+      </CCard>
     </div>
   );
 };

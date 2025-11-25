@@ -4,7 +4,7 @@ import { CFormInput, CInputGroup, CInputGroupText, CButton } from '@coreui/react
 import CIcon from '@coreui/icons-react';
 import { cilCarAlt, cilPrint, cilReload } from '@coreui/icons';
 import axiosInstance from '../../axiosInstance';
-
+import '../../css/form.css';
 function DealForm() {
   const [formData, setFormData] = useState({
     chassisNumber: '',
@@ -608,11 +608,11 @@ function DealForm() {
         {error && <div className="text-danger mb-3">{error}</div>}
 
         <div className="d-flex gap-2">
-          <CButton color="primary" onClick={handlePrint} disabled={!invoiceData || loading}>
+          <CButton className='submit-button' onClick={handlePrint}>
             <CIcon icon={cilPrint} className="me-2" />
             Print
           </CButton>
-          <CButton color="secondary" onClick={handleClear} disabled={loading}>
+          <CButton className='cancel-button' onClick={handleClear} disabled={loading}>
             <CIcon icon={cilReload} className="me-2" />
             Clear
           </CButton>
