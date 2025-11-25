@@ -5,11 +5,9 @@ import {
   cilCarAlt,
   cilCart,
   cilChartLine,
-  cilCursor,
   cilDescription,
   cilDollar,
   cilDrop,
-  cilFolderOpen,
   cilLibrary,
   cilMoney,
   cilNotes,
@@ -18,6 +16,8 @@ import {
   cilShieldAlt,
   cilSpeedometer,
   cilStar,
+  cilUser,
+  cilPeople,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -131,7 +131,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Quotation',
-    to: '/Quotation-list',
+    to: '/quotation-list',
     icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
   },
   {
@@ -248,7 +248,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Report',
-        to: '/rto/report',
+        to: '/rto/rto-report',
       }
     ],
   },
@@ -431,25 +431,6 @@ const _nav = [
     to: '/all-customers',
     icon: <CIcon icon={cilDrop} customClassName="nav-icon" />,
   },
-  // {
-  //   component: CNavGroup,
-  //   name: 'Incentive',
-  //   to: '/purchase',
-  //   icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-  //   visible: true,
-  //   items: [
-  //     {
-  //       component: CNavItem,
-  //       name: 'Add Incentive',
-  //       to: '/sales-report',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Calculate Incentive',
-  //       to: '/periodic-report',
-  //     },
-  //   ],
-  // },
   {
     component: CNavTitle,
     name: 'SUBDEALER',
@@ -457,168 +438,104 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Master',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'Subdealer List',
-        to: '/sales-report',
+        to: '/subdealer-list',
       },
       {
         component: CNavItem,
         name: 'Subdealer Commission',
-        to: '/periodic-report',
+        to: '/subdealer-commission',
       },
       {
         component: CNavItem,
         name: 'Calculate Commission',
-        to: '/periodic-report',
+        to: '/subdealer/calculate-commission',
       },
-    ],
-  },
-  {
-    component: CNavGroup,
-    name: 'Account',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Add Balance',
-        to: '/sales-report',
-      },
-      {
-        component: CNavItem,
-        name: 'OnAccount Balance',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Payment Verification',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Finance Payment',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Subdealer Ledger',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Customer Ledger',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Summary',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Subdealer Commission',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Payment Summary',
-        to: '/periodic-report',
-      }
     ],
   },
   {
     component: CNavGroup,
     name: 'Booking',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'New Booking',
-        to: '/sales-report',
+        to: '/subdealer-booking',
       },
       {
         component: CNavItem,
         name: 'All Booking',
-        to: '/periodic-report',
+        to: '/subdealer-all-bookings',
       },
       {
         component: CNavItem,
-        name: 'Delivary Challan',
-        to: '/periodic-report',
+        name: 'Delivery Challan',
+        to: '/subdealer/delivery-challan',
       },
-      {
-        component: CNavItem,
-        name: 'Invoice',
-        to: '/periodic-report',
-      },
-      {
-        component: CNavItem,
-        name: 'Deal Form',
-        to: '/periodic-report',
-      }
     ],
   },
   {
     component: CNavGroup,
     name: 'Account',
-    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilMoney} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'Add Balance',
-        to: '/branch/branch-list',
+        to: '/subdealer-account/add-balance',
       },
       {
         component: CNavItem,
         name: 'OnAccount Balance',
-        to: '/headers/headers-list',
+        to: '/subdealer-account/onaccount-balance',
       },
       {
         component: CNavItem,
-        name: 'Payment Verification',
-        to: '/model/model-list',
+        name: 'Add Amount',
+        to: '/subdealer-account/add-amount',
       },
       {
         component: CNavItem,
         name: 'Finance Payment',
-        to: '/accessories/accessories-list',
+        to: '/subdealer-account/receipt',
       },
       {
         component: CNavItem,
-        name: 'Subdealer Ledger',
-        to: '/color/color-list',
-      },
-      {
-        component: CNavItem,
-        name: 'Customer Ledger',
-        to: '/documents/documents-list',
-      },
-      {
-        component: CNavItem,
-        name: 'Summary',
-        to: '/conditions/conditions-list',
+        name: 'Payment Verification',
+        to: '/subdealer/payment-verification',
       },
       {
         component: CNavItem,
         name: 'Subdealer Commission',
-        to: '/offers/offer-list',
+        to: '/subdealer/payment',
       },
       {
         component: CNavItem,
         name: 'Payment Summary',
-        to: '/attachments/attachments-list',
+        to: '/subdealer/payment-summary',
+      },
+      {
+        component: CNavItem,
+        name: 'Subdealer Ledger',
+        to: '/subdealer-ledger',
+      },
+      {
+        component: CNavItem,
+        name: 'Customer Ledger',
+        to: '/subdealer/customer-ledger',
+      },
+      {
+        component: CNavItem,
+        name: 'Summary',
+        to: '/subdealer/summary',
       },
     ],
   },
-
   {
     component: CNavTitle,
     name: 'USER MANAGEMENT',
@@ -626,51 +543,47 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Roles',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
+    icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'Create Role',
-        to: '/sales-report',
+        to: '/roles/create-role',
       },
       {
         component: CNavItem,
         name: 'All Role',
-        to: '/periodic-report',
+        to: '/roles/all-role',
       },
     ],
   },
   {
     component: CNavGroup,
     name: 'User',
-    to: '/purchase',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    visible: true,
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'Add User',
-        to: '/sales-report',
+        to: '/users/add-user',
       },
       {
         component: CNavItem,
         name: 'User List',
-        to: '/periodic-report',
+        to: '/users/users-list',
       },
     ],
   },
   {
     component: CNavItem,
     name: 'Buffer Report',
-    to: '/theme/typography',
+    to: '/buffer/buffer-list',
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
     name: 'Manager Deviation',
-    to: '/theme/typography',
+    to: '/users/manager-deviation',
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
   },
   {
