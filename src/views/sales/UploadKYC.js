@@ -4,9 +4,9 @@ import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilCamera, cilCarAlt, cilCreditCard, cilFingerprint, cilHome, cilLocationPin, cilTag, cilUser } from '@coreui/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from 'utils/sweetAlerts';
-import axiosInstance from 'axiosInstance';
-import FormButtons from 'utils/FormButtons';
+import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
+import axiosInstance from '../../axiosInstance';
+import FormButtons from '../../utils/FormButtons';
 
 function UploadKYC() {
   const [formData, setFormData] = useState({
@@ -115,14 +115,11 @@ function UploadKYC() {
   };
 
   return (
-    <div>
-      <h4>Customer KYC Details</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className='title'>Customer KYC Details</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">

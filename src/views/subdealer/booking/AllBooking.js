@@ -426,12 +426,9 @@ const AllBooking = () => {
                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
                 }}
-                placeholder="Search bookings..."
               />
             </div>
           </div>
-
-          {/* Tabs Navigation */}
           <CNav variant="tabs" className="mb-3">
             <CNavItem>
               <CNavLink active={activeTab === 0} onClick={() => setActiveTab(0)}>

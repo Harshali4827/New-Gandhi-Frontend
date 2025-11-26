@@ -73,8 +73,6 @@ function AddUser() {
     try {
       const res = await axiosInstance.get(`/users/${userId}`);
       const userData = res.data.data;
-      
-      // Extract role permissions and user-specific permissions
       const rolePermissions = userData.roles[0]?.permissions || [];
       const userPermissions = userData.permissions?.map(p => p.permission) || [];
       
@@ -85,7 +83,7 @@ function AddUser() {
         branch: userData.branchDetails?._id || '',
         roleId: userData.roles[0]?._id || '',
         discount: userData.discount || '',
-        permissions: [...rolePermissions] // Only use role permissions initially
+        permissions: [...rolePermissions]
       });
 
       if (userData.roles[0]?._id) {
@@ -151,7 +149,6 @@ function AddUser() {
       const res = await axiosInstance.get(`/roles/${roleId}`);
       const rolePermissions = res.data.data.permissions || [];
       
-      // Only set role permissions, don't merge with existing
       setFormData(prev => ({
         ...prev,
         permissions: rolePermissions
@@ -220,17 +217,7 @@ function AddUser() {
     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile is required';
     if (!formData.branch) newErrors.branch = 'Branch is required';
     if (!formData.roleId) newErrors.roleId = 'Role is required';
-
-    const selectedRole = roles.find(role => role._id === formData.roleId);
-    if (selectedRole?.name === 'SALES_EXECUTIVE') {
-      if (formData.discount === '' || formData.discount === null) {
-        newErrors.discount = 'Discount is required for Sales Executive';
-      } else if (isNaN(Number(formData.discount))) {
-        newErrors.discount = 'Discount must be a number';
-      } else if (Number(formData.discount) < 0) {
-        newErrors.discount = 'Discount must be positive';
-      }
-    }
+    if(!formData.discount) newErrors.discount = 'Discount is required'
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -269,15 +256,11 @@ function AddUser() {
   };
 
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} User</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div  className="form-container">
+      <div className='title'>{id ? 'Edit' : 'Add'} User</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-            
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">
@@ -367,7 +350,7 @@ function AddUser() {
                 {errors.roleId && <p className="error">{errors.roleId}</p>}
               </div>
               
-              {roles.find(role => role._id === formData.roleId)?.name === 'SALES_EXECUTIVE' && (
+              {/* {roles.find(role => role._id === formData.roleId)?.name === 'SALES_EXECUTIVE' && ( */}
                 <div className="input-box">
                   <div className="details-container">
                     <span className="details">Discount</span>
@@ -387,7 +370,7 @@ function AddUser() {
                   </CInputGroup>
                   {errors.discount && <p className="error">{errors.discount}</p>}
                 </div>
-              )}
+              {/* )} */}
 
               <div className="input-box">
                 <div className="details-container">
@@ -474,11 +457,11 @@ function AddUser() {
               </div>
             )}
 
-            <div className="button-row mt-4">
-              <button type="submit" className="simple-button primary-button">
+            <div className="form-footer">
+              <button type="submit" className="cancel-button">
                 Save
               </button>
-              <button type="button" className="simple-button secondary-button" onClick={handleCancel}>
+              <button type="button" className="submit-button" onClick={handleCancel}>
                 Cancel
               </button>
             </div>

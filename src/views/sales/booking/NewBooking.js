@@ -1081,8 +1081,8 @@ function BookingForm() {
                   </div>
                 )}
 
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1214,11 +1214,11 @@ function BookingForm() {
                     {errors.sales_executive && <p className="error">{errors.sales_executive}</p>}
                   </div> */}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(1)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(1)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1472,11 +1472,11 @@ function BookingForm() {
                   </div>
                 </div>
 
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(2)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(2)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1722,11 +1722,11 @@ function BookingForm() {
                     </>
                   )}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(3)}>
+                <div className="form-footer">
+                  <button type="button" className="submit-button" onClick={() => setActiveTab(3)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="cancel-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1759,11 +1759,11 @@ function BookingForm() {
                     <p>No accessories available for this model</p>
                   )}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(4)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(4)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1821,11 +1821,11 @@ function BookingForm() {
                     </div>
                   )}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(5)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(5)}>
                     Back
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  <button type="submit" className="submit-button" disabled={isSubmitting}>
                     {isSubmitting ? 'Submitting...' : 'Apply for Approval'}
                   </button>
                 </div>

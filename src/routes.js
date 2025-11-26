@@ -323,7 +323,8 @@ const GSTInvoice = React.lazy(() => import('./views/sales/Invoice'))
 const HelmetInvoice = React.lazy(() => import('./views/sales/HelmetInvoice'))
 const DealForm = React.lazy(() => import('./views/sales/DealForm'))
 const UploadDealForm = React.lazy(() => import('./views/sales/UploadDealForm'))
-
+const UploadFinance = React.lazy(() => import('./views/sales/UploadFinance'))
+const uploadKYC = React.lazy(() => import('./views/sales/UploadKYC'))
 //Sales Report
 const SalesReport = React.lazy(() => import('./views/sales-report/SalesReport'))
 const PeriodicReport = React.lazy(() => import('./views/sales-report/PeriodicReport'))
@@ -494,6 +495,8 @@ const routes = [
   { path:'/booking-form/:id', name:'Edit Booking', element:NewBooking},
   { path:'/booking-list', name:'Booking List', element:BookingList},
   { path:'/update-booking/:id', name:'Edit Booking', element:NewBooking},
+  { path:'/upload-finance/:id', name:'Upload Finance', element:UploadFinance},
+  { path:'/upload-kyc/:id', name:'Upload KYC', element:uploadKYC},
 
   { path:'/delivery-challan', name:'Delivery Challan', element:DeliveryChallan},
   { path:'/gst-invoice', name:'GST Invoice', element:GSTInvoice},

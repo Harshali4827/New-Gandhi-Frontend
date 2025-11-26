@@ -18,6 +18,9 @@ import {
   cilStar,
   cilUser,
   cilPeople,
+  cilSettings,
+  cilApps,
+  cilWarning,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -423,13 +426,13 @@ const _nav = [
     component: CNavItem,
     name: 'Accessories Billing',
     to: '/accessories-billing',
-    icon: <CIcon icon={cilDrop} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
     name: 'Customers',
     to: '/all-customers',
-    icon: <CIcon icon={cilDrop} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,
@@ -438,7 +441,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Master',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilApps} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -543,7 +546,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Roles',
-    icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -578,17 +581,13 @@ const _nav = [
     component: CNavItem,
     name: 'Buffer Report',
     to: '/buffer/buffer-list',
-    icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
     name: 'Manager Deviation',
     to: '/users/manager-deviation',
-    icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavTitle,
-    name: 'Extras',
+    icon: <CIcon icon={cilWarning} customClassName="nav-icon" />,
   },
 ]
 

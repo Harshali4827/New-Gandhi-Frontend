@@ -13,7 +13,7 @@ function WorkshopReceipt() {
   const hasBranch = !!storedUser.branch?._id;
   const [formData, setFormData] = useState({
     recipientName: '',
-    voucherType: '',
+    voucherType: 'debit',
     receiptType: '',
     amount: '',
     remark: '',
@@ -64,7 +64,7 @@ function WorkshopReceipt() {
     if (!formData.recipientName) formErrors.recipientName = 'This field is required';
     if (!formData.receiptType) formErrors.receiptType = 'This field is required';
     if (!formData.amount) formErrors.amount = 'This field is required';
-    if (!formData.voucherType) formErrors.voucherType = 'This field is required';
+    // if (!formData.voucherType) formErrors.voucherType = 'This field is required';
     if (!formData.bankLocation) formErrors.bankLocation = 'This field is required';
 
     if (Object.keys(formErrors).length > 0) {
@@ -126,7 +126,7 @@ function WorkshopReceipt() {
                 </CInputGroup>
                 {errors.branch && <p className="error">{errors.branch}</p>}
               </div>
-              <div className="input-box">
+              {/* <div className="input-box">
                 <div className="details-container">
                   <span className="details">Voucher Type</span>
                   <span className="required">*</span>
@@ -142,7 +142,7 @@ function WorkshopReceipt() {
                   </CFormSelect>
                 </CInputGroup>
                 {errors.voucherType && <p className="error">{errors.voucherType}</p>}
-              </div>
+              </div> */}
               <div className="input-box">
                 <div className="details-container">
                   <span className="details">Receipt Type</span>

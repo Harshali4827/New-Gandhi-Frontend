@@ -480,12 +480,12 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     const oldestChassis = getOldestChassis();
     const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
     
-    let displayText = `${chassis.chassisNumber} (${chassis.age})`;
+    let displayText = `${chassis.chassisNumber} (${chassis.ageInDays}day)`;
     
     if (chassis.chassisNumber === booking?.chassisNumber) {
       displayText += ' (Current)';
     } else if (isOldest) {
-      displayText += ' (Oldest - FIFO)';
+      displayText += '';
     }
     
     return displayText;

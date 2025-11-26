@@ -301,16 +301,11 @@ const CreateRoleWithHierarchy = () => {
   }
 
   return (
-    <div>
-      <h4>{id ? 'Edit' : 'Add'} Role</h4>
-
-      <div className="form-container">
-        <div className="page-header">
+    <div className='form-container'>
+      <div className='title'>{id ? 'Edit' : 'Add'} Role</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
-
             {/* ------------ Details block ------------- */}
             <div className="user-details">
               <div className="input-box">

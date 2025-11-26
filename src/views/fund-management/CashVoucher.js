@@ -13,7 +13,7 @@ function CashVoucher() {
   const hasBranch = !!storedUser.branch?._id;
   const [formData, setFormData] = useState({
     recipientName: '',
-    voucherType: 'debit',
+    voucherType: 'credit',
     expenseType: '',
     amount: '',
     remark: '',

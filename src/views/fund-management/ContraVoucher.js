@@ -13,7 +13,7 @@ function ContraVoucher() {
   const hasBranch = !!storedUser.branch?._id;
   const [formData, setFormData] = useState({
     recipientName: '',
-    voucherType: 'debit',
+    voucherType: 'credit',
     contraType: '',
     amount: '',
     remark: '',

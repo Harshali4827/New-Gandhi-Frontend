@@ -4,9 +4,9 @@ import { CInputGroup, CInputGroupText, CFormInput } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilFile, cilLocationPin, cilTag, cilUser } from '@coreui/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from 'utils/sweetAlerts';
-import axiosInstance from 'axiosInstance';
-import FormButtons from 'utils/FormButtons';
+import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
+import axiosInstance from '../../axiosInstance';
+import FormButtons from '../../utils/FormButtons';
 
 function UploadFinance() {
   const [formData, setFormData] = useState({
@@ -103,14 +103,11 @@ function UploadFinance() {
   };
 
   return (
-    <div>
-      <h4>Customer Finance Upload Details</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className='title'>Customer Finance Upload Details</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit}>
-            <div className="form-note">
-              <span className="required">*</span> Field is mandatory
-            </div>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">

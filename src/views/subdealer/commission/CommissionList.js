@@ -376,21 +376,23 @@ const CommissionList = () => {
             </CButton>
 
           </div>
-
-          <div className="d-flex align-items-center">
-            <CFormLabel className="mb-0 me-2">Search:</CFormLabel>
-            <div className="search-icon-data">
-              <CFormInput
-                type="text"
-                placeholder="Search by model name, type..."
-                onChange={(e) => handleCommissionSearch(e.target.value)}
-                className="square-search"
-              />
-            </div>
-          </div>
         </CCardHeader>
         
         <CCardBody>
+
+        <div className="d-flex justify-content-between mb-3">
+            <div></div>
+            <div className='d-flex'>
+              <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
+              <CFormInput
+                type="text"
+                className="d-inline-block square-search"
+                // value={searchTerm}
+                onChange={(e) => handleCommissionSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
           {!isFilterApplied ? (
             <div className="text-center py-5">
               <p className="text-muted">Please apply a filter to view commission data</p>
@@ -515,9 +517,6 @@ const CommissionList = () => {
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setFilterModalVisible(false)}>
-            Cancel
-          </CButton>
           <CButton className='submit-button' onClick={handleApplyFilter}>
             Apply
           </CButton>
@@ -582,25 +581,12 @@ const CommissionList = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton
-            color="secondary"
-            onClick={() => {
-              setDateRangeModalVisible(false);
-              setDateRangeData(null);
-              setDateRangeSubdealer('');
-              setFromDate('');
-              setToDate('');
-            }}
-          >
-            Close
-          </CButton>
-          <CButton color="primary" onClick={fetchDateRangeCommission} disabled={loadingDateRange}>
+          <CButton className='submit-button' onClick={fetchDateRangeCommission} disabled={loadingDateRange}>
             Apply Commission
           </CButton>
         </CModalFooter>
       </CModal>
 
-      {/* Export Modal */}
       <CModal visible={exportModalVisible} onClose={() => setExportModalVisible(false)}>
         <CModalHeader onClose={() => setExportModalVisible(false)}>
           <CModalTitle>Export Commission Template</CModalTitle>
@@ -627,16 +613,12 @@ const CommissionList = () => {
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setExportModalVisible(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={handleExportCSV}>
+          <CButton className='submit-button' onClick={handleExportCSV}>
             Generate CSV
           </CButton>
         </CModalFooter>
       </CModal>
 
-      {/* Import Modal */}
       <CModal visible={importModalVisible} onClose={() => setImportModalVisible(false)}>
         <CModalHeader onClose={() => setImportModalVisible(false)}>
           <CModalTitle>Import Commission Data</CModalTitle>
@@ -668,10 +650,7 @@ const CommissionList = () => {
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setImportModalVisible(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={handleImportCSV}>
+          <CButton className='submit-button' onClick={handleImportCSV}>
             Import CSV
           </CButton>
         </CModalFooter>

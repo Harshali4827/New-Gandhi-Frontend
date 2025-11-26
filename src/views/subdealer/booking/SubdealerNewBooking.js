@@ -624,10 +624,10 @@ function SubdealerNewBooking() {
   };
 
   return (
-    <div>
-      <h4>{isEditMode ? 'Edit Booking' : 'Create New Booking'}</h4>
-      <div className="form-container">
-        <div className="page-header">
+    <div className="form-container">
+      <div className='title'>{isEditMode ? 'Edit Booking' : 'Create New Booking'}</div>
+      <div className="form-card">
+        <div className="form-body">
           <form onSubmit={handleSubmit} id="bookingForm">
             <div className="form-note">
               <span className="required">*</span> Field is mandatory
@@ -788,15 +788,14 @@ function SubdealerNewBooking() {
                     </div>
                   </div>
                 )}
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
               </>
             )}
 
-            {/* Rest of the tabs remain the same */}
             {activeTab === 2 && (
               <>
                 <div className="user-details">
@@ -854,18 +853,17 @@ function SubdealerNewBooking() {
                     </CInputGroup>
                   </div>
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(1)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(1)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
               </>
             )}
 
-            {/* Tabs 3-6 remain unchanged */}
             {activeTab === 3 && (
               <>
                 <div className="user-details">
@@ -1087,11 +1085,11 @@ function SubdealerNewBooking() {
                   </div>
                 </div>
 
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(2)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(2)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1143,11 +1141,11 @@ function SubdealerNewBooking() {
                     </>
                   )}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(3)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(3)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1180,11 +1178,11 @@ function SubdealerNewBooking() {
                     <p>No accessories available for this model</p>
                   )}
                 </div>
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(4)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(4)}>
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleNextTab}>
+                  <button type="button" className="submit-button" onClick={handleNextTab}>
                     Next
                   </button>
                 </div>
@@ -1220,11 +1218,11 @@ function SubdealerNewBooking() {
                     </div>
                   </div>
                 )}
-                <div className="booking-button-row">
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(5)}>
+                <div className="form-footer">
+                  <button type="button" className="cancel-button" onClick={() => setActiveTab(5)}>
                     Back
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  <button type="submit" className="submit-button" disabled={isSubmitting}>
                     {isSubmitting ? 'Submitting...' : 'Apply for Approval'}
                   </button>
                 </div>
