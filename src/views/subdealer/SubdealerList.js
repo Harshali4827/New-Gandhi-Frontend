@@ -189,7 +189,6 @@ const SubdealerList = () => {
                   setSearchTerm(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                placeholder="Search subdealers..."
               />
             </div>
           </div>

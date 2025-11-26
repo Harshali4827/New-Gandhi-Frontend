@@ -244,10 +244,7 @@ const PrintModal = ({ show, onClose, bookingId }) => {
                     <td class="left-col">Disbursement Amount assured by finance company</td>
                     <td>${financeDisbursement.toLocaleString('en-IN')}</td>
                 </tr>
-                <tr>
-                    <td class="left-col">Finance Charges</td>
-                    <td>${gcAmount.toLocaleString('en-IN')}</td>
-                </tr>
+            
                 <tr>
                     <td class="left-col">Net Down Payment to be taken from Customer</td>
                     <td>${downPayment.toLocaleString('en-IN')}</td>

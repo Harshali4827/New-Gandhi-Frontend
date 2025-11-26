@@ -307,6 +307,9 @@
 // export default ChassisNumberModal;
 
 
+
+
+
 import React, { useState, useEffect } from 'react';
 import {
   CModal,
@@ -337,48 +340,60 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     documents: []
   });
   const [documentPreviews, setDocumentPreviews] = useState([]);
-  const [note, setNote] = useState('');
-  const [showNoteInput, setShowNoteInput] = useState(false);
-
   const [isDeviation, setIsDeviation] = useState(booking?.is_deviation === 'YES' ? 'YES' : 'NO');
+  const [showNonFifoNote, setShowNonFifoNote] = useState(false);
+  const [nonFifoReason, setNonFifoReason] = useState('');
 
   const isCashPayment = booking?.payment?.type?.toLowerCase() === 'cash';
 
   useEffect(() => {
     if (show && booking) {
       fetchAvailableChassisNumbers();
-      // Reset states when modal opens
-      setNote('');
-      setShowNoteInput(false);
     }
   }, [show, booking]);
+
+  // Reset non-FIFO note when chassis number changes
+  useEffect(() => {
+    if (chassisNumber && availableChassisData.length > 0) {
+      const selectedChassis = availableChassisData.find(chassis => chassis.chassisNumber === chassisNumber);
+      const oldestChassis = getOldestChassis();
+      
+      // Show note if selected chassis is not the oldest one (ageInDays > oldest chassis age)
+      setShowNonFifoNote(selectedChassis && oldestChassis && selectedChassis.ageInDays !== oldestChassis.ageInDays);
+      
+      // Reset reason when switching back to FIFO chassis
+      if (selectedChassis && selectedChassis.ageInDays === oldestChassis?.ageInDays) {
+        setNonFifoReason('');
+      }
+    }
+  }, [chassisNumber, availableChassisData]);
 
   const fetchAvailableChassisNumbers = async () => {
     try {
       setLoadingChassisNumbers(true);
       const response = await axiosInstance.get(`/vehicles/model/${booking.model._id}/${booking.color._id}/chassis-numbers`);
-      let availableData = response.data.data.chassisNumbers || [];
+      const availableData = response.data.data.chassisNumbers || [];
 
-      // The API returns data in FIFO order (oldest first), so we don't need to sort
-      // Just use the data as it comes from API
+      // Sort by ageInDays (descending) - oldest first (FIFO)
+      const sortedData = [...availableData].sort((a, b) => b.ageInDays - a.ageInDays);
       
       // Store the full data
-      setAvailableChassisData(availableData);
+      setAvailableChassisData(sortedData);
 
       // Extract just the chassis number strings from the objects
-      const chassisNumberStrings = availableData.map((item) => item.chassisNumber);
+      const chassisNumberStrings = sortedData.map((item) => item.chassisNumber);
       setAvailableChassisNumbers(chassisNumberStrings);
+
+      // Auto-select the oldest chassis (FIFO) if not in update mode
+      if (!isUpdate && sortedData.length > 0) {
+        setChassisNumber(sortedData[0].chassisNumber);
+      }
 
       if (isUpdate && booking.chassisNumber && !chassisNumberStrings.includes(booking.chassisNumber)) {
         setAvailableChassisNumbers([booking.chassisNumber, ...chassisNumberStrings]);
-        // Also add current chassis to the beginning of the data array for display
+        // Also add current chassis to the data array for display
         setAvailableChassisData((prev) => [
-          { 
-            chassisNumber: booking.chassisNumber, 
-            age: 'Current', 
-            ageInDays: -1, 
-            addedDate: 'Current' 
-          },
+          { chassisNumber: booking.chassisNumber, age: 'Current', ageInDays: 0, addedDate: 'Current' },
           ...prev
         ]);
       }
@@ -390,24 +405,12 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     }
   };
 
-  const handleChassisNumberChange = (e) => {
-    const selectedChassis = e.target.value;
-    setChassisNumber(selectedChassis);
-
-    // Check if selected chassis is NOT the first one in the list (not FIFO)
-    if (availableChassisData.length > 0 && selectedChassis) {
-      const firstChassis = availableChassisData[0].chassisNumber;
-      const isNotFIFO = selectedChassis !== firstChassis;
-      
-      setShowNoteInput(isNotFIFO);
-      
-      // Clear note if switching back to FIFO selection
-      if (!isNotFIFO) {
-        setNote('');
-      }
-    } else {
-      setShowNoteInput(false);
-    }
+  // Get the oldest chassis (FIFO - first in first out)
+  const getOldestChassis = () => {
+    if (availableChassisData.length === 0) return null;
+    
+    // Since we sorted by ageInDays descending, the first one is the oldest
+    return availableChassisData[0];
   };
 
   const handleDocumentUpload = (e) => {
@@ -444,25 +447,22 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
 
   const handleSubmit = () => {
     if (!chassisNumber.trim()) {
-      showError('Please select a chassis number');
+      showError('Please enter a chassis number');
       return;
     }
-
-    // Check if note is required but not provided
-    if (showNoteInput && !note.trim()) {
-      showError('Please enter a note explaining why you selected a non-FIFO chassis number');
-      return;
-    }
-
     if (isUpdate && !reason.trim()) {
       showError('Please enter a reason for updating');
+      return;
+    }
+    if (showNonFifoNote && !nonFifoReason.trim()) {
+      showError('Please enter a reason for selecting non-FIFO chassis number');
       return;
     }
 
     const payload = {
       chassisNumber: chassisNumber.trim(),
       ...(isUpdate && { reason }),
-      ...(showNoteInput && { note: note.trim() }), // Include note only when non-FIFO selection
+      ...(showNonFifoNote && { note: nonFifoReason.trim() }),
       ...(hasClaim && {
         claimDetails: {
           price: claimDetails.price,
@@ -476,9 +476,20 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     onSave(payload);
   };
 
-  // Get the first (FIFO) chassis number for comparison - this is the OLDEST one
-  const firstChassisNumber = availableChassisData.length > 0 ? availableChassisData[0].chassisNumber : '';
-  const firstChassisAge = availableChassisData.length > 0 ? availableChassisData[0].age : '';
+  const getChassisDisplayText = (chassis) => {
+    const oldestChassis = getOldestChassis();
+    const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
+    
+    let displayText = `${chassis.chassisNumber} (${chassis.age})`;
+    
+    if (chassis.chassisNumber === booking?.chassisNumber) {
+      displayText += ' (Current)';
+    } else if (isOldest) {
+      displayText += ' (Oldest - FIFO)';
+    }
+    
+    return displayText;
+  };
 
   return (
     <CModal visible={show} onClose={onClose} alignment="center" size={hasClaim !== null ? 'lg' : undefined}>
@@ -534,67 +545,37 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
             )}
 
             <div className="mb-3">
-              <CFormLabel htmlFor="chassisNumber">
-                Chassis Number 
-                {firstChassisNumber && (
-                  <small className="text-muted ms-2">
-                    (Oldest available: {firstChassisNumber} - {firstChassisAge})
-                  </small>
-                )}
-              </CFormLabel>
+              <CFormLabel htmlFor="chassisNumber">Chassis Number</CFormLabel>
               {loadingChassisNumbers ? (
                 <div className="text-center">
                   <CSpinner size="sm" />
                   <span className="ms-2">Loading chassis numbers...</span>
                 </div>
               ) : availableChassisNumbers.length > 0 ? (
-                <>
-                  <CFormSelect 
-                    value={chassisNumber} 
-                    onChange={handleChassisNumberChange} 
-                    required
-                  >
-                    <option value="">Select a chassis number</option>
-                    {availableChassisData.map((chassis, index) => (
-                      <option key={chassis.chassisNumber} value={chassis.chassisNumber}>
-                        {chassis.chassisNumber} - {chassis.age}
-                        {index === 0 && ' 🏷️ FIFO First (Oldest)'}
-                        {chassis.chassisNumber === booking?.chassisNumber && ' (Current)'}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                  {firstChassisNumber && chassisNumber === firstChassisNumber && (
-                    <small className="text-success mt-1 d-block">
-                      ✓ You have selected the FIFO (First-In-First-Out) chassis number - Oldest available
-                    </small>
-                  )}
-                  {showNoteInput && (
-                    <small className="text-warning mt-1 d-block">
-                      ⚠️ You have selected a chassis number that is not the oldest available. Please provide a note below.
-                    </small>
-                  )}
-                </>
+                <CFormSelect value={chassisNumber} onChange={(e) => setChassisNumber(e.target.value)} required>
+                  <option value="">Select a chassis number</option>
+                  {availableChassisData.map((chassis) => (
+                    <option key={chassis.chassisNumber} value={chassis.chassisNumber}>
+                      {getChassisDisplayText(chassis)}
+                    </option>
+                  ))}
+                </CFormSelect>
               ) : (
                 <div className="text-danger">No chassis numbers available for this model and color combination</div>
               )}
             </div>
 
-            {showNoteInput && (
+            {showNonFifoNote && (
               <div className="mb-3">
-                <CFormLabel htmlFor="note">
-                  Note for Non-FIFO Selection *
-                </CFormLabel>
-                <CFormTextarea
-                  id="note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Please provide a note explaining why you selected a chassis number that is not the oldest available (non-FIFO)"
+                <CFormLabel htmlFor="nonFifoReason">Reason for Non-FIFO Selection *</CFormLabel>
+                <CFormTextarea 
+                  id="nonFifoReason" 
+                  value={nonFifoReason} 
+                  onChange={(e) => setNonFifoReason(e.target.value)} 
+                  required 
                   rows={3}
-                  required
+                  placeholder="Please explain why you are not selecting the oldest chassis number"
                 />
-                <small className="text-muted">
-                  This note is required when selecting a chassis number other than the oldest available one
-                </small>
               </div>
             )}
 
@@ -692,13 +673,7 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
           <CButton
             color="primary"
             onClick={handleSubmit}
-            disabled={
-              isLoading || 
-              (!chassisNumber) ||
-              (showNoteInput && !note.trim()) ||
-              (isUpdate && !reason.trim()) ||
-              (loadingChassisNumbers || availableChassisNumbers.length === 0)
-            }
+            disabled={isLoading || (!isUpdate && (loadingChassisNumbers || availableChassisNumbers.length === 0))}
           >
             {isLoading ? 'Saving...' : 'Save'}
           </CButton>

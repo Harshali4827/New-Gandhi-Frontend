@@ -269,6 +269,9 @@ const BookingList = () => {
       const formData = new FormData();
       formData.append('chassisNumber', payload.chassisNumber);
       formData.append('is_deviation', payload.is_deviation);
+      if (payload.note) {
+        formData.append('note', payload.note);
+      }
       if (payload.claimDetails) {
         formData.append('hasClaim', 'true');
         formData.append('priceClaim', payload.claimDetails.price);

@@ -158,8 +158,7 @@ function AccessoriesBilling() {
             {
               accessory_id: accessoryId,
               quantity: 1,
-              price: accessory.price,
-              gst_rate: accessory.gst_rate,
+              price: accessory.price, // This price already includes GST
               name: accessory.name,
               part_number: accessory.part_number
             }
@@ -187,25 +186,14 @@ function AccessoriesBilling() {
     });
   };
 
-  const calculateItemTotalWithGst = (item) => {
-    const basePrice = item.price * item.quantity;
-    const gstAmount = basePrice * (item.gst_rate / 100);
-    return basePrice + gstAmount;
+  // Since price already includes GST, we just multiply by quantity
+  const calculateItemTotal = (item) => {
+    return item.price * item.quantity;
   };
 
-  const calculateSubtotal = () => {
-    return formData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  };
-
-  const calculateTotalGst = () => {
-    return formData.items.reduce((sum, item) => {
-      const basePrice = item.price * item.quantity;
-      return sum + basePrice * (item.gst_rate / 100);
-    }, 0);
-  };
-
-  const calculateTotalWithGst = () => {
-    return calculateSubtotal() + calculateTotalGst();
+  // Total is simply the sum of all item totals
+  const calculateTotal = () => {
+    return formData.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   };
 
   const generateInvoiceContent = () => {
@@ -256,8 +244,7 @@ function AccessoriesBilling() {
                 <th>#</th>
                 <th>Item</th>
                 <th>Part Number</th>
-                <th>Price</th>
-                <th>GST Rate</th>
+                <th>Price (incl. GST)</th>
                 <th>Quantity</th>
                 <th>Total (incl. GST)</th>
               </tr>
@@ -271,9 +258,8 @@ function AccessoriesBilling() {
                   <td>${item.name}</td>
                   <td>${item.part_number}</td>
                   <td>₹${item.price.toFixed(2)}</td>
-                  <td>${item.gst_rate}%</td>
                   <td>${item.quantity}</td>
-                  <td>₹${calculateItemTotalWithGst(item).toFixed(2)}</td>
+                  <td>₹${calculateItemTotal(item).toFixed(2)}</td>
                 </tr>
               `
                 )
@@ -281,31 +267,11 @@ function AccessoriesBilling() {
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3" style="text-align: right; font-weight: bold;">
-                  Subtotal:
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td style="font-weight: bold;">₹${calculateSubtotal().toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right; font-weight: bold;">
-                  GST Total:
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td style="font-weight: bold;">₹${calculateTotalGst().toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right; font-weight: bold;">
+                <td colspan="4" style="text-align: right; font-weight: bold;">
                   Grand Total:
                 </td>
-                <td style="font-weight: bold;"></td>
                 <td></td>
-                <td></td>
-                <td style="font-weight: bold;">₹${calculateTotalWithGst().toFixed(2)}</td>
+                <td style="font-weight: bold;">₹${calculateTotal().toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
@@ -724,13 +690,12 @@ function AccessoriesBilling() {
                   {accessories.map((accessory) => {
                     const accessoryId = accessory._id || accessory.id;
                     const isSelected = formData.items.some((a) => a.accessory_id === accessoryId);
-                    const priceWithGst = accessory.price * (1 + accessory.gst_rate / 100);
 
                     return (
                       <div key={accessoryId} className="permission-item accessory-item">
                         <label>
                           <input type="checkbox" checked={isSelected} onChange={() => handleAccessorySelect(accessoryId)} />
-                          {accessory.name} - ₹{priceWithGst.toFixed(2)} (incl. {accessory.gst_rate}% GST)
+                          {accessory.name} - ₹{accessory.price.toFixed(2)} (incl. GST)
                         </label>
                         {isSelected && (
                           <div className="quantity-control">
@@ -758,12 +723,10 @@ function AccessoriesBilling() {
                 <ul>
                   {formData.items.map((item) => (
                     <li key={item.accessory_id}>
-                      {item.name} - ₹{item.price} x {item.quantity} + {item.gst_rate}% GST = ₹{calculateItemTotalWithGst(item).toFixed(2)}
+                      {item.name} - ₹{item.price} x {item.quantity} = ₹{calculateItemTotal(item).toFixed(2)}
                     </li>
                   ))}
-                  <li className="total">Subtotal: ₹{calculateSubtotal().toFixed(2)}</li>
-                  <li className="total">GST Total: ₹{calculateTotalGst().toFixed(2)}</li>
-                  <li className="total">Grand Total: ₹{calculateTotalWithGst().toFixed(2)}</li>
+                  <li className="total">Grand Total: ₹{calculateTotal().toFixed(2)}</li>
                 </ul>
               ) : (
                 <p>No accessories selected</p>

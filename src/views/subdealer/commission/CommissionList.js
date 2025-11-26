@@ -45,6 +45,8 @@ import FileUploadIcon from '@mui/icons-material/FileUpload';
 import AddIcon from '@mui/icons-material/Add';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import { hasPermission } from 'src/utils/permissionUtils';
+import CIcon from '@coreui/icons-react';
+import { cilPlus, cilSearch, cilZoomOut } from '@coreui/icons';
 
 const CommissionList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -113,8 +115,6 @@ const CommissionList = () => {
       });
 
       setPriceHeaders(headers);
-
-      // Set the selected subdealer name for display
       const selected = subdealers.find((s) => s._id === subdealerId);
       if (selected) {
         setSelectedSubdealerName(selected.name || selected.companyName || selected.email);
@@ -296,15 +296,12 @@ const CommissionList = () => {
 
     const searchTerm = searchValue.toLowerCase();
     const filtered = commissionData.filter((commission) => {
-      // Search in model details
       if (commission.model_details?.model_name?.toLowerCase().includes(searchTerm)) {
         return true;
       }
       if (commission.model_details?.type?.toLowerCase().includes(searchTerm)) {
         return true;
       }
-
-      // Search in commission rates
       if (commission.commission_rates) {
         return commission.commission_rates.some(
           (rate) => rate.header_id?.header_key?.toLowerCase().includes(searchTerm) || String(rate.commission_rate).includes(searchTerm)
@@ -322,14 +319,21 @@ const CommissionList = () => {
       <div className="title">{isFilterApplied ? `Subdealer Commission - ${selectedSubdealerName}` : 'Subdealer Commission'}</div>
       
       <CCard className="table-container mt-4">
-        <CCardHeader className="card-header d-flex justify-content-between align-items-center">
-          <div className="button-group">
+        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+          <div>
+            {hasAddPermission && (
+              <Link to="/subdealer/add-commission">
+                <CButton size="sm" className="action-btn me-1">
+                  <CIcon icon={cilPlus} className="me-1" /> Add
+                </CButton>
+              </Link>
+            )}
             <CButton 
               size="sm" 
               className="action-btn me-1"
               onClick={() => setFilterModalVisible(true)}
             >
-              <FilterListIcon className="me-1" /> Filter
+              <CIcon icon={cilSearch} className="me-1" /> Search
             </CButton>
             
             {isFilterApplied && (
@@ -339,7 +343,7 @@ const CommissionList = () => {
                 className="action-btn me-1"
                 onClick={handleClearFilter}
               >
-                <ClearIcon className="me-1" /> Clear
+                <CIcon icon={cilZoomOut} className="me-1" /> Reset Search
               </CButton>
             )}
             
@@ -370,14 +374,7 @@ const CommissionList = () => {
             >
               <FileDownloadIcon className="me-1" /> Export
             </CButton>
-            
-            {hasAddPermission && (
-              <Link to="/subdealer/add-commission">
-                <CButton size="sm" className="action-btn me-1">
-                  <AddIcon className="me-1" /> Add Commission
-                </CButton>
-              </Link>
-            )}
+
           </div>
 
           <div className="d-flex align-items-center">
@@ -521,13 +518,13 @@ const CommissionList = () => {
           <CButton color="secondary" onClick={() => setFilterModalVisible(false)}>
             Cancel
           </CButton>
-          <CButton color="primary" onClick={handleApplyFilter}>
-            Apply Filter
+          <CButton className='submit-button' onClick={handleApplyFilter}>
+            Apply
           </CButton>
         </CModalFooter>
       </CModal>
 
-      {/* Date Range Commission Modal */}
+
       <CModal
         visible={dateRangeModalVisible}
         onClose={() => {
