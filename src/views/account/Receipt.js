@@ -192,9 +192,14 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber}</CTableDataCell>
-                  <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
+                {/*<CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
                   <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell>{booking.balanceAmount || '0'}</CTableDataCell>
+                  <CTableDataCell>{booking.balanceAmount || '0'}</CTableDataCell>*/}
+                  <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+<CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+<CTableDataCell>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
+
+
                   {hasPermission('LEDGER', 'CREATE') && (
                     <CTableDataCell>
                       <CButton 
@@ -307,9 +312,13 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
+                  {/* <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
                   <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'green' }}>{booking.balanceAmount || '0'}</CTableDataCell>
+                  <CTableDataCell style={{ color: 'green' }}>{booking.balanceAmount || '0'}</CTableDataCell> */}
+                  <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+<CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+<CTableDataCell style={{ color: 'green' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
+
                 </CTableRow>
               ))
             )}
@@ -354,9 +363,12 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
+                  {/* <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
                   <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'red' }}>{booking.balanceAmount || '0'}</CTableDataCell>
+                  <CTableDataCell style={{ color: 'red' }}>{booking.balanceAmount || '0'}</CTableDataCell> */}
+                    <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+<CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+<CTableDataCell style={{ color: 'red' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
                 </CTableRow>
               ))
             )}
