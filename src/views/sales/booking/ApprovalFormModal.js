@@ -20,7 +20,7 @@ const ApprovalFormModal = ({ show, onClose, onApprove, actionType = '', isLoadin
       </CModalHeader>
       <CModalBody>
         <div className="mb-3">
-          <CFormLabel htmlFor="approvalNote">Approval Note (Optional)</CFormLabel>
+          <CFormLabel htmlFor="approvalNote">Note</CFormLabel>
           <CFormInput
             id="approvalNote"
             type="text"

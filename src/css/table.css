@@ -478,3 +478,15 @@ details div {
   font-weight: bold;
   font-style: italic;
 }
+/**** claim icon*****/
+
+
+.active-icon {
+  color: #28a745;
+  font-size: 20px;
+}
+
+.inactive-icon {
+  color: #dc3545; 
+  font-size: 20px;
+}

@@ -860,32 +860,64 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
     }
   };
 
+  // const handleStatusUpdate = async (approvalNote) => {
+  //   try {
+  //     setActionLoading(true);
+  //     setShowApprovalModal(false);
+
+  //     const requestBody = {};
+  //     if (approvalNote && approvalNote.trim()) {
+  //       requestBody.approvalNote = approvalNote.trim();
+  //     }
+  //     if (currentAction === 'approve') {
+  //       await axiosInstance.put(`/bookings/${booking.id}/approve`, requestBody);
+  //     } else {
+  //       await axiosInstance.post(`/bookings/${booking.id}/${currentAction}`, requestBody);
+  //     }
+
+  //     showSuccess(`Booking ${currentAction}d successfully!`);
+  //     refreshData();
+  //     onClose();
+  //   } catch (error) {
+  //     console.log(error);
+  //     showError(error);
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // };
+
   const handleStatusUpdate = async (approvalNote) => {
     try {
       setActionLoading(true);
       setShowApprovalModal(false);
-
+  
       const requestBody = {};
       if (approvalNote && approvalNote.trim()) {
-        requestBody.approvalNote = approvalNote.trim();
+        if (currentAction === 'reject') {
+          requestBody.rejectionNote = approvalNote.trim();
+        } else {
+          requestBody.approvalNote = approvalNote.trim();
+        }
       }
+  
       if (currentAction === 'approve') {
         await axiosInstance.put(`/bookings/${booking.id}/approve`, requestBody);
+      } else if (currentAction === 'reject') {
+        await axiosInstance.post(`/bookings/${booking.id}/reject`, requestBody);
       } else {
         await axiosInstance.post(`/bookings/${booking.id}/${currentAction}`, requestBody);
       }
-
+  
       showSuccess(`Booking ${currentAction}d successfully!`);
       refreshData();
       onClose();
     } catch (error) {
-      console.log(error);
-      showError(error);
+      console.log('Error updating status:', error);
+      showError(error.response?.data?.message || `Failed to ${currentAction} booking`);
     } finally {
       setActionLoading(false);
     }
   };
-
   const handleChassisAllocation = async (chassisNumber) => {
     try {
       setChassisLoading(true);
@@ -961,12 +993,11 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
     return <CBadge color="secondary">{status}</CBadge>;
   };
 
-  // Check if booking form should show "Awaiting for Approval"
+ 
   const shouldShowAwaitingApproval = () => {
     return userRole === 'SALES_EXECUTIVE' && booking?.status === 'PENDING_APPROVAL (Discount_Exceeded)';
   };
 
-  // Check if approve/reject buttons should be shown
   const shouldShowApproveRejectButtons = () => {
     return hasActionPermission && 
            (booking?.status === 'PENDING_APPROVAL' || booking?.status === 'PENDING_APPROVAL (Discount_Exceeded)');
@@ -1414,7 +1445,7 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
               )}
             </div>
             <div>
-              <Link to={`/booking-form/${booking.id}`} className="submit-button">
+              <Link to={`/booking-form/${booking.id}`} style={{textDecoration:'none'}} className="submit-button me-1">
                 Edit
               </Link>
               <button className="btn btn-secondary" onClick={onClose}>

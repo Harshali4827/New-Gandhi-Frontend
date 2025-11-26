@@ -1558,7 +1558,7 @@ const BookingList = () => {
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasPermission('BOOKING', 'CREATE') && (
-              <Link to="/booking-form">
+              <Link to="/new-booking">
                 <CButton size="sm" className="action-btn me-1">
                   <CIcon icon={cilPlus} className='icon'/> New Booking
                 </CButton>

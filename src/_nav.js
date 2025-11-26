@@ -106,9 +106,13 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Upload Deal Form & Delivery Challan',
+        // name: 'Upload Deal Form & Delivery Challan',
+        name: <>
+    Upload Deal Form <br /> & Delivery Challan
+  </>,
         to: '/upload-deal',
       },
+      
       
     ],
   },
