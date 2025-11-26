@@ -7,9 +7,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import {
-  cilAccountLogout,
-} from '@coreui/icons'
+import { cilAccountLogout, cilBuilding } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
 import './appHeader.css';
@@ -39,30 +37,38 @@ const AppHeaderDropdown = () => {
         <CAvatar src={avatar8} size="md"/>
       </CDropdownToggle>
       <CDropdownMenu className="pt-0 profile-dropdown-menu" placement="bottom-end" style={{ minWidth: '280px' }}>
-        <div className="px-4 py-4 text-center bg-primary text-white rounded-top">
-          <CAvatar 
-            src={avatar8} 
-            size="xl" 
-            className="border-4 border-white shadow-lg mb-3"
-            style={{ width: '100px', height: '100px' }}
-          />
-          <h4 className="mb-2 fw-bold">{user?.name || 'User Name'}</h4>
-          <p className="mb-2 opacity-75 fs-6">{user?.role || 'User Role'}</p>
-          <div className="d-inline-block bg-white text-primary px-3 py-1 rounded-pill fw-semibold">
-            <i className="cil-building me-2"></i>
-            {user?.branch?.name || 'Branch Name'}
+        <div className="px-3 py-3 bg-primary text-white rounded-top">
+      
+          <div className="d-flex align-items-center mb-3">
+            <CAvatar 
+              src={avatar8} 
+              className="border-3 border-white shadow me-3"
+              style={{ width: '60px', height: '60px' }}
+            />
+            <div className="flex-grow-1">
+              <h6 className="mb-1 fw-bold" style={{ fontSize: '1rem' }}>{user?.name || 'User Name'}</h6>
+              <p className="mb-0 opacity-75" style={{ fontSize: '0.85rem' }}>{user?.role || 'User Role'}</p>
+            </div>
+          </div>
+
+      
+          <div className="d-flex align-items-center bg-white text-primary rounded px-2 py-1">
+         
+            <span className="fw-semibold" style={{ fontSize: '0.85rem' }}>
+              {user?.branch?.name || 'Branch Name'}
+            </span>
           </div>
         </div>
 
-        <CDropdownDivider />
+        <CDropdownDivider className="my-0" />
 
         <CDropdownItem 
           href="#" 
           onClick={handleLogout} 
-          className="text-danger text-center fw-bold py-3"
-          style={{ fontSize: '1.1rem' }}
+          className="text-danger fw-semibold py-2 d-flex align-items-center justify-content-center"
+          style={{ fontSize: '0.9rem' }}
         >
-          <CIcon icon={cilAccountLogout} className="me-2" size="lg" />
+          <CIcon icon={cilAccountLogout} className="me-2" size="sm" />
           Sign Out
         </CDropdownItem>
       </CDropdownMenu>

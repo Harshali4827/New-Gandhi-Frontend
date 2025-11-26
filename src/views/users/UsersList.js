@@ -1,7 +1,7 @@
 import { exportToUserCsv, exportToUserPdf } from 'src/utils/tableExports';
 import '../../css/table.css';
 import '../../css/form.css';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CTable,
   CTableHead,
@@ -15,7 +15,6 @@ import {
   CButton,
   CFormInput,
   CSpinner,
-  CFormSwitch,
   CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
@@ -31,6 +30,8 @@ import {
   React as ReactHook,
   useState as useStateHook,
   useEffect as useEffectHook,
+  Menu,
+  MenuItem,
   getDefaultSearchFields,
   useTableFilter,
   confirmDelete,
@@ -41,13 +42,13 @@ import {
 import { hasPermission } from 'src/utils/permissionUtils.jsx';
 
 const UsersList = () => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState({});
-  const dropdownRefs = useRef({});
 
   const hasEditPermission = hasPermission('USER', 'UPDATE');
   const hasDeletePermission = hasPermission('USER', 'DELETE');
@@ -92,6 +93,16 @@ const UsersList = () => {
     setFilteredData(filtered);
   };
 
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
+
   const handleDelete = async (id) => {
     const result = await confirmDelete();
     if (result.isConfirmed) {
@@ -100,6 +111,7 @@ const UsersList = () => {
         setData(data.filter((user) => user.id !== id));
         setFilteredData(filteredData.filter((user) => user.id !== id));
         showSuccess('User deleted successfully!');
+        handleClose();
       } catch (error) {
         console.log(error);
         let message = 'Failed to delete. Please try again.';
@@ -136,36 +148,6 @@ const UsersList = () => {
       showError('Failed to update user status');
     }
   };
-
-  const toggleDropdown = (id) => {
-    setDropdownOpen(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const newDropdownState = {};
-      let shouldUpdate = false;
-      
-      Object.keys(dropdownRefs.current).forEach(key => {
-        if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
-          newDropdownState[key] = false;
-          shouldUpdate = true;
-        }
-      });
-      
-      if (shouldUpdate) {
-        setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never logged in';
@@ -269,44 +251,33 @@ const UsersList = () => {
                       </CTableDataCell>
                       {showActionColumn && (
                         <CTableDataCell>
-                          <div className="dropdown-container" ref={el => dropdownRefs.current[user.id] = el}>
-                            <CButton 
-                              size="sm"
-                              className='option-button btn-sm'
-                              onClick={() => toggleDropdown(user.id)}
-                            >
-                              <CIcon icon={cilSettings} />
-                              Options
-                            </CButton>
-                            {dropdownOpen[user.id] && (
-                              <div className="dropdown-menu show">
-                                {hasEditPermission && (
-                                  <Link 
-                                    className="dropdown-item"
-                                    to={`/users/update-user/${user.id}`}
-                                  >
-                                    <CIcon icon={cilPencil} className="me-2" /> Edit
-                                  </Link>
-                                )}
-                                {hasDeletePermission && (
-                                  <button 
-                                    className="dropdown-item"
-                                    onClick={() => handleDelete(user.id)}
-                                  >
-                                    <CIcon icon={cilTrash} className="me-2" /> Delete
-                                  </button>
-                                )}
-                                {/* Uncomment if you want status toggle in dropdown */}
-                                {/* <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleToggleActive(user.id, user.isActive)}
-                                >
-                                  <CIcon icon={user.isActive ? cilBan : cilCheck} className="me-2" />
-                                  {user.isActive ? 'Deactivate' : 'Activate'}
-                                </button> */}
-                              </div>
+                          <CButton
+                            size="sm"
+                            className='option-button btn-sm'
+                            onClick={(event) => handleClick(event, user.id)}
+                          >
+                            <CIcon icon={cilSettings} />
+                            Options
+                          </CButton>
+                          <Menu 
+                            id={`action-menu-${user.id}`} 
+                            anchorEl={anchorEl} 
+                            open={menuId === user.id} 
+                            onClose={handleClose}
+                          >
+                            {hasEditPermission && (
+                              <Link className="Link" to={`/users/update-user/${user.id}`}>
+                                <MenuItem style={{ color: 'black' }}>
+                                  <CIcon icon={cilPencil} className="me-2" />Edit
+                                </MenuItem>
+                              </Link>
                             )}
-                          </div>
+                            {hasDeletePermission && (
+                              <MenuItem onClick={() => handleDelete(user.id)}>
+                                <CIcon icon={cilTrash} className="me-2" />Delete
+                              </MenuItem>
+                            )}
+                          </Menu>
                         </CTableDataCell>
                       )}
                     </CTableRow>

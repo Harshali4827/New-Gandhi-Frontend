@@ -1,6 +1,6 @@
 import '../../css/table.css';
 import '../../css/form.css';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CTable,
   CTableHead,
@@ -28,6 +28,8 @@ import {
   React as ReactHook,
   useState as useStateHook,
   useEffect as useEffectHook,
+  Menu,
+  MenuItem,
   getDefaultSearchFields,
   useTableFilter,
   confirmDelete,
@@ -38,13 +40,13 @@ import {
 import { hasPermission } from 'src/utils/permissionUtils.jsx';
 
 const AllRoles = () => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState({});
-  const dropdownRefs = useRef({});
   
   const hasEditPermission = hasPermission('ROLE', 'UPDATE');
   const hasDeletePermission = hasPermission('ROLE', 'DELETE');
@@ -83,6 +85,16 @@ const AllRoles = () => {
     setFilteredData(filtered);
   };
 
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
+
   const handleDelete = async (id) => {
     const result = await confirmDelete();
     if (result.isConfirmed) {
@@ -91,42 +103,13 @@ const AllRoles = () => {
         setData(data.filter((role) => role.id !== id));
         setFilteredData(filteredData.filter((role) => role.id !== id));
         showSuccess('Role deleted successfully!');
+        handleClose();
       } catch (error) {
         console.log(error);
         showError(error);
       }
     }
   };
-
-  const toggleDropdown = (id) => {
-    setDropdownOpen(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const newDropdownState = {};
-      let shouldUpdate = false;
-      
-      Object.keys(dropdownRefs.current).forEach(key => {
-        if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
-          newDropdownState[key] = false;
-          shouldUpdate = true;
-        }
-      });
-      
-      if (shouldUpdate) {
-        setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   // Group permissions by module for display
   const groupPermissionsByModule = (permissions) => {
@@ -241,36 +224,33 @@ const AllRoles = () => {
                         </CTableDataCell>
                         {showActionColumn && (
                           <CTableDataCell>
-                            <div className="dropdown-container" ref={el => dropdownRefs.current[role._id || role.id] = el}>
-                              <CButton 
-                                size="sm"
-                                className='option-button btn-sm'
-                                onClick={() => toggleDropdown(role._id || role.id)}
-                              >
-                                <CIcon icon={cilSettings} />
-                                Options
-                              </CButton>
-                              {dropdownOpen[role._id || role.id] && (
-                                <div className="dropdown-menu show">
-                                  {hasEditPermission && (
-                                    <Link 
-                                      className="dropdown-item"
-                                      to={`/roles/update-role/${role._id || role.id}`}
-                                    >
-                                      <CIcon icon={cilPencil} className="me-2" /> Edit
-                                    </Link>
-                                  )}
-                                  {hasDeletePermission && (
-                                    <button 
-                                      className="dropdown-item"
-                                      onClick={() => handleDelete(role._id || role.id)}
-                                    >
-                                      <CIcon icon={cilTrash} className="me-2" /> Delete
-                                    </button>
-                                  )}
-                                </div>
+                            <CButton
+                              size="sm"
+                              className='option-button btn-sm'
+                              onClick={(event) => handleClick(event, role._id || role.id)}
+                            >
+                              <CIcon icon={cilSettings} />
+                              Options
+                            </CButton>
+                            <Menu 
+                              id={`action-menu-${role._id || role.id}`} 
+                              anchorEl={anchorEl} 
+                              open={menuId === (role._id || role.id)} 
+                              onClose={handleClose}
+                            >
+                              {hasEditPermission && (
+                                <Link className="Link" to={`/roles/update-role/${role._id || role.id}`}>
+                                  <MenuItem style={{ color: 'black' }}>
+                                    <CIcon icon={cilPencil} className="me-2" />Edit
+                                  </MenuItem>
+                                </Link>
                               )}
-                            </div>
+                              {hasDeletePermission && (
+                                <MenuItem onClick={() => handleDelete(role._id || role.id)}>
+                                  <CIcon icon={cilTrash} className="me-2" />Delete
+                                </MenuItem>
+                              )}
+                            </Menu>
                           </CTableDataCell>
                         )}
                       </CTableRow>

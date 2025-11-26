@@ -1,6 +1,6 @@
 import '../../css/table.css';
 import '../../css/form.css';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CTable,
   CTableHead,
@@ -14,14 +14,17 @@ import {
   CButton,
   CFormInput,
   CSpinner,
-  CFormSwitch
+  CFormSwitch,
+  CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { 
   cilPlus, 
   cilSettings, 
   cilPencil, 
-  cilTrash
+  cilTrash,
+  cilCheckCircle,
+  cilXCircle
 } from '@coreui/icons';
 import { Link } from 'react-router-dom';
 import { CFormLabel } from '@coreui/react';
@@ -49,8 +52,6 @@ const SubdealerList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState({});
-  const dropdownRefs = useRef({});
 
   const hasEditPermission = hasPermission('SUBDEALER', 'UPDATE');
   const hasDeletePermission = hasPermission('SUBDEALER', 'DELETE');
@@ -80,6 +81,16 @@ const SubdealerList = () => {
     handleFilter(searchValue, getDefaultSearchFields('subdealer'));
   };
 
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
+
   const handleToggleActive = async (subdealerId, currentStatus) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
@@ -92,6 +103,7 @@ const SubdealerList = () => {
         prevData.map((subdealer) => (subdealer.id === subdealerId ? { ...subdealer, status: newStatus } : subdealer))
       );
       showSuccess('Subdealer status updated successfully!');
+      handleClose();
     } catch (error) {
       console.error('Error toggling subdealer status:', error);
       showError('Failed to update subdealer status');
@@ -106,42 +118,13 @@ const SubdealerList = () => {
         setData(data.filter((subdealer) => subdealer.id !== id));
         setFilteredData(filteredData.filter((subdealer) => subdealer.id !== id));
         showSuccess('Subdealer deleted successfully!');
+        handleClose();
       } catch (error) {
         console.log(error);
         showError(error);
       }
     }
   };
-
-  const toggleDropdown = (id) => {
-    setDropdownOpen(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const newDropdownState = {};
-      let shouldUpdate = false;
-      
-      Object.keys(dropdownRefs.current).forEach(key => {
-        if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
-          newDropdownState[key] = false;
-          shouldUpdate = true;
-        }
-      });
-      
-      if (shouldUpdate) {
-        setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -216,43 +199,55 @@ const SubdealerList = () => {
                       <CTableDataCell>{subdealer.rateOfInterest}</CTableDataCell>
                       <CTableDataCell>{subdealer.type}</CTableDataCell>
                       <CTableDataCell>
-                        <CFormSwitch
-                          checked={subdealer.status === 'active'}
-                          onChange={() => handleToggleActive(subdealer.id, subdealer.status)}
-                        />
+                        <CBadge color={subdealer.status === 'active' ? 'success' : 'secondary'}>
+                          {subdealer.status === 'active' ? (
+                            <>
+                              <CIcon icon={cilCheckCircle} className="me-1" />
+                              Active
+                            </>
+                          ) : (
+                            <>
+                              <CIcon icon={cilXCircle} className="me-1" />
+                              Inactive
+                            </>
+                          )}
+                        </CBadge>
                       </CTableDataCell>
                       {showActionColumn && (
                         <CTableDataCell>
-                          <div className="dropdown-container" ref={el => dropdownRefs.current[subdealer.id] = el}>
-                            <CButton 
-                              size="sm"
-                              className='option-button btn-sm'
-                              onClick={() => toggleDropdown(subdealer.id)}
-                            >
-                              <CIcon icon={cilSettings} />
-                              Options
-                            </CButton>
-                            {dropdownOpen[subdealer.id] && (
-                              <div className="dropdown-menu show">
-                                {hasEditPermission && (
-                                  <Link 
-                                    className="dropdown-item"
-                                    to={`/update-subdealer/${subdealer.id}`}
-                                  >
-                                    <CIcon icon={cilPencil} className="me-2" /> Edit
-                                  </Link>
-                                )}
-                                {hasDeletePermission && (
-                                  <button 
-                                    className="dropdown-item"
-                                    onClick={() => handleDelete(subdealer.id)}
-                                  >
-                                    <CIcon icon={cilTrash} className="me-2" /> Delete
-                                  </button>
-                                )}
-                              </div>
+                          <CButton
+                            size="sm"
+                            className='option-button btn-sm'
+                            onClick={(event) => handleClick(event, subdealer.id)}
+                          >
+                            <CIcon icon={cilSettings} />
+                            Options
+                          </CButton>
+                          <Menu 
+                            id={`action-menu-${subdealer.id}`} 
+                            anchorEl={anchorEl} 
+                            open={menuId === subdealer.id} 
+                            onClose={handleClose}
+                          >
+                            {hasEditPermission && (
+                              <Link className="Link" to={`/update-subdealer/${subdealer.id}`}>
+                                <MenuItem style={{ color: 'black' }}>
+                                  <CIcon icon={cilPencil} className="me-2" />Edit
+                                </MenuItem>
+                              </Link>
                             )}
-                          </div>
+                            {hasEditPermission && (
+                              <MenuItem onClick={() => handleToggleActive(subdealer.id, subdealer.status)}>
+                                <CIcon icon={subdealer.status === 'active' ? cilXCircle : cilCheckCircle} className="me-2" /> 
+                                {subdealer.status === 'active' ? 'Deactivate' : 'Activate'}
+                              </MenuItem>
+                            )}
+                            {hasDeletePermission && (
+                              <MenuItem onClick={() => handleDelete(subdealer.id)}>
+                                <CIcon icon={cilTrash} className="me-2" />Delete
+                              </MenuItem>
+                            )}
+                          </Menu>
                         </CTableDataCell>
                       )}
                     </CTableRow>

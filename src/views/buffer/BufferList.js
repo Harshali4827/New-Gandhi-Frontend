@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../css/table.css';
 import '../../css/form.css';
 import {
@@ -33,9 +33,10 @@ import {
   React as ReactHook,
   useState as useStateHook,
   useEffect as useEffectHook,
+  Menu,
+  MenuItem,
   getDefaultSearchFields,
   useTableFilter,
-  confirmDelete,
   showError,
   showSuccess,
   axiosInstance
@@ -43,13 +44,13 @@ import {
 import { hasPermission } from 'src/utils/permissionUtils.jsx';
 
 const BufferList = () => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState({});
-  const dropdownRefs = useRef({});
 
   // Modals state
   const [unfreezeModalVisible, setUnfreezeModalVisible] = useState(false);
@@ -98,41 +99,21 @@ const BufferList = () => {
     setFilteredData(filtered);
   };
 
-  const toggleDropdown = (id) => {
-    setDropdownOpen(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const newDropdownState = {};
-      let shouldUpdate = false;
-      
-      Object.keys(dropdownRefs.current).forEach(key => {
-        if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
-          newDropdownState[key] = false;
-          shouldUpdate = true;
-        }
-      });
-      
-      if (shouldUpdate) {
-        setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
 
   // Unfreeze handlers
   const handleUnfreezeClick = (userId) => {
     setSelectedUserId(userId);
     setUnfreezeModalVisible(true);
-    setDropdownOpen({}); // Close dropdown
+    handleClose();
   };
 
   const confirmUnfreeze = async () => {
@@ -162,7 +143,7 @@ const BufferList = () => {
   const handleExtendTimeClick = (userId) => {
     setSelectedUserId(userId);
     setExtendTimeModalVisible(true);
-    setDropdownOpen({}); // Close dropdown
+    handleClose();
   };
 
   const confirmExtendTime = async () => {
@@ -357,32 +338,27 @@ const BufferList = () => {
                       <CTableDataCell>{formatDate(user.documentBufferTime)}</CTableDataCell>
                       {showActionColumn && (
                         <CTableDataCell>
-                          <div className="dropdown-container" ref={el => dropdownRefs.current[user.id || user._id] = el}>
-                            <CButton 
-                              size="sm"
-                              className='option-button btn-sm'
-                              onClick={() => toggleDropdown(user.id || user._id)}
-                            >
-                              <CIcon icon={cilSettings} />
-                              Options
-                            </CButton>
-                            {dropdownOpen[user.id || user._id] && (
-                              <div className="dropdown-menu show">
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleUnfreezeClick(user.id || user._id)}
-                                >
-                                  <CIcon icon={cilBan} className="me-2" /> Unfreeze
-                                </button>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleExtendTimeClick(user.id || user._id)}
-                                >
-                                  <CIcon icon={cilClock} className="me-2" /> Extend Time
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                          <CButton
+                            size="sm"
+                            className='option-button btn-sm'
+                            onClick={(event) => handleClick(event, user.id || user._id)}
+                          >
+                            <CIcon icon={cilSettings} />
+                            Options
+                          </CButton>
+                          <Menu 
+                            id={`action-menu-${user.id || user._id}`} 
+                            anchorEl={anchorEl} 
+                            open={menuId === (user.id || user._id)} 
+                            onClose={handleClose}
+                          >
+                            <MenuItem onClick={() => handleUnfreezeClick(user.id || user._id)} style={{ color: 'black' }}>
+                              <CIcon icon={cilBan} className="me-2" /> Unfreeze
+                            </MenuItem>
+                            <MenuItem onClick={() => handleExtendTimeClick(user.id || user._id)} style={{ color: 'black' }}>
+                              <CIcon icon={cilClock} className="me-2" /> Extend Time
+                            </MenuItem>
+                          </Menu>
                         </CTableDataCell>
                       )}
                     </CTableRow>

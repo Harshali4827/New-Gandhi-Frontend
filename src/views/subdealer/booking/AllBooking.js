@@ -15,7 +15,7 @@ import {
   showSuccess
 } from 'src/utils/tableImports';
 import CIcon from '@coreui/icons-react';
-import { cilCloudUpload, cilPrint, cilPlus } from '@coreui/icons';
+import { cilCloudUpload, cilPrint, cilPlus, cilSettings } from '@coreui/icons';
 import config from 'src/config.js';
 import KYCView from 'src/views/sales/booking/KYCView';
 import FinanceView from 'src/views/sales/booking/FinanceView';
@@ -363,27 +363,32 @@ const AllBooking = () => {
                     )}
                   </CTableDataCell>
                   <CTableDataCell>
-                    <button className="action-button" onClick={(event) => handleClick(event, booking.id)}>
-                      Action
-                    </button>
+                    <CButton
+                      size="sm"
+                      className='option-button btn-sm'
+                      onClick={(event) => handleClick(event, booking.id)}
+                    >
+                      <CIcon icon={cilSettings} />
+                      Options
+                    </CButton>
 
                     <Menu id={`action-menu-${booking.id}`} anchorEl={anchorEl} open={menuId === booking.id} onClose={handleClose}>
-                      <MenuItem onClick={() => handleViewBooking(booking.id)}>View Booking</MenuItem>
+                      <MenuItem onClick={() => handleViewBooking(booking.id)} style={{ color: 'black' }}>View Booking</MenuItem>
                       <Link className="Link" to={`/update-subdealer-booking/${booking.id}`}>
-                        <MenuItem>Edit</MenuItem>
+                        <MenuItem style={{ color: 'black' }}>Edit</MenuItem>
                       </Link>
                       {booking.payment.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status !== 'NOT_UPLOADED' && (
-                        <MenuItem onClick={() => handleViewFinanceLetter(booking._id)}>View Finance Letter</MenuItem>
+                        <MenuItem onClick={() => handleViewFinanceLetter(booking._id)} style={{ color: 'black' }}>View Finance Letter</MenuItem>
                       )}
                       {booking.documentStatus?.kyc?.status !== 'NOT_UPLOADED' && (
-                        <MenuItem onClick={() => handleViewKYC(booking.id)}>View KYC</MenuItem>
+                        <MenuItem onClick={() => handleViewKYC(booking.id)} style={{ color: 'black' }}>View KYC</MenuItem>
                       )}
                       {tabIndex === 1 && booking.status === 'APPROVED' && (
-                        <MenuItem onClick={() => handleAllocateChassis(booking.id)}>Allocate Chassis</MenuItem>
+                        <MenuItem onClick={() => handleAllocateChassis(booking.id)} style={{ color: 'black' }}>Allocate Chassis</MenuItem>
                       )}
 
                       {tabIndex === 2 && booking.status === 'ALLOCATED' && (
-                        <MenuItem onClick={() => handleUpdateChassis(booking.id)}>Update Chassis</MenuItem>
+                        <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>Update Chassis</MenuItem>
                       )}
                     </Menu>
                   </CTableDataCell>
@@ -426,9 +431,12 @@ const AllBooking = () => {
                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
                 }}
+                placeholder="Search bookings..."
               />
             </div>
           </div>
+
+          {/* Tabs Navigation */}
           <CNav variant="tabs" className="mb-3">
             <CNavItem>
               <CNavLink active={activeTab === 0} onClick={() => setActiveTab(0)}>
