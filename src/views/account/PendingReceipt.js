@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/invoice.css';
 import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, SearchOutlinedIcon, useTableFilter } from 'utils/tableImports';
+import { axiosInstance, SearchOutlinedIcon, useTableFilter } from 'utils/tableImports';
 import '../../css/table.css';
 import UpdateReceipt from './UpdateReceipt';
 function PendingReceipt() {

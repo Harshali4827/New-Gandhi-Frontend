@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, MenuItem } from '@mui/material';
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import '../../../css/table.css';
 import '../../../css/importCsv.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getDefaultSearchFields, useTableFilter } from '../../../utils/tableFilters';
-import { usePagination } from '../../../utils/pagination.jsx';
+import { usePagination } from '../../../utils/pagination.js';
 import axiosInstance from '../../../axiosInstance';
 import { confirmDelete, showError, showSuccess } from '../../../utils/sweetAlerts';
 import { hasPermission } from '../../../utils/permissionUtils';

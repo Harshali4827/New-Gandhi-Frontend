@@ -4,7 +4,7 @@ import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/r
 import CIcon from '@coreui/icons-react';
 import { cilDollar, cilList, cilLocationPin, cilUser } from '@coreui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts.jsx';
+import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts.js';
 import axiosInstance from 'src/axiosInstance.js';
 import FormButtons from 'src/utils/FormButtons';
 

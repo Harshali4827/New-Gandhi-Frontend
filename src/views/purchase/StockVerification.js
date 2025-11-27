@@ -26,7 +26,7 @@ import '../../css/table.css';
 import Swal from 'sweetalert2';
 import { hasPermission } from '../../utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilCheckCircle, cilZoomOut } from '@coreui/icons';
+import { cilCheckCircle, cilZoomOut } from '@coreui/icons';
 
 function StockVerification() {
   const [activeTab, setActiveTab] = useState(0);
@@ -197,10 +197,10 @@ function StockVerification() {
           <CTableHead>
             <CTableRow>
               <CTableHeaderCell scope="col">
-                <CFormCheck
+                {/* <CFormCheck
                   onChange={handleSelectAll}
                   checked={selectedVehicles.length === filteredPendings.length && filteredPendings.length > 0}
-                />
+                /> */}
               </CTableHeaderCell>
               <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
               <CTableHeaderCell scope="col">Type</CTableHeaderCell>

@@ -3,7 +3,6 @@ import '../../css/bill.css';
 import {
   React,
   useEffect,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
@@ -33,7 +32,6 @@ import {
 const AllReceipt = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-  const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -52,25 +50,6 @@ const AllReceipt = () => {
       console.log('Error fetching data', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleViewPdf = async (id) => {
-    try {
-      const response = await axiosInstance.get(`/vouchers/receipt/${id}`, {
-        responseType: 'blob'
-      });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = `receipt_${id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      alert('Failed to download receipt. Please try again.');
     }
   };
 

@@ -58,7 +58,7 @@ const UpdateRTO = ({ show, onClose, bookingData, onSuccess }) => {
       if (response.data.success) {
         setSuccess('RTO application number successfully updated!');
         if (onSuccess) {
-          onSuccess(); // Trigger the refresh in parent component
+          onSuccess();
         }
         setTimeout(() => {
           onClose();

@@ -183,7 +183,10 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Broker Payment Verification',
+        // name: 'Broker Payment Verification',
+        name: <>
+        Broker Payment <br /> Verification
+      </>,
         to: '/broker-payment',
       },
       {

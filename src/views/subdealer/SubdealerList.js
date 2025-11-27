@@ -14,7 +14,6 @@ import {
   CButton,
   CFormInput,
   CSpinner,
-  CFormSwitch,
   CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
@@ -41,8 +40,8 @@ import {
   showError,
   showSuccess,
   axiosInstance
-} from 'src/utils/tableImports.jsx';
-import { hasPermission } from 'src/utils/permissionUtils.jsx';
+} from 'src/utils/tableImports.js';
+import { hasPermission } from 'src/utils/permissionUtils.js';
 
 const SubdealerList = () => {
   const [anchorEl, setAnchorEl] = useState(null);

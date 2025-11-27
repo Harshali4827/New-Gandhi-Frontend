@@ -38,8 +38,8 @@ import {
   showError,
   showSuccess,
   axiosInstance
-} from 'src/utils/tableImports.jsx';
-import { hasPermission } from 'src/utils/permissionUtils.jsx';
+} from 'src/utils/tableImports.js';
+import { hasPermission } from 'src/utils/permissionUtils.js';
 
 const UsersList = () => {
   const [anchorEl, setAnchorEl] = useState(null);

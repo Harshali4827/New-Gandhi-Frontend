@@ -14,7 +14,6 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CButton,
   CFormInput,
   CSpinner,
@@ -22,7 +21,7 @@ import {
 } from '@coreui/react';
 import { Link } from 'react-router-dom';
 import CIcon from '@coreui/icons-react';
-import { cilCloudUpload, cilSearch, cilZoomOut, cilZoom } from '@coreui/icons';
+import { cilCloudUpload,cilZoom } from '@coreui/icons';
 import { axiosInstance, getDefaultSearchFields, showError, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
@@ -119,12 +118,6 @@ function RTOPaper() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchTerm('');
-  };
-
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('rto'));
-    else handleApprovedFilter('', getDefaultSearchFields('rto'));
   };
 
   const renderPendingTable = () => {
@@ -273,26 +266,6 @@ function RTOPaper() {
       <div className='title'>RTO Paper Management</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
         
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">

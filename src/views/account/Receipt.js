@@ -14,7 +14,6 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CButton,
   CFormInput,
   CSpinner,
@@ -27,7 +26,7 @@ import ReceiptModal from './ReceiptModal';
 import { confirmVerify } from '../../utils/sweetAlerts';
 import { hasPermission } from '../../utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilPlus, cilCheckCircle } from '@coreui/icons';
+import { cilCheckCircle } from '@coreui/icons';
 
 function Receipt() {
   const [activeTab, setActiveTab] = useState(0);
@@ -152,10 +151,6 @@ function Receipt() {
     setSearchTerm('');
   };
 
-  const handleResetSearch = () => {
-    setSearchTerm('');
-  };
-
   const renderCustomerTable = () => {
     return (
       <div className="responsive-table-wrapper">
@@ -192,9 +187,6 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber}</CTableDataCell>
-                {/*<CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell>{booking.balanceAmount || '0'}</CTableDataCell>*/}
                   <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
 <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
 <CTableDataCell>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
@@ -312,9 +304,6 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  {/* <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'green' }}>{booking.balanceAmount || '0'}</CTableDataCell> */}
                   <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
 <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
 <CTableDataCell style={{ color: 'green' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
@@ -363,9 +352,6 @@ function Receipt() {
                   <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
                   <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  {/* <CTableDataCell>{booking.discountedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell>{booking.receivedAmount || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'red' }}>{booking.balanceAmount || '0'}</CTableDataCell> */}
                     <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
 <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
 <CTableDataCell style={{ color: 'red' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
@@ -442,27 +428,6 @@ function Receipt() {
       <div className='title'>Receipt Management</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
-        
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">
             <CNavItem>

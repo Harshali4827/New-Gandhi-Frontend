@@ -3,7 +3,6 @@ import {
   React,
   useState,
   useEffect,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
@@ -27,8 +26,6 @@ import {
   CSpinner,
   CAlert
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilPlus } from '@coreui/icons';
 
 const Refund = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
@@ -147,7 +144,6 @@ const Refund = () => {
                             className="action-btn"
                             onClick={() => handleAddClick(booking)}
                           >
-                            {/* <CIcon icon={cilPlus} className="me-1" /> */}
                             Add
                           </CButton>
                         </CTableDataCell>
@@ -160,7 +156,6 @@ const Refund = () => {
           </div>
         </CCardBody>
       </CCard>
-      {/* <PaginationOptions /> */}
       
       <RefundModel show={showModal} onClose={() => setShowModal(false)} bookingData={selectedBooking} />
     </div>

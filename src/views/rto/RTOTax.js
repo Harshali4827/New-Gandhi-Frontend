@@ -14,19 +14,16 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
-  CButton,
   CFormCheck,
   CSpinner,
-  CFormLabel
+  CFormLabel,
+  CButton
 } from '@coreui/react';
 import { axiosInstance, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
 import { showError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import { hasPermission } from '../../utils/permissionUtils';
-import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilCheckCircle } from '@coreui/icons';
 
 function RTOTax() {
   const [activeTab, setActiveTab] = useState(0);
@@ -168,13 +165,6 @@ function RTOTax() {
     setSearchTerm('');
     setReceiptNoSearch('');
   };
-
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    setReceiptNoSearch('');
-    setFilteredPendings(pendingData);
-  };
-
   const renderPendingTable = () => {
     return (
       <div className="responsive-table-wrapper">
@@ -312,49 +302,6 @@ function RTOTax() {
       <div className='title'>RTO Tax Management</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            {activeTab === 0 && (
-              <div className="d-flex align-items-center gap-2">
-                <CFormInput
-                  type="text"
-                  placeholder="Receipt Number"
-                  value={receiptNumber}
-                  onChange={(e) => setReceiptNumber(e.target.value)}
-                  style={{ width: '200px' }}
-                  size="sm"
-                />
-                {hasPermission('RTO_PROCESS', 'UPDATE') && (
-                  <CButton 
-                    size="sm" 
-                    className="action-btn"
-                    onClick={handleUpdateSelected}
-                  >
-                    <CIcon icon={cilCheckCircle} className="me-1" />
-                    Update Selected ({selectedRows.length})
-                  </CButton>
-                )}
-              </div>
-            )}
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {(searchTerm || receiptNoSearch) && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
-        
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">
             <CNavItem>
@@ -388,7 +335,29 @@ function RTOTax() {
           </CNav>
 
           <div className="d-flex justify-content-between mb-3">
-            <div></div>
+          <div>
+            {activeTab === 0 && (
+              <div className="d-flex align-items-center gap-2">
+                <CFormInput
+                  type="text"
+                  placeholder="Receipt Number"
+                  value={receiptNumber}
+                  onChange={(e) => setReceiptNumber(e.target.value)}
+                  style={{ width: '200px' }}
+                  size="sm"
+                />
+                {hasPermission('RTO_PROCESS', 'UPDATE') && (
+                  <CButton 
+                    size="sm" 
+                    className="action-btn"
+                    onClick={handleUpdateSelected}
+                  >
+                    Update
+                  </CButton>
+                )}
+              </div>
+            )}
+          </div>
             <div className='d-flex'>
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
               <CFormInput

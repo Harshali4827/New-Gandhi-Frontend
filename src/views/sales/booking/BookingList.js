@@ -1,4 +1,5 @@
 // import '../../../css/table.css';
+// import '../../../css/form.css';
 // import '../../../css/invoice.css';
 // import {
 //   React,
@@ -7,19 +8,16 @@
 //   Link,
 //   Menu,
 //   MenuItem,
-//   SearchOutlinedIcon,
 //   getDefaultSearchFields,
 //   useTableFilter,
 //   usePagination,
 //   showError,
 //   axiosInstance,
 //   showSuccess,
-//   // FaCheckCircle,
-//   // FaTimesCircle,
 //   confirmDelete
 // } from '../../../utils/tableImports';
 // import CIcon from '@coreui/icons-react';
-// import { cilCloudUpload, cilPrint, cilSearch, cilPlus, cilSettings, cilPencil, cilTrash, cilZoomOut } from '@coreui/icons';
+// import { cilCloudUpload, cilPrint,cilPlus, cilSettings, cilPencil, cilTrash, cilZoomOut, cilCheck, cilX, cilCheckCircle, cilXCircle } from '@coreui/icons';
 // import config from '../../../config';
 // import ViewBooking from './BookingDetails';
 // import KYCView from './KYCView';
@@ -43,7 +41,13 @@
 //   CButton,
 //   CFormInput,
 //   CSpinner,
-//   CFormLabel
+//   CFormLabel,
+//   CModal,
+//   CModalHeader,
+//   CModalTitle,
+//   CModalBody,
+//   CModalFooter,
+//   CFormTextarea
 // } from '@coreui/react';
 // import PrintModal from './PrintFinance';
 // import PendingUpdateDetailsModal from './ViewPendingUpdates';
@@ -63,6 +67,13 @@
 //   const [searchTerm, setSearchTerm] = useState('');
 //   const [currentPage, setCurrentPage] = useState(1);
 //   const [totalPages, setTotalPages] = useState(1);
+  
+//   // Chassis Approval Modal States
+//   const [chassisApprovalModal, setChassisApprovalModal] = useState(false);
+//   const [selectedBookingForApproval, setSelectedBookingForApproval] = useState(null);
+//   const [approvalAction, setApprovalAction] = useState('');
+//   const [approvalNote, setApprovalNote] = useState('');
+//   const [approvalLoading, setApprovalLoading] = useState(false);
   
 //   const navigate = useNavigate();
 
@@ -87,10 +98,18 @@
 //     setFilteredData: setFilteredAllocated,
 //     handleFilter: handleAllocatedFilter
 //   } = useTableFilter([]);
+//   const {
+//     data: pendingAllocatedData,
+//     setData: setPendingAllocatedData,
+//     filteredData: filteredPendingAllocated,
+//     setFilteredData: setFilteredPendingAllocated,
+//     handleFilter: handlePendingAllocatedFilter
+//   } = useTableFilter([]);
 
 //   const { currentRecords: pendingRecords, PaginationOptions: PendingPagination } = usePagination(filteredPending);
 //   const { currentRecords: approvedRecords, PaginationOptions: ApprovedPagination } = usePagination(filteredApproved);
 //   const { currentRecords: allocatedRecords, PaginationOptions: AllocatedPagination } = usePagination(filteredAllocated);
+//   const { currentRecords: pendingAllocatedRecords, PaginationOptions: PendingAllocatedPagination } = usePagination(filteredPendingAllocated);
 
 //   const [viewModalVisible, setViewModalVisible] = useState(false);
 //   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -116,6 +135,7 @@
 //   const hasActionPermission = hasPermission('BOOKING', 'BOOKING_ACTIONS');
 //   const hasFinancePermission = hasPermission('FINANCE_LETTER', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
 //   const hasKYCPermission = hasPermission('KYC', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
+//   const hasChassisApprovalPermission = hasPermission('BOOKING', 'CHASSIS_APPROVAL');
 //   const showActionColumn =
 //     hasEditPermission ||
 //     hasDeletePermission ||
@@ -123,7 +143,8 @@
 //     hasFinancePermission ||
 //     hasKYCPermission ||
 //     hasViewPermission ||
-//     hasChassisAllocation;
+//     hasChassisAllocation ||
+//     hasChassisApprovalPermission;
 
 //   useEffect(() => {
 //     fetchData();
@@ -147,6 +168,11 @@
 //       setApprovedData(approvedBookings);
 //       setFilteredApproved(approvedBookings);
 
+//       // Fetch pending allocated data (ON_HOLD status)
+//       const pendingAllocatedBookings = branchBookings.filter((booking) => booking.status === 'ON_HOLD');
+//       setPendingAllocatedData(pendingAllocatedBookings);
+//       setFilteredPendingAllocated(pendingAllocatedBookings);
+
 //       const allocatedBookings = branchBookings.filter((booking) => booking.status === 'ALLOCATED');
 //       setAllocatedData(allocatedBookings);
 //       setFilteredAllocated(allocatedBookings);
@@ -167,6 +193,51 @@
 //   const handleClose = () => {
 //     setAnchorEl(null);
 //     setMenuId(null);
+//   };
+
+//   // Chassis Approval Functions
+//   const handleApproveChassis = (bookingId) => {
+//     setSelectedBookingForApproval(bookingId);
+//     setApprovalAction('APPROVE');
+//     setApprovalNote('');
+//     setChassisApprovalModal(true);
+//     handleClose();
+//   };
+
+//   const handleRejectChassis = (bookingId) => {
+//     setSelectedBookingForApproval(bookingId);
+//     setApprovalAction('REJECT');
+//     setApprovalNote('');
+//     setChassisApprovalModal(true);
+//     handleClose();
+//   };
+
+//   const handleChassisApprovalSubmit = async () => {
+//     if (!approvalNote.trim()) {
+//       showError('Please enter approval note');
+//       return;
+//     }
+
+//     try {
+//       setApprovalLoading(true);
+//       const payload = {
+//         action: approvalAction,
+//         approvalNote: approvalNote.trim()
+//       };
+
+//       await axiosInstance.patch(`/bookings/${selectedBookingForApproval}/approve-chassis`, payload);
+      
+//       showSuccess(`Chassis allocation ${approvalAction === 'APPROVE' ? 'approved' : 'rejected'} successfully!`);
+//       setChassisApprovalModal(false);
+//       setSelectedBookingForApproval(null);
+//       setApprovalNote('');
+//       fetchData();
+//     } catch (error) {
+//       console.error(`Error ${approvalAction === 'APPROVE' ? 'approving' : 'rejecting'} chassis:`, error);
+//       showError(error.response?.data?.message || `Failed to ${approvalAction === 'APPROVE' ? 'approve' : 'reject'} chassis allocation`);
+//     } finally {
+//       setApprovalLoading(false);
+//     }
 //   };
 
 //   const handleViewBooking = async (id) => {
@@ -350,6 +421,8 @@
 //         setFilteredApproved(filteredApproved.filter((booking) => booking._id !== id));
 //         setAllocatedData(allocatedData.filter((booking) => booking._id !== id));
 //         setFilteredAllocated(filteredAllocated.filter((booking) => booking._id !== id));
+//         setPendingAllocatedData(pendingAllocatedData.filter((booking) => booking._id !== id));
+//         setFilteredPendingAllocated(filteredPendingAllocated.filter((booking) => booking._id !== id));
 
 //         showSuccess('Booking deleted successfully');
 //       } catch (error) {
@@ -368,6 +441,7 @@
 //     setSearchTerm('');
 //     if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('booking'));
 //     else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('booking'));
+//     else if (activeTab === 2) handlePendingAllocatedFilter('', getDefaultSearchFields('booking'));
 //     else handleAllocatedFilter('', getDefaultSearchFields('booking'));
 //   };
 
@@ -377,44 +451,46 @@
 //         <CTable striped bordered hover className='responsive-table'>
 //           <CTableHead>
 //             <CTableRow>
-//               <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+//             {tabIndex != 2 &&   <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>}
 //               <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
 //               <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
-//               <CTableHeaderCell scope="col">Type</CTableHeaderCell>
+//               {tabIndex != 2 && <CTableHeaderCell scope="col">Type</CTableHeaderCell>}
 //               <CTableHeaderCell scope="col">Color</CTableHeaderCell>
 //               <CTableHeaderCell scope="col">Fullname</CTableHeaderCell>
-//               <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>
+//               {tabIndex != 2 &&  <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>}
 //               {/* <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell> */}
-//               {tabIndex != 2 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
-//               {tabIndex != 2 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
-//               <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>
+//               {tabIndex != 2 && tabIndex != 3 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
+//               {tabIndex != 2 && tabIndex != 3 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
+//               {tabIndex != 2 &&  <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>}
 //               <CTableHeaderCell scope="col">Status</CTableHeaderCell>
 //               {tabIndex === 0 && <CTableHeaderCell scope="col">Altration Request</CTableHeaderCell>}
 //               {tabIndex === 2 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
 //               {tabIndex === 2 && <CTableHeaderCell scope="col">Is Claim</CTableHeaderCell>}
-//               <CTableHeaderCell scope="col">Print</CTableHeaderCell>
+//               {tabIndex === 3 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
+//               {tabIndex != 2 &&   <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
+//               {tabIndex === 2 &&   <CTableHeaderCell scope="col">Note</CTableHeaderCell>}
 //               {showActionColumn && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
 //             </CTableRow>
 //           </CTableHead>
 //           <CTableBody>
 //             {records.length === 0 ? (
 //               <CTableRow>
-//                 <CTableDataCell colSpan={tabIndex === 2 ? 16 : 15} style={{ color: 'red', textAlign: 'center' }}>
+//                 <CTableDataCell colSpan={tabIndex === 2 || tabIndex === 3 ? 16 : 15} style={{ color: 'red', textAlign: 'center' }}>
 //                   No booking available
 //                 </CTableDataCell>
 //               </CTableRow>
 //             ) : (
 //               records.map((booking, index) => (
 //                 <CTableRow key={index}>
-//                   <CTableDataCell>{index + 1}</CTableDataCell>
+//                     {tabIndex != 2 &&  <CTableDataCell>{index + 1}</CTableDataCell>}
 //                   <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
 //                   <CTableDataCell>{booking.model.model_name || booking.model.name || ''}</CTableDataCell>
-//                   <CTableDataCell>{booking.model.type}</CTableDataCell>
+//                   {tabIndex != 2 &&  <CTableDataCell>{booking.model.type}</CTableDataCell>}
 //                   <CTableDataCell>{booking.color?.name || ''}</CTableDataCell>
 //                   <CTableDataCell>{booking.customerDetails.name || ''}</CTableDataCell>
-//                   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>
+//                   {tabIndex != 2 &&   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>}
 //                   {/* <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell> */}
-//                   {tabIndex != 2 && (
+//                   {tabIndex != 2 && tabIndex != 3 && (
 //                     <CTableDataCell>
 //                       {booking.payment.type === 'FINANCE' && (
 //                         <CButton 
@@ -427,7 +503,7 @@
 //                       )}
 //                     </CTableDataCell>
 //                   )}
-//                   {tabIndex != 2 && (
+//                   {tabIndex != 2 && tabIndex != 3 && (
 //                     <CTableDataCell>
 //                       {booking.payment.type === 'FINANCE' && (
 //                         <>
@@ -455,7 +531,7 @@
 //                       )}
 //                     </CTableDataCell>
 //                   )}
-//                   <CTableDataCell>
+//                    {tabIndex != 2 &&   <CTableDataCell>
 //                     {booking.documentStatus.kyc.status === 'NOT_UPLOADED' ? (
 //                       <Link
 //                         to={`/upload-kyc/${booking.id}`}
@@ -491,7 +567,7 @@
 //                         )}
 //                       </div>
 //                     )}
-//                   </CTableDataCell>
+//                   </CTableDataCell>}
 //                   <CTableDataCell>
 //                     <span className={`status-badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
 //                   </CTableDataCell>
@@ -505,16 +581,17 @@
 //                   {tabIndex === 2 && <CTableDataCell>{booking.chassisNumber}</CTableDataCell>}
 //                   {tabIndex === 2 && (
 //                     <CTableDataCell>
-//                       {/* <span className={`status-text ${booking.status}`}>
-//                         {booking.claimDetails?.hasClaim ? (
-//                           <FaCheckCircle className="status-icon active-icon" />
-//                         ) : (
-//                           <FaTimesCircle className="status-icon inactive-icon" />
-//                         )}
-//                       </span> */}
-//                     </CTableDataCell>
+//                     <span className={`status-text ${booking.status}`}>
+//                       {booking.claimDetails?.hasClaim ? (
+//                         <CIcon icon={cilCheckCircle} className="status-icon active-icon" />
+//                       ) : (
+//                         <CIcon icon={cilXCircle} className="status-icon inactive-icon" />
+//                       )}
+//                     </span>
+//                   </CTableDataCell>
 //                   )}
-//                   <CTableDataCell>
+//                   {tabIndex === 3 && <CTableDataCell>{booking.chassisNumber}</CTableDataCell>}
+//                   {tabIndex != 2 &&      <CTableDataCell>
 //                     {booking.formPath && (
 //                       <>
 //                         {userRole === 'SALES_EXECUTIVE' && booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ? (
@@ -528,7 +605,12 @@
 //                         )}
 //                       </>
 //                     )}
-//                   </CTableDataCell>
+//                   </CTableDataCell>}
+     
+//                   {tabIndex === 2 && <CTableDataCell>
+//                    {booking.note}
+//                   </CTableDataCell>}    
+
 //                   {showActionColumn && (
 //                     <CTableDataCell>
 //                       <CButton
@@ -560,7 +642,7 @@
 
 //                         {hasEditPermission && (
 //                           <>
-//                             {tabIndex != 2 && (
+//                             {tabIndex != 2 && tabIndex != 3 && (
 //                               <Link className="Link" to={`/booking-form/${booking.id}`}>
 //                                 <MenuItem style={{ color: 'black' }}>
 //                                   <CIcon icon={cilPencil} className="me-2" /> Edit
@@ -606,11 +688,22 @@
 //                                   <CIcon icon={cilPencil} className="me-2" /> Allocate Chassis
 //                                 </MenuItem>
 //                               )}
-//                             {tabIndex === 2 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
+//                             {tabIndex === 3 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
 //                               <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>
 //                                 <CIcon icon={cilPencil} className="me-2" /> Update Chassis
 //                               </MenuItem>
 //                             )}
+//                           </>
+//                         )}
+
+//                         {hasChassisAllocation && tabIndex === 2 && booking.status === 'ON_HOLD' && (
+//                           <>
+//                             <MenuItem onClick={() => handleApproveChassis(booking.id)} style={{ color: 'green' }}>
+//                               <CIcon icon={cilCheck} className="me-2" /> Approve Chassis
+//                             </MenuItem>
+//                             <MenuItem onClick={() => handleRejectChassis(booking.id)} style={{ color: 'red' }}>
+//                               <CIcon icon={cilX} className="me-2" /> Reject Chassis
+//                             </MenuItem>
 //                           </>
 //                         )}
 //                       </Menu>
@@ -649,7 +742,7 @@
 //         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
 //           <div>
 //             {hasPermission('BOOKING', 'CREATE') && (
-//               <Link to="/booking-form">
+//               <Link to="/new-booking">
 //                 <CButton size="sm" className="action-btn me-1">
 //                   <CIcon icon={cilPlus} className='icon'/> New Booking
 //                 </CButton>
@@ -717,6 +810,20 @@
 //                   color: 'black'
 //                 }}
 //               >
+//                 Pending Allocated
+//               </CNavLink>
+//             </CNavItem>
+//             <CNavItem>
+//               <CNavLink
+//                 active={activeTab === 3}
+//                 onClick={() => handleTabChange(3)}
+//                 style={{ 
+//                   cursor: 'pointer',
+//                   borderTop: activeTab === 3 ? '4px solid #2759a2' : '3px solid transparent',
+//                   borderBottom: 'none',
+//                   color: 'black'
+//                 }}
+//               >
 //                 Allocated
 //               </CNavLink>
 //             </CNavItem>
@@ -735,6 +842,7 @@
 //                   setSearchTerm(e.target.value);
 //                   if (activeTab === 0) handlePendingFilter(e.target.value, getDefaultSearchFields('booking'));
 //                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
+//                   else if (activeTab === 2) handlePendingAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
 //                   else handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
 //                 }}
 //               />
@@ -751,12 +859,50 @@
 //               {/* <ApprovedPagination /> */}
 //             </CTabPane>
 //             <CTabPane visible={activeTab === 2}>
-//               {renderBookingTable(allocatedRecords, 2)}
+//               {renderBookingTable(pendingAllocatedRecords, 2)}
+//               {/* <PendingAllocatedPagination /> */}
+//             </CTabPane>
+//             <CTabPane visible={activeTab === 3}>
+//               {renderBookingTable(allocatedRecords, 3)}
 //               {/* <AllocatedPagination /> */}
 //             </CTabPane>
 //           </CTabContent>
 //         </CCardBody>
 //       </CCard>
+
+//       {/* Chassis Approval Modal */}
+//       <CModal visible={chassisApprovalModal} onClose={() => setChassisApprovalModal(false)}>
+//         <CModalHeader>
+//           <CModalTitle>
+//             {approvalAction === 'APPROVE' ? 'Approve Chassis Allocation' : 'Reject Chassis Allocation'}
+//           </CModalTitle>
+//         </CModalHeader>
+//         <CModalBody>
+//           <div className="mb-3">
+//             <CFormLabel>
+//               {approvalAction === 'APPROVE' ? 'Approval Note:' : 'Rejection Note:'}
+//             </CFormLabel>
+//             <CFormTextarea
+//               value={approvalNote}
+//               onChange={(e) => setApprovalNote(e.target.value)}
+//               rows={3}
+//             />
+//           </div>
+//         </CModalBody>
+//         <CModalFooter>
+//           <CButton 
+//             className={approvalAction === 'APPROVE' ? 'submit-button' : 'cancel-button'}
+//             onClick={handleChassisApprovalSubmit}
+//             disabled={approvalLoading}
+//           >
+//             {approvalLoading ? (
+//               <CSpinner size="sm" />
+//             ) : (
+//               approvalAction === 'APPROVE' ? 'Approve' : 'Reject'
+//             )}
+//           </CButton>
+//         </CModalFooter>
+//       </CModal>
 
 //       <ViewBooking open={viewModalVisible} onClose={() => setViewModalVisible(false)} booking={selectedBooking} refreshData={fetchData} />
 //       <KYCView
@@ -812,6 +958,8 @@
 // export default BookingList;
 
 
+
+
 import '../../../css/table.css';
 import '../../../css/form.css';
 import '../../../css/invoice.css';
@@ -828,8 +976,6 @@ import {
   showError,
   axiosInstance,
   showSuccess,
-  // FaCheckCircle,
-  // FaTimesCircle,
   confirmDelete
 } from '../../../utils/tableImports';
 import CIcon from '@coreui/icons-react';
@@ -921,11 +1067,19 @@ const BookingList = () => {
     setFilteredData: setFilteredPendingAllocated,
     handleFilter: handlePendingAllocatedFilter
   } = useTableFilter([]);
+  const {
+    data: rejectedData,
+    setData: setRejectedData,
+    filteredData: filteredRejected,
+    setFilteredData: setFilteredRejected,
+    handleFilter: handleRejectedFilter
+  } = useTableFilter([]);
 
   const { currentRecords: pendingRecords, PaginationOptions: PendingPagination } = usePagination(filteredPending);
   const { currentRecords: approvedRecords, PaginationOptions: ApprovedPagination } = usePagination(filteredApproved);
   const { currentRecords: allocatedRecords, PaginationOptions: AllocatedPagination } = usePagination(filteredAllocated);
   const { currentRecords: pendingAllocatedRecords, PaginationOptions: PendingAllocatedPagination } = usePagination(filteredPendingAllocated);
+  const { currentRecords: rejectedRecords, PaginationOptions: RejectedPagination } = usePagination(filteredRejected);
 
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -992,6 +1146,11 @@ const BookingList = () => {
       const allocatedBookings = branchBookings.filter((booking) => booking.status === 'ALLOCATED');
       setAllocatedData(allocatedBookings);
       setFilteredAllocated(allocatedBookings);
+      
+      // Fetch rejected bookings
+      const rejectedBookings = branchBookings.filter((booking) => booking.status === 'REJECTED');
+      setRejectedData(rejectedBookings);
+      setFilteredRejected(rejectedBookings);
       
       setLoading(false);
     } catch (error) {
@@ -1171,13 +1330,13 @@ const BookingList = () => {
         formData.append('hasClaim', 'false');
       }
 
-      await axiosInstance.put(url, formData, {
+      const response = await axiosInstance.put(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      showSuccess(`Chassis number ${isUpdateChassis ? 'updated' : 'allocated'} successfully!`);
+      showSuccess(response.data.message);
       fetchData();
       setShowChassisModal(false);
       setIsUpdateChassis(false);
@@ -1239,6 +1398,8 @@ const BookingList = () => {
         setFilteredAllocated(filteredAllocated.filter((booking) => booking._id !== id));
         setPendingAllocatedData(pendingAllocatedData.filter((booking) => booking._id !== id));
         setFilteredPendingAllocated(filteredPendingAllocated.filter((booking) => booking._id !== id));
+        setRejectedData(rejectedData.filter((booking) => booking._id !== id));
+        setFilteredRejected(filteredRejected.filter((booking) => booking._id !== id));
 
         showSuccess('Booking deleted successfully');
       } catch (error) {
@@ -1258,7 +1419,8 @@ const BookingList = () => {
     if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('booking'));
     else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('booking'));
     else if (activeTab === 2) handlePendingAllocatedFilter('', getDefaultSearchFields('booking'));
-    else handleAllocatedFilter('', getDefaultSearchFields('booking'));
+    else if (activeTab === 3) handleAllocatedFilter('', getDefaultSearchFields('booking'));
+    else handleRejectedFilter('', getDefaultSearchFields('booking'));
   };
 
   const renderBookingTable = (records, tabIndex) => {
@@ -1267,23 +1429,23 @@ const BookingList = () => {
         <CTable striped bordered hover className='responsive-table'>
           <CTableHead>
             <CTableRow>
-            {tabIndex != 2 &&   <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>}
+            {tabIndex != 2 && tabIndex != 4 &&   <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
               <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
-              {tabIndex != 2 && <CTableHeaderCell scope="col">Type</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Type</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Color</CTableHeaderCell>
               <CTableHeaderCell scope="col">Fullname</CTableHeaderCell>
-              {tabIndex != 2 &&  <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 &&  <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>}
               {/* <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell> */}
-              {tabIndex != 2 && tabIndex != 3 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
-              {tabIndex != 2 && tabIndex != 3 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
-              {tabIndex != 2 &&  <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 &&  <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Status</CTableHeaderCell>
               {tabIndex === 0 && <CTableHeaderCell scope="col">Altration Request</CTableHeaderCell>}
               {tabIndex === 2 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
               {tabIndex === 2 && <CTableHeaderCell scope="col">Is Claim</CTableHeaderCell>}
               {tabIndex === 3 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
-              {tabIndex != 2 &&   <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 &&   <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
               {tabIndex === 2 &&   <CTableHeaderCell scope="col">Note</CTableHeaderCell>}
               {showActionColumn && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
             </CTableRow>
@@ -1291,22 +1453,22 @@ const BookingList = () => {
           <CTableBody>
             {records.length === 0 ? (
               <CTableRow>
-                <CTableDataCell colSpan={tabIndex === 2 || tabIndex === 3 ? 16 : 15} style={{ color: 'red', textAlign: 'center' }}>
+                <CTableDataCell colSpan={tabIndex === 2 || tabIndex === 3 || tabIndex === 4 ? 16 : 15} style={{ color: 'red', textAlign: 'center' }}>
                   No booking available
                 </CTableDataCell>
               </CTableRow>
             ) : (
               records.map((booking, index) => (
                 <CTableRow key={index}>
-                    {tabIndex != 2 &&  <CTableDataCell>{index + 1}</CTableDataCell>}
+                    {tabIndex != 2 && tabIndex != 4 &&  <CTableDataCell>{index + 1}</CTableDataCell>}
                   <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
                   <CTableDataCell>{booking.model.model_name || booking.model.name || ''}</CTableDataCell>
-                  {tabIndex != 2 &&  <CTableDataCell>{booking.model.type}</CTableDataCell>}
+                  {tabIndex != 2 && tabIndex != 4 &&  <CTableDataCell>{booking.model.type}</CTableDataCell>}
                   <CTableDataCell>{booking.color?.name || ''}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.name || ''}</CTableDataCell>
-                  {tabIndex != 2 &&   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>}
+                  {tabIndex != 2 && tabIndex != 4 &&   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>}
                   {/* <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell> */}
-                  {tabIndex != 2 && tabIndex != 3 && (
+                  {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
                     <CTableDataCell>
                       {booking.payment.type === 'FINANCE' && (
                         <CButton 
@@ -1319,7 +1481,7 @@ const BookingList = () => {
                       )}
                     </CTableDataCell>
                   )}
-                  {tabIndex != 2 && tabIndex != 3 && (
+                  {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
                     <CTableDataCell>
                       {booking.payment.type === 'FINANCE' && (
                         <>
@@ -1347,7 +1509,7 @@ const BookingList = () => {
                       )}
                     </CTableDataCell>
                   )}
-                   {tabIndex != 2 &&   <CTableDataCell>
+                   {tabIndex != 2 && tabIndex != 4 &&   <CTableDataCell>
                     {booking.documentStatus.kyc.status === 'NOT_UPLOADED' ? (
                       <Link
                         to={`/upload-kyc/${booking.id}`}
@@ -1407,7 +1569,7 @@ const BookingList = () => {
                   </CTableDataCell>
                   )}
                   {tabIndex === 3 && <CTableDataCell>{booking.chassisNumber}</CTableDataCell>}
-                  {tabIndex != 2 &&      <CTableDataCell>
+                  {tabIndex != 2 && tabIndex != 4 &&      <CTableDataCell>
                     {booking.formPath && (
                       <>
                         {userRole === 'SALES_EXECUTIVE' && booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ? (
@@ -1458,7 +1620,7 @@ const BookingList = () => {
 
                         {hasEditPermission && (
                           <>
-                            {tabIndex != 2 && tabIndex != 3 && (
+                            {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
                               <Link className="Link" to={`/booking-form/${booking.id}`}>
                                 <MenuItem style={{ color: 'black' }}>
                                   <CIcon icon={cilPencil} className="me-2" /> Edit
@@ -1470,7 +1632,7 @@ const BookingList = () => {
 
                         {hasDeletePermission && (
                           <>
-                            {tabIndex === 0 && (
+                            {(tabIndex === 0 || tabIndex === 4) && (
                               <MenuItem onClick={() => handleDelete(booking.id)} style={{ color: 'black' }}>
                                 <CIcon icon={cilTrash} className="me-2" /> Delete
                               </MenuItem>
@@ -1564,24 +1726,6 @@ const BookingList = () => {
                 </CButton>
               </Link>
             )}
-            {/* <CButton 
-              size="sm" 
-              className="action-btn me-1"
-              onClick={() => {
-              }}
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )} */}
           </div>
         </CCardHeader>
         
@@ -1643,6 +1787,20 @@ const BookingList = () => {
                 Allocated
               </CNavLink>
             </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 4}
+                onClick={() => handleTabChange(4)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 4 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
+              >
+                Rejected
+              </CNavLink>
+            </CNavItem>
           </CNav>
 
           <div className="d-flex justify-content-between mb-3">
@@ -1659,7 +1817,8 @@ const BookingList = () => {
                   if (activeTab === 0) handlePendingFilter(e.target.value, getDefaultSearchFields('booking'));
                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else if (activeTab === 2) handlePendingAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
-                  else handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
+                  else if (activeTab === 3) handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
+                  else handleRejectedFilter(e.target.value, getDefaultSearchFields('booking'));
                 }}
               />
             </div>
@@ -1681,6 +1840,10 @@ const BookingList = () => {
             <CTabPane visible={activeTab === 3}>
               {renderBookingTable(allocatedRecords, 3)}
               {/* <AllocatedPagination /> */}
+            </CTabPane>
+            <CTabPane visible={activeTab === 4}>
+              {renderBookingTable(rejectedRecords, 4)}
+              {/* <RejectedPagination /> */}
             </CTabPane>
           </CTabContent>
         </CCardBody>

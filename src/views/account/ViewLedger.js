@@ -27,8 +27,6 @@ import {
   CSpinner,
   CAlert
 } from '@coreui/react';
-// import CIcon from '@coreui/icons-react';
-// import { cilEye } from '@coreui/icons';
 
 const ViewLedgers = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
@@ -379,7 +377,6 @@ const ViewLedgers = () => {
                             className="action-btn"
                             onClick={() => handleViewLedger(booking)}
                           >
-                            {/* <CIcon icon={cilEye} className="me-1" /> */}
                             View
                           </CButton>
                         </CTableDataCell>

@@ -3,7 +3,6 @@ import {
   React,
   useState,
   useEffect,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,

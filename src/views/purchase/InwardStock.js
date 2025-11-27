@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilBuilding, cilCheckCircle, cilLocationPin, cilUser } from '@coreui/icons';
+import { CInputGroup, CFormInput, CFormSelect } from '@coreui/react';
+
 import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import FormButtons from '../../utils/FormButtons'

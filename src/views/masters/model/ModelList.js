@@ -539,7 +539,7 @@ import {
   CFormSelect
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilFilter, cilSearch, cilZoomOut } from '@coreui/icons';
+import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle,cilSearch, cilZoomOut } from '@coreui/icons';
 
 const ModelList = () => {
   const [anchorEl, setAnchorEl] = useState(null);

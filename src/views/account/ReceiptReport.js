@@ -27,7 +27,6 @@ const ReceiptReport = () => {
     try {
       setLoading(true);
 
-      // Format dates to YYYY-MM-DD
       const formatDate = (date) => {
         return date.toISOString().split('T')[0];
       };

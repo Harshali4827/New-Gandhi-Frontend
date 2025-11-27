@@ -10,7 +10,7 @@ import '../../css/form.css';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getDefaultSearchFields, useTableFilter } from '../../utils/tableFilters';
-import { usePagination } from '../../utils/pagination.jsx';
+import { usePagination } from '../../utils/pagination.js';
 import axiosInstance from '../../axiosInstance';
 import { confirmDelete, showError, showSuccess } from '../../utils/sweetAlerts';
 import TextField from '@mui/material/TextField';

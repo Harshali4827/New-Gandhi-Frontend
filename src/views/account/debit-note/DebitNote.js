@@ -3,7 +3,6 @@ import {
   React,
   useState,
   useEffect,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
@@ -26,8 +25,6 @@ import {
   CSpinner,
   CAlert
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilPlus } from '@coreui/icons';
 
 const DebitNote = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([])

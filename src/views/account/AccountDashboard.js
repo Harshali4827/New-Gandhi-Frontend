@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Spinner, Alert, Table, Badge, ProgressBar } from 'react-bootstrap';
-import { FiFileText, FiDollarSign, FiPieChart, FiTrendingUp, FiTrendingDown, FiUsers, FiCheckCircle } from 'react-icons/fi';
+import { FiDollarSign, FiPieChart, FiTrendingUp, FiTrendingDown, FiUsers, FiCheckCircle } from 'react-icons/fi';
 import axiosInstance from '../../axiosInstance';
 import '../../css/dashboard.css';
 
