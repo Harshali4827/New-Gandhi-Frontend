@@ -113,18 +113,32 @@ function PaymentVerification() {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchValue('');
+  };
+
+  const handleResetSearch = () => {
+    setSearchValue('');
+  };
+
   return (
     <div>
       <div className='title'>Payment Verification</div>
     
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header'>
-          <CNav variant="tabs" role="tablist" className="border-0">
+        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+          <CNav variant="tabs" className="mb-0 border-bottom">
             <CNavItem>
               <CNavLink
                 active={activeTab === 0}
-                onClick={() => setActiveTab(0)}
-                className={`fw-bold ${activeTab === 0 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(0)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 0 ? '4px solid #2759a2' : '3px solid transparent',
+                  color: 'black',
+                  borderBottom: 'none'
+                }}
               >
                 Payment Verification
                 <CBadge color="danger" className="ms-2">
@@ -135,8 +149,13 @@ function PaymentVerification() {
             <CNavItem>
               <CNavLink
                 active={activeTab === 1}
-                onClick={() => setActiveTab(1)}
-                className={`fw-bold ${activeTab === 1 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(1)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 1 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
               >
                 Verified List
                 <CBadge color="success" className="ms-2">
@@ -154,11 +173,22 @@ function PaymentVerification() {
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
               <CFormInput
                 type="text"
+                style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
                 className="d-inline-block square-search"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search payments..."
+               
               />
+              {searchValue && (
+                <CButton 
+                  size="sm" 
+                  color="secondary" 
+                  className="action-btn ms-2"
+                  onClick={handleResetSearch}
+                >
+                  Reset
+                </CButton>
+              )}
             </div>
           </div>
           
@@ -168,21 +198,21 @@ function PaymentVerification() {
                 <CTable striped bordered hover className='responsive-table'>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                      <CTableHeaderCell>Subdealer Name</CTableHeaderCell>
-                      <CTableHeaderCell>Location</CTableHeaderCell>
-                      <CTableHeaderCell>REF Number</CTableHeaderCell>
-                      <CTableHeaderCell>Bank</CTableHeaderCell>
-                      <CTableHeaderCell>Amount</CTableHeaderCell>
-                      <CTableHeaderCell>Date</CTableHeaderCell>
-                      <CTableHeaderCell>Status</CTableHeaderCell>
-                      <CTableHeaderCell>Action</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Subdealer Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Location</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">REF Number</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Bank</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Amount</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Date</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Status</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredPendingLedgerEntries.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan="9" className="text-center">
+                        <CTableDataCell colSpan="9" style={{ color: 'red', textAlign: 'center' }}>
                           {searchValue ? 'No matching pending payments found' : 'No pending payments available'}
                         </CTableDataCell>
                       </CTableRow>
@@ -204,7 +234,6 @@ function PaymentVerification() {
                           <CTableDataCell>
                             <CButton 
                               size="sm" 
-                              color="success"
                               className="action-btn"
                               onClick={() => handleVerifyPayment(entry)}
                               disabled={entry.approvalStatus !== 'Pending'}
@@ -225,19 +254,19 @@ function PaymentVerification() {
                 <CTable striped bordered hover className='responsive-table'>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                      <CTableHeaderCell>Subdealer Name</CTableHeaderCell>
-                      <CTableHeaderCell>REF Number</CTableHeaderCell>
-                      <CTableHeaderCell>Bank</CTableHeaderCell>
-                      <CTableHeaderCell>Amount</CTableHeaderCell>
-                      <CTableHeaderCell>Date</CTableHeaderCell>
-                      <CTableHeaderCell>Verified By</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Subdealer Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">REF Number</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Bank</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Amount</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Date</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Verified By</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredVerifiedLedgerEntries.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan="7" className="text-center">
+                        <CTableDataCell colSpan="7" style={{ color: 'red', textAlign: 'center' }}>
                           {searchValue ? 'No matching verified payments found' : 'No verified payments available'}
                         </CTableDataCell>
                       </CTableRow>

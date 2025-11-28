@@ -168,7 +168,7 @@ const AllRoles = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search roles..."
+                // placeholder="Search roles..."
               />
             </div>
           </div>

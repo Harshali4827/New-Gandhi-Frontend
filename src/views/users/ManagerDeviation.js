@@ -219,7 +219,7 @@ const ManagerDeviation = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search managers..."
+                // placeholder="Search managers..."
               />
             </div>
           </div>

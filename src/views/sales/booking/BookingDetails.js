@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   CModal,
@@ -90,6 +89,7 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
       setKycActionLoading(false);
     }
   };
+
   const handleStatusUpdate = async (approvalNote) => {
     try {
       setActionLoading(true);
@@ -104,15 +104,31 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
         }
       }
   
+      let response;
       if (currentAction === 'approve') {
-        await axiosInstance.put(`/bookings/${booking.id}/approve`, requestBody);
+        response = await axiosInstance.put(`/bookings/${booking.id}/approve`, requestBody);
       } else if (currentAction === 'reject') {
-        await axiosInstance.post(`/bookings/${booking.id}/reject`, requestBody);
+        response = await axiosInstance.post(`/bookings/${booking.id}/reject`, requestBody);
       } else {
-        await axiosInstance.post(`/bookings/${booking.id}/${currentAction}`, requestBody);
+        response = await axiosInstance.post(`/bookings/${booking.id}/${currentAction}`, requestBody);
       }
   
-      showSuccess(`Booking ${currentAction}d successfully!`);
+      // Use API response message if available, otherwise fallback to static message
+      const successMessage = response?.data?.message || `Booking ${currentAction}d successfully!`;
+      
+      // Show success message with red icon for rejections
+      if (currentAction === 'reject') {
+        Swal.fire({
+          title: 'Success!',
+          text: successMessage,
+          icon: 'success',
+          confirmButtonColor: '#d33',
+          iconColor: '#d33'
+        });
+      } else {
+        showSuccess(successMessage);
+      }
+      
       refreshData();
       onClose();
     } catch (error) {
@@ -122,6 +138,7 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
       setActionLoading(false);
     }
   };
+
   const handleChassisAllocation = async (chassisNumber) => {
     try {
       setChassisLoading(true);
@@ -181,7 +198,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
           >
             <CButton color="primary" size="sm" className="upload-kyc-btn icon-only">
               <CIcon icon={cilCloudUpload} className="me-1" />
-              {/* Upload */}
             </CButton>
           </Link>
         </div>
@@ -197,7 +213,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
     return <CBadge color="secondary">{status}</CBadge>;
   };
 
- 
   const shouldShowAwaitingApproval = () => {
     return userRole === 'SALES_EXECUTIVE' && booking?.status === 'PENDING_APPROVAL (Discount_Exceeded)';
   };
@@ -379,13 +394,11 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
                         <span className="detail-label">HPA:</span>
                         <span className="detail-value">
                           {booking.hpa ? 'Yes' : 'No'}
-                          {/* {booking.hpa && ` (₹${booking.hypothecationCharges})`} */}
                         </span>
                       </div>
                     </CCardBody>
                   </CCard>
 
-                  {/* Customer Information */}
                   <CCard className="booking-section">
                     <CCardHeader>
                       <h5>
@@ -490,7 +503,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
                     </CCardBody>
                   </CCard>
 
-                  {/* Price Components */}
                   <CCard className="booking-section">
                     <CCardHeader>
                       <h5>
@@ -544,7 +556,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
                     </CCardBody>
                   </CCard>
 
-                  {/* Sales Information */}
                   <CCard className="booking-section">
                     <CCardHeader>
                       <h5>
@@ -624,7 +635,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
         <CModalFooter>
           <div className="d-flex justify-content-between w-100">
             <div>
-              {/* Show Approve/Reject buttons based on permission and status */}
               {shouldShowApproveRejectButtons() && (
                 <>
                   <button className="btn btn-success me-2" onClick={() => handleActionClick('approve')} disabled={actionLoading}>
@@ -636,7 +646,6 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
                 </>
               )}
 
-              {/* Show KYC verification buttons */}
               {booking?.documentStatus?.kyc?.status === 'PENDING' && (
                 <>
                   <button className="btn btn-success me-2" onClick={() => handleKycStatusUpdate('APPROVED')} disabled={kycActionLoading}>

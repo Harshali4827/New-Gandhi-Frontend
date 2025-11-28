@@ -301,7 +301,7 @@ const CustomerLedger = () => {
                   setSearchTerm(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                placeholder="Search bookings..."
+                // placeholder="Search bookings..."
               />
             </div>
           </div>

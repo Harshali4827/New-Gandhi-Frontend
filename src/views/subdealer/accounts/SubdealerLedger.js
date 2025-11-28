@@ -98,7 +98,18 @@ function SubdealerLedger() {
   };
 
   const handleSearch = (searchValue) => {
+    setSearchTerm(searchValue);
     handleFilter(searchValue, getDefaultSearchFields('subdealer'));
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchTerm('');
+  };
+
+  const handleResetSearch = () => {
+    setSearchTerm('');
+    handleFilter('', getDefaultSearchFields('subdealer'));
   };
 
   const handleViewLedger = async (subdealer) => {
@@ -381,13 +392,18 @@ function SubdealerLedger() {
       <div className='title'>Subdealer Ledger</div>
     
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header'>
-          <CNav variant="tabs" role="tablist" className="border-0">
+        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+          <CNav variant="tabs" className="mb-0 border-bottom">
             <CNavItem>
               <CNavLink
                 active={activeTab === 0}
-                onClick={() => setActiveTab(0)}
-                className={`fw-bold ${activeTab === 0 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(0)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 0 ? '4px solid #2759a2' : '3px solid transparent',
+                  color: 'black',
+                  borderBottom: 'none'
+                }}
               >
                 Sub Dealer
               </CNavLink>
@@ -395,8 +411,13 @@ function SubdealerLedger() {
             <CNavItem>
               <CNavLink
                 active={activeTab === 1}
-                onClick={() => setActiveTab(1)}
-                className={`fw-bold ${activeTab === 1 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(1)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 1 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
               >
                 Sub Dealer UTR
               </CNavLink>
@@ -413,14 +434,22 @@ function SubdealerLedger() {
                   <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
                   <CFormInput
                     type="text"
+                    style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
                     className="d-inline-block square-search"
                     value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      handleSearch(e.target.value);
-                    }}
-                    placeholder="Search subdealers..."
+                    onChange={(e) => handleSearch(e.target.value)}
+                   
                   />
+                  {searchTerm && (
+                    <CButton 
+                      size="sm" 
+                      color="secondary" 
+                      className="action-btn ms-2"
+                      onClick={handleResetSearch}
+                    >
+                      Reset
+                    </CButton>
+                  )}
                 </div>
               </div>
               
@@ -428,19 +457,19 @@ function SubdealerLedger() {
                 <CTable striped bordered hover className='responsive-table'>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                      <CTableHeaderCell>Name</CTableHeaderCell>
-                      <CTableHeaderCell>Location</CTableHeaderCell>
-                      <CTableHeaderCell>Rate Of Interest</CTableHeaderCell>
-                      <CTableHeaderCell>Discount</CTableHeaderCell>
-                      <CTableHeaderCell>Type</CTableHeaderCell>
-                      <CTableHeaderCell>Action</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Location</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Rate Of Interest</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Discount</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Type</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredData.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan="7" className="text-center">
+                        <CTableDataCell colSpan="7" style={{ color: 'red', textAlign: 'center' }}>
                           No subdealers available
                         </CTableDataCell>
                       </CTableRow>
@@ -515,7 +544,7 @@ function SubdealerLedger() {
                   </small>
                 </CCol>
                 <CCol md={2} className="d-flex align-items-end">
-                  <CButton color="primary" className="w-100">
+                  <CButton className="action-btn w-100">
                     View
                   </CButton>
                 </CCol>

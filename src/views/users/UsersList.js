@@ -213,7 +213,7 @@ const UsersList = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search users..."
+                // placeholder="Search users..."
               />
             </div>
           </div>

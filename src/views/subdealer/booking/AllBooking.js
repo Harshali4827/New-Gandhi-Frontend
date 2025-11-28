@@ -45,7 +45,7 @@ const AllBooking = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(''); // Added missing state
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Data states for each tab
   const [allData, setAllData] = useState([]);
@@ -239,32 +239,44 @@ const AllBooking = () => {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchTerm('');
+  };
+
+  const handleResetSearch = () => {
+    setSearchTerm('');
+    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('booking'));
+    else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('booking'));
+    else handleAllocatedFilter('', getDefaultSearchFields('booking'));
+  };
+
   const renderBookingTable = (records, tabIndex) => {
     return (
       <div className="responsive-table-wrapper">
         <CTable striped bordered hover className='responsive-table'>
           <CTableHead>
             <CTableRow>
-              <CTableHeaderCell>Sr.no</CTableHeaderCell>
-              <CTableHeaderCell>Booking ID</CTableHeaderCell>
-              <CTableHeaderCell>Model Name</CTableHeaderCell>
-              <CTableHeaderCell>Type</CTableHeaderCell>
-              <CTableHeaderCell>Color</CTableHeaderCell>
-              <CTableHeaderCell>Fullname</CTableHeaderCell>
-              <CTableHeaderCell>Contact1</CTableHeaderCell>
-              <CTableHeaderCell>Booking Date</CTableHeaderCell>
-              <CTableHeaderCell>Upload Finance</CTableHeaderCell>
-              <CTableHeaderCell>Upload KYC</CTableHeaderCell>
-              <CTableHeaderCell>Status</CTableHeaderCell>
-              {tabIndex === 2 && <CTableHeaderCell>Chassis Number</CTableHeaderCell>}
-              <CTableHeaderCell>Print</CTableHeaderCell>
-              <CTableHeaderCell>Action</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Type</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Color</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Fullname</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Status</CTableHeaderCell>
+              {tabIndex === 2 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
+              <CTableHeaderCell scope="col">Print</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Action</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
             {records.length === 0 ? (
               <CTableRow>
-                <CTableDataCell colSpan={tabIndex === 2 ? 14 : 13} className="text-center">
+                <CTableDataCell colSpan={tabIndex === 2 ? 14 : 13} style={{ color: 'red', textAlign: 'center' }}>
                   No subdealer bookings available
                 </CTableDataCell>
               </CTableRow>
@@ -294,13 +306,13 @@ const AllBooking = () => {
                               bookingType: 'SUBDEALER'
                             }}
                           >
-                            <CButton size="sm" className="action-btn me-1">
-                              <CIcon icon={cilCloudUpload} className='icon'/> Upload
+                            <CButton size="sm" className="upload-kyc-btn icon-only">
+                              <CIcon icon={cilCloudUpload} />
                             </CButton>
                           </Link>
                         ) : null}
                         {booking.documentStatus.financeLetter.status !== 'NOT_UPLOADED' && (
-                          <span className={`badge bg-${booking.documentStatus.financeLetter.status === 'APPROVED' ? 'success' : 'warning'}`}>
+                          <span className={`status-badge ${booking.documentStatus.financeLetter.status.toLowerCase()}`}>
                             {booking.documentStatus.financeLetter.status}
                           </span>
                         )}
@@ -319,13 +331,13 @@ const AllBooking = () => {
                           bookingType: 'SUBDEALER'
                         }}
                       >
-                        <CButton size="sm" className="action-btn me-1">
-                          <CIcon icon={cilCloudUpload} className='icon'/> Upload
+                        <CButton size="sm" className="upload-kyc-btn icon-only">
+                          <CIcon icon={cilCloudUpload} />
                         </CButton>
                       </Link>
                     ) : (
                       <div className="d-flex align-items-center">
-                        <span className={`badge bg-${booking.documentStatus.kyc.status === 'APPROVED' ? 'success' : 'warning'}`}>
+                        <span className={`status-badge ${booking.documentStatus.kyc.status.toLowerCase()}`}>
                           {booking.documentStatus.kyc.status}
                         </span>
                         {booking.documentStatus.kyc.status === 'REJECTED' && (
@@ -339,8 +351,8 @@ const AllBooking = () => {
                             }}
                             className="ms-2"
                           >
-                            <CButton size="sm" className="action-btn">
-                              <CIcon icon={cilCloudUpload} className='icon'/> Re-upload
+                            <CButton size="sm" className="upload-kyc-btn icon-only">
+                              <CIcon icon={cilCloudUpload} />
                             </CButton>
                           </Link>
                         )}
@@ -348,7 +360,7 @@ const AllBooking = () => {
                     )}
                   </CTableDataCell>
                   <CTableDataCell>
-                    <span className={`badge bg-${booking.status === 'APPROVED' ? 'success' : booking.status === 'ALLOCATED' ? 'info' : 'warning'}`}>
+                    <span className={`status-badge ${booking.status.toLowerCase()}`}>
                       {booking.status}
                     </span>
                   </CTableDataCell>
@@ -356,8 +368,8 @@ const AllBooking = () => {
                   <CTableDataCell>
                     {booking.formPath && (
                       <a href={`${config.baseURL}${booking.formPath}`} target="_blank" rel="noopener noreferrer">
-                        <CButton size="sm" className="action-btn">
-                          <CIcon icon={cilPrint} className='icon'/>
+                        <CButton size="sm" className="upload-kyc-btn icon-only">
+                          <CIcon icon={cilPrint} />
                         </CButton>
                       </a>
                     )}
@@ -413,16 +425,73 @@ const AllBooking = () => {
                 <CIcon icon={cilPlus} className='icon'/> New Booking
               </CButton>
             </Link>
+            {searchTerm && (
+              <CButton 
+                size="sm" 
+                color="secondary" 
+                className="action-btn me-1"
+                onClick={handleResetSearch}
+              >
+                Reset Search
+              </CButton>
+            )}
           </div>
         </CCardHeader>
         
         <CCardBody>
+          {/* Tabs Navigation */}
+          <CNav variant="tabs" className="mb-3 border-bottom">
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 0}
+                onClick={() => handleTabChange(0)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 0 ? '4px solid #2759a2' : '3px solid transparent',
+                  color: 'black',
+                  borderBottom: 'none'
+                }}
+              >
+                Pending Approvals
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 1}
+                onClick={() => handleTabChange(1)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 1 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
+              >
+                Approved
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 2}
+                onClick={() => handleTabChange(2)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 2 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
+              >
+                Allocated
+              </CNavLink>
+            </CNavItem>
+          </CNav>
+
           <div className="d-flex justify-content-between mb-3">
             <div></div>
             <div className='d-flex'>
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
               <CFormInput
                 type="text"
+                style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => {
@@ -431,29 +500,10 @@ const AllBooking = () => {
                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
                 }}
-                placeholder="Search bookings..."
+               
               />
             </div>
           </div>
-
-          {/* Tabs Navigation */}
-          <CNav variant="tabs" className="mb-3">
-            <CNavItem>
-              <CNavLink active={activeTab === 0} onClick={() => setActiveTab(0)}>
-                Pending Approvals
-              </CNavLink>
-            </CNavItem>
-            <CNavItem>
-              <CNavLink active={activeTab === 1} onClick={() => setActiveTab(1)}>
-                Approved
-              </CNavLink>
-            </CNavItem>
-            <CNavItem>
-              <CNavLink active={activeTab === 2} onClick={() => setActiveTab(2)}>
-                Allocated
-              </CNavLink>
-            </CNavItem>
-          </CNav>
 
           {/* Tabs Content */}
           <CTabContent>

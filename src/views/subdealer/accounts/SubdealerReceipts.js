@@ -113,18 +113,39 @@ function SubdealerReceipts() {
     handleCompletedBookingsFilter(searchValue, getDefaultSearchFields('booking'));
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPendingSearchTerm('');
+    setCompletedSearchTerm('');
+  };
+
+  const handleResetPendingSearch = () => {
+    setPendingSearchTerm('');
+    handlePendingBookingsFilter('', getDefaultSearchFields('booking'));
+  };
+
+  const handleResetCompletedSearch = () => {
+    setCompletedSearchTerm('');
+    handleCompletedBookingsFilter('', getDefaultSearchFields('booking'));
+  };
+
   return (
     <div>
       <div className='title'>Subdealer Receipts</div>
     
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header'>
-          <CNav variant="tabs" role="tablist" className="border-0">
+        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+          <CNav variant="tabs" className="mb-0 border-bottom">
             <CNavItem>
               <CNavLink
                 active={activeTab === 0}
-                onClick={() => setActiveTab(0)}
-                className={`fw-bold ${activeTab === 0 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(0)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 0 ? '4px solid #2759a2' : '3px solid transparent',
+                  color: 'black',
+                  borderBottom: 'none'
+                }}
               >
                 Pending Payment
                 <CBadge color="warning" className="ms-2">
@@ -135,8 +156,13 @@ function SubdealerReceipts() {
             <CNavItem>
               <CNavLink
                 active={activeTab === 1}
-                onClick={() => setActiveTab(1)}
-                className={`fw-bold ${activeTab === 1 ? 'text-primary' : 'text-muted'}`}
+                onClick={() => handleTabChange(1)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 1 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
               >
                 Complete Payment
                 <CBadge color="success" className="ms-2">
@@ -156,11 +182,22 @@ function SubdealerReceipts() {
                   <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
                   <CFormInput
                     type="text"
+                    style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
                     className="d-inline-block square-search"
                     value={pendingSearchTerm}
                     onChange={(e) => handlePendingSearch(e.target.value)}
-                    placeholder="Search pending bookings..."
+                  
                   />
+                  {pendingSearchTerm && (
+                    <CButton 
+                      size="sm" 
+                      color="secondary" 
+                      className="action-btn ms-2"
+                      onClick={handleResetPendingSearch}
+                    >
+                      Reset
+                    </CButton>
+                  )}
                 </div>
               </div>
               
@@ -168,22 +205,22 @@ function SubdealerReceipts() {
                 <CTable striped bordered hover className='responsive-table'>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                      <CTableHeaderCell>Booking ID</CTableHeaderCell>
-                      <CTableHeaderCell>Model Name</CTableHeaderCell>
-                      <CTableHeaderCell>Booking Date</CTableHeaderCell>
-                      <CTableHeaderCell>Customer Name</CTableHeaderCell>
-                      <CTableHeaderCell>Chassis Number</CTableHeaderCell>
-                      <CTableHeaderCell>Total</CTableHeaderCell>
-                      <CTableHeaderCell>Received</CTableHeaderCell>
-                      <CTableHeaderCell>Balance</CTableHeaderCell>
-                      {hasPermission('FINANCE_DISBURSEMENT', 'CREATE') && <CTableHeaderCell>Action</CTableHeaderCell>}
+                      <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Total</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Received</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+                      {hasPermission('FINANCE_DISBURSEMENT', 'CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredPendingBookings.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan={hasPermission('FINANCE_DISBURSEMENT', 'CREATE') ? "10" : "9"} className="text-center">
+                        <CTableDataCell colSpan={hasPermission('FINANCE_DISBURSEMENT', 'CREATE') ? "10" : "9"} style={{ color: 'red', textAlign: 'center' }}>
                           {pendingSearchTerm ? 'No matching pending bookings found' : 'No pending bookings available'}
                         </CTableDataCell>
                       </CTableRow>
@@ -205,7 +242,6 @@ function SubdealerReceipts() {
                             <CTableDataCell>
                               <CButton 
                                 size="sm" 
-                                color="primary"
                                 className="action-btn"
                                 onClick={() => handleAddClick(booking)}
                               >
@@ -228,11 +264,22 @@ function SubdealerReceipts() {
                   <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
                   <CFormInput
                     type="text"
+                    style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
                     className="d-inline-block square-search"
                     value={completedSearchTerm}
                     onChange={(e) => handleCompletedSearch(e.target.value)}
-                    placeholder="Search completed payments..."
+                  
                   />
+                  {completedSearchTerm && (
+                    <CButton 
+                      size="sm" 
+                      color="secondary" 
+                      className="action-btn ms-2"
+                      onClick={handleResetCompletedSearch}
+                    >
+                      Reset
+                    </CButton>
+                  )}
                 </div>
               </div>
               
@@ -240,21 +287,21 @@ function SubdealerReceipts() {
                 <CTable striped bordered hover className='responsive-table'>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>Sr.no</CTableHeaderCell>
-                      <CTableHeaderCell>Booking ID</CTableHeaderCell>
-                      <CTableHeaderCell>Model Name</CTableHeaderCell>
-                      <CTableHeaderCell>Booking Date</CTableHeaderCell>
-                      <CTableHeaderCell>Customer Name</CTableHeaderCell>
-                      <CTableHeaderCell>Chassis Number</CTableHeaderCell>
-                      <CTableHeaderCell>Total</CTableHeaderCell>
-                      <CTableHeaderCell>Received</CTableHeaderCell>
-                      <CTableHeaderCell>Balance</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Total</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Received</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredCompletedBookings.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan="9" className="text-center">
+                        <CTableDataCell colSpan="9" style={{ color: 'red', textAlign: 'center' }}>
                           {completedSearchTerm ? 'No matching completed payments found' : 'No completed payments available'}
                         </CTableDataCell>
                       </CTableRow>

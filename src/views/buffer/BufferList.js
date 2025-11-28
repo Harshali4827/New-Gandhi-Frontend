@@ -235,7 +235,7 @@ const BufferList = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search frozen users..."
+                // placeholder="Search frozen users..."
               />
             </div>
           </div>
@@ -250,7 +250,7 @@ const BufferList = () => {
               <CFormTextarea
                 value={unfreezeReason}
                 onChange={(e) => setUnfreezeReason(e.target.value)}
-                placeholder="Enter reason (e.g., Documents have been submitted)"
+                // placeholder="Enter reason (e.g., Documents have been submitted)"
                 rows={3}
               />
             </CModalBody>
@@ -294,7 +294,7 @@ const BufferList = () => {
                       reason: e.target.value
                     })
                   }
-                  placeholder="Additional time needed for document collection"
+                  // placeholder="Additional time needed for document collection"
                   rows={3}
                 />
               </div>

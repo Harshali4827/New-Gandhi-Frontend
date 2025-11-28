@@ -13,7 +13,7 @@ import {
 } from 'src/utils/tableImports';
 import tvsLogo from '../../../assets/images/logo.png';
 import { hasPermission } from 'src/utils/permissionUtils';
-import { cilPrint } from '@coreui/icons';
+import { cilPlus, cilPrint } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
   CCard,
@@ -348,16 +348,16 @@ const OnAccountBalance = () => {
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            {hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') && (
-              <Link to="/subdealer-account/add-amount">
-                <CButton color="primary" className="new-user-btn">
-                  + New Balance
-                </CButton>
-              </Link>
-            )}
-          </div>
-        </CCardHeader>
+  <div>
+    {hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') && (
+      <Link to="/subdealer-account/add-amount">
+        <CButton size="sm" className="action-btn me-1">
+          <CIcon icon={cilPlus} className='icon'/> New Balance
+        </CButton>
+      </Link>
+    )}
+  </div>
+</CCardHeader>
         
         <CCardBody>
           <div className="d-flex justify-content-between mb-3">
@@ -368,7 +368,7 @@ const OnAccountBalance = () => {
                 type="text"
                 className="d-inline-block square-search"
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search subdealers..."
+              
               />
             </div>
           </div>
