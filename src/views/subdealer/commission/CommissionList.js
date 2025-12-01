@@ -333,7 +333,7 @@ const CommissionList = () => {
               className="action-btn me-1"
               onClick={() => setFilterModalVisible(true)}
             >
-              <CIcon icon={cilSearch} className="me-1" /> Search
+              <CIcon icon={cilSearch} className="me-1" /> Filter
             </CButton>
             
             {isFilterApplied && (
