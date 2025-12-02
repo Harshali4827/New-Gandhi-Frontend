@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
+import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CForm, CSpinner } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilLayerGroup, cilCheckCircle } from '@coreui/icons';
+import { cilLayers, cilCheckCircle } from '@coreui/icons'; // Changed cilLayerGroup to cilLayers
 import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
 import FormButtons from '../../../utils/FormButtons';
@@ -14,6 +14,8 @@ function UpdateVerticalMaster() {
     status: 'active'
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -25,36 +27,45 @@ function UpdateVerticalMaster() {
 
   const fetchVertical = async (id) => {
     try {
+      setInitialLoading(true);
       const res = await axiosInstance.get(`/verticle-masters/${id}`);
       const vertical = res.data.data?.verticleMaster;
-      setFormData({
-        name: vertical?.name || '',
-        status: vertical?.status || 'active'
-      });
+      if (vertical) {
+        setFormData({
+          name: vertical.name || '',
+          status: vertical.status || 'active'
+        });
+      }
+      setErrors({});
     } catch (error) {
       console.error('Error fetching vertical master:', error);
       showFormSubmitError('Failed to load vertical master details');
+    } finally {
+      setInitialLoading(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    }
   };
 
   const validateForm = () => {
-    let formErrors = {};
+    const newErrors = {};
     
     if (!formData.name.trim()) {
-      formErrors.name = 'Vertical name is required';
+      newErrors.name = 'Vertical name is required';
     }
     
     if (!formData.status) {
-      formErrors.status = 'Status is required';
+      newErrors.status = 'Status is required';
     }
     
-    return formErrors;
+    return newErrors;
   };
 
   const handleSubmit = async (e) => {
@@ -67,13 +78,24 @@ function UpdateVerticalMaster() {
     }
 
     try {
+      setLoading(true);
+      // Update existing vertical master using PUT
       await axiosInstance.put(`/verticle-masters/${id}`, formData);
       await showFormSubmitToast('Vertical master updated successfully!', () => 
         navigate('/vertical-master/vertical-master-list')
       );
     } catch (error) {
       console.error('Error details:', error);
-      showFormSubmitError(error);
+      
+      // Handle specific error messages from API
+      let errorMessage = 'An error occurred while updating. Please try again.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      showFormSubmitError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,12 +103,20 @@ function UpdateVerticalMaster() {
     navigate('/vertical-master/vertical-master-list');
   };
 
+  if (initialLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <CSpinner color="primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="form-container">
       <div className="title">Edit Vertical Master</div>
       <div className="form-card">
         <div className="form-body">
-          <form onSubmit={handleSubmit}>
+          <CForm onSubmit={handleSubmit}>
             <div className="user-details">
               <div className="input-box">
                 <div className="details-container">
@@ -95,7 +125,7 @@ function UpdateVerticalMaster() {
                 </div>
                 <CInputGroup>
                   <CInputGroupText className="input-icon">
-                    <CIcon icon={cilLayerGroup} />
+                    <CIcon icon={cilLayers} /> {/* Changed to cilLayers */}
                   </CInputGroupText>
                   <CFormInput 
                     type="text" 
@@ -103,6 +133,7 @@ function UpdateVerticalMaster() {
                     value={formData.name} 
                     onChange={handleChange}
                     placeholder="Enter vertical name"
+                    disabled={loading}
                   />
                 </CInputGroup>
                 {errors.name && <p className="error">{errors.name}</p>}
@@ -121,6 +152,7 @@ function UpdateVerticalMaster() {
                     name="status" 
                     value={formData.status} 
                     onChange={handleChange}
+                    disabled={loading}
                   >
                     <option value="">-Select Status-</option>
                     <option value="active">Active</option>
@@ -130,8 +162,12 @@ function UpdateVerticalMaster() {
                 {errors.status && <p className="error">{errors.status}</p>}
               </div>
             </div>
-            <FormButtons onCancel={handleCancel} />
-          </form>
+            <FormButtons 
+              onCancel={handleCancel} 
+              submitText="Update"
+              disabled={loading}
+            />
+          </CForm>
         </div>
       </div>
     </div>
