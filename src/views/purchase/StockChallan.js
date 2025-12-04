@@ -589,7 +589,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
   const generateDeclarationHTML = () => {
     if (declarations.length === 0) {
       return `
-        <b>Declaration</b> - I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
+        I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
         us, However getting the vehicle insured from Insurance company & getting the vehicle registered from RTO is entirely my/our sole
         responsibility. Registration Number alloted by RTO will be acceptable to me as else I will pre book for choise number at RTO at
         my own. Dealership has no role in RTO Number allocation. I/We are exclusively responsible for any loss /personally/legal action
@@ -790,7 +790,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
         </div>
 
         <div class="notes-section">
-          <p class="section-title">Notes:</p>
+          <p class="section-title">Notes: All Standard Fitments Received</p>
           <p class="notes-text">
             ${generateDeclarationHTML()}
           </p>
@@ -814,7 +814,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
     if (declarations.length === 0) {
       return (
         <p className="notes-text">
-          <b>Declaration</b> - I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
+          I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
           us, However getting the vehicle insured from Insurance company & getting the vehicle registered from RTO is entirely my/our sole
           responsibility. Registration Number alloted by RTO will be acceptable to me as else I will pre book for choise number at RTO at my
           own. Dealership has no role in RTO Number allocation. I/We are exclusively responsible for any loss /personally/legal action
@@ -828,19 +828,14 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
     }
 
     return (
-      <>
-        <p>
-          <b>Declaration:</b>
-        </p>
-        <div className="notes-text">
-          {declarations.map((declaration, index) => (
-            <p key={declaration._id}>
-              {declaration.content}
-              {index < declarations.length - 1}
-            </p>
-          ))}
-        </div>
-      </>
+      <div className="notes-text">
+        {declarations.map((declaration, index) => (
+          <p key={declaration._id}>
+            {declaration.content}
+            {index < declarations.length - 1}
+          </p>
+        ))}
+      </div>
     );
   };
 
@@ -916,7 +911,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
         </div>
 
         <div className="notes-section">
-          <p className="section-title">Notes:</p>
+          <p className="section-title">Notes: All Standard Fitments Received</p>
           {generateDeclarationPreview()}
         </div>
 

@@ -806,15 +806,11 @@ function AddUser() {
     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile is required';
     if (!formData.discount) newErrors.discount = 'Discount is required';
     
-    // Validate verticles only for sales_manager or sales_executive roles
-    const selectedRole = roles.find(role => role._id === formData.roleId);
-    if (selectedRole && ['sales_manager', 'sales_executive'].includes(selectedRole.name.toLowerCase())) {
-      if (formData.verticles.length === 0) {
-        newErrors.verticles = 'At least one vertical is required for sales roles';
-      }
-    }
+    // REMOVED: No longer validating verticles as required for any role
+    // Verticles are now optional for all roles
     
     // Validate manager-specific fields
+    const selectedRole = roles.find(role => role._id === formData.roleId);
     if (selectedRole?.name === 'MANAGER') {
       if (!formData.totalDeviationAmount) newErrors.totalDeviationAmount = 'Total Deviation Amount is required';
       if (!formData.perTransactionDeviationLimit) newErrors.perTransactionDeviationLimit = 'Per Transaction Deviation Limit is required';
@@ -836,7 +832,7 @@ function AddUser() {
       email: formData.email,
       mobile: formData.mobile,
       permissions: formData.permissions,
-      verticles: formData.verticles,
+      verticles: formData.verticles, // Verticles are included for all roles, can be empty array
       ...(formData.discount !== '' && { discount: Number(formData.discount) }),
       ...(formData.type === 'subdealer' && { subdealerType: formData.subdealerType }),
       ...(formData.totalDeviationAmount && { totalDeviationAmount: Number(formData.totalDeviationAmount) }),
@@ -866,7 +862,7 @@ function AddUser() {
 
   const selectedRole = roles.find(role => role._id === formData.roleId);
   const isManager = selectedRole?.name === 'MANAGER';
-  const requiresVerticles = selectedRole && ['sales_manager', 'sales_executive'].includes(selectedRole.name.toLowerCase());
+  // REMOVED: No longer restricting verticles to specific roles
 
   const getSelectedVerticalNames = () => {
     return formData.verticles.map(verticalId => {
@@ -1061,62 +1057,61 @@ function AddUser() {
                 {errors.discount && <p className="error">{errors.discount}</p>}
               </div>
 
-              {requiresVerticles && (
-                <div className="input-box">
-                  <div className="details-container">
-                    <span className="details">Verticles</span>
-                    <span className="required">*</span>
-                  </div>
-                  <CInputGroup>
-                    <CInputGroupText className="input-icon">
-                      <CIcon icon={cilTag} />
-                    </CInputGroupText>
-                    <CFormSelect 
-                      name="vertical" 
-                      value="" 
-                      onChange={handleVerticalChange}
-                    >
-                      <option value="">-Select Verticle-</option>
-                      {verticles
-                        .filter(vertical => vertical.status === 'active')
-                        .map(vertical => (
-                          <option 
-                            key={vertical._id} 
-                            value={vertical._id}
-                            disabled={formData.verticles.includes(vertical._id)}
-                          >
-                            {vertical.name}
-                          </option>
-                        ))}
-                    </CFormSelect>
-                  </CInputGroup>
-                  {errors.verticles && <p className="error">{errors.verticles}</p>}
-                  
-                  {/* Display selected verticles as badges */}
-                  <div className="mt-2">
-                    <div className="d-flex flex-wrap gap-2">
-                      {getSelectedVerticalNames().map((verticalName, index) => (
-                        <CBadge 
-                          key={formData.verticles[index]}
-                          color="primary"
-                          className="d-flex align-items-center"
-                          style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}
-                        >
-                          {verticalName}
-                          <CCloseButton 
-                            className="ms-2"
-                            onClick={() => removeVertical(formData.verticles[index])}
-                            style={{ fontSize: '0.75rem' }}
-                          />
-                        </CBadge>
-                      ))}
-                    </div>
-                    <small className="text-muted">
-                      {formData.verticles.length} verticle(s) selected
-                    </small>
-                  </div>
+              {/* Verticles field - now available for all roles and optional */}
+              <div className="input-box">
+                <div className="details-container">
+                  <span className="details">Verticles</span>
+                  {/* Removed required asterisk */}
                 </div>
-              )}
+                <CInputGroup>
+                  <CInputGroupText className="input-icon">
+                    <CIcon icon={cilTag} />
+                  </CInputGroupText>
+                  <CFormSelect 
+                    name="vertical" 
+                    value="" 
+                    onChange={handleVerticalChange}
+                  >
+                    <option value="">-Select Verticle-</option>
+                    {verticles
+                      .filter(vertical => vertical.status === 'active')
+                      .map(vertical => (
+                        <option 
+                          key={vertical._id} 
+                          value={vertical._id}
+                          disabled={formData.verticles.includes(vertical._id)}
+                        >
+                          {vertical.name}
+                        </option>
+                      ))}
+                  </CFormSelect>
+                </CInputGroup>
+                {/* Removed error display for verticles since it's optional */}
+                
+                {/* Display selected verticles as badges */}
+                <div className="mt-2">
+                  <div className="d-flex flex-wrap gap-2">
+                    {getSelectedVerticalNames().map((verticalName, index) => (
+                      <CBadge 
+                        key={formData.verticles[index]}
+                        color="primary"
+                        className="d-flex align-items-center"
+                        style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}
+                      >
+                        {verticalName}
+                        <CCloseButton 
+                          className="ms-2"
+                          onClick={() => removeVertical(formData.verticles[index])}
+                          style={{ fontSize: '0.75rem' }}
+                        />
+                      </CBadge>
+                    ))}
+                  </div>
+                  <small className="text-muted">
+                    {formData.verticles.length} verticle(s) selected (Optional)
+                  </small>
+                </div>
+              </div>
 
               {isManager && (
                 <>

@@ -103,6 +103,7 @@
 
 
 import React from 'react';
+
 const AddBranch = React.lazy(() => import('../views/masters/branch/AddBranch'))
 const BranchList = React.lazy(() => import('../views/masters/branch/BranchList'))
 const AddHeader = React.lazy(() => import('../views/masters/headers/AddHeader'))
@@ -146,6 +147,8 @@ const AddVerticalMaster = React.lazy(() => import('../views/masters/verticlemast
 const VerticalMasterList = React.lazy(() => import('../views/masters/verticlemasters/VerticalMasterList'))
 const UpdateVerticalMaster = React.lazy(() => import('../views/masters/verticlemasters/UpdateVerticalMaster'))
 
+const MinimumBookingAmountList = React.lazy(() => import('../views/masters/minimumbookingamount/MinimumBookingAmountList'))
+
 export const masterRoutes = [
     { path:'/branch/branch-list',name: 'Branch List', element: BranchList},
     { path:'/branch/add-branch',name: 'Add Branch', element: AddBranch},
@@ -157,6 +160,9 @@ export const masterRoutes = [
     { path:'/model/model-list', name:"model List", element:ModelList},
     { path:'/model/add-model', name:"Add Model", element:AddModel},
     { path:'/model/update-model/:id', name:'Update Model', element:UpdateModel},
+
+    { path:'/minimumbookingamount/minimum-booking-amount-list', name:"Minimum Booking Amount List", element:MinimumBookingAmountList},
+    
   
     { path:'/accessories/add-accessories', name:"Add Accessories", element:AddAccessories},
     { path:'/accessories/update-accessories/:id', name:"Add Accessories", element:AddAccessories},

@@ -972,23 +972,49 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     onSave(payload);
   };
 
+  // const getChassisDisplayText = (chassis) => {
+  //   const oldestChassis = getOldestChassis();
+  //   const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
+    
+  //   let displayText = `${chassis.chassisNumber} (${chassis.age})`;
+    
+  //   if (chassis.chassisNumber === booking?.chassisNumber) {
+  //     displayText += ' (Current)';
+  //   } else if (isOldest) {
+  //     displayText += '';
+  //   }
+    
+  //   return displayText;
+  // };
+
+
   const getChassisDisplayText = (chassis) => {
-    const oldestChassis = getOldestChassis();
-    const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
-    
-    let displayText = `${chassis.chassisNumber} (${chassis.age})`;
-    
-    if (chassis.chassisNumber === booking?.chassisNumber) {
-      displayText += ' (Current)';
-    } else if (isOldest) {
-      displayText += '';
+  const oldestChassis = getOldestChassis();
+  const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
+  
+  
+  const isCurrentChassis = chassis.chassisNumber === booking?.chassisNumber;
+  
+  
+  if (isCurrentChassis) {
+    return chassis.chassisNumber;
+  }
+  
+
+  if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
+    const days = chassis.ageInDays;
+    if (days === 0) {
+      return `${chassis.chassisNumber}`;
     }
-    
-    return displayText;
-  };
+    return `${chassis.chassisNumber} (${days} day${days !== 1 ? 's' : ''})`;
+  }
+  
+
+  return chassis.chassisNumber;
+};
 
   const handleCloseModal = () => {
-    // Reset all state before closing
+ 
     setHasClaim(null);
     setShowNonFifoNote(false);
     setNonFifoReason('');

@@ -936,6 +936,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Minimum Booking Amount',
+        to: '/minimumbookingamount/minimum-booking-amount-list',
+      },
+      {
+        component: CNavItem,
         name: 'Accessories',
         to: '/accessories/accessories-list',
       },
