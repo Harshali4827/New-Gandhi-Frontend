@@ -1844,7 +1844,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../../css/form.css';
 import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CFormCheck, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
@@ -1955,6 +1955,9 @@ function BookingForm() {
   const [searchError, setSearchError] = useState('');
 
   const [headerDiscounts, setHeaderDiscounts] = useState({});
+  const [bookingPriceComponents, setBookingPriceComponents] = useState([]);
+  
+  const isInitialBookingLoad = useRef(false);
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -2081,7 +2084,8 @@ function BookingForm() {
   }, [isEditMode, formData.model_id, models]);
 
   useEffect(() => {
-    if (id) {
+    if (id && !isInitialBookingLoad.current) {
+      isInitialBookingLoad.current = true;
       fetchBookingDetails(id);
       setIsEditMode(true);
     }
@@ -2091,26 +2095,29 @@ function BookingForm() {
     try {
       const response = await axiosInstance.get(`/bookings/${bookingId}`);
       const bookingData = response.data.data;
-
-      if (isSalesExecutive && storedUser.branch?._id) {
-        await fetchModels(bookingData.customerType, storedUser.branch._id);
-      } else {
-        await fetchModels(bookingData.customerType, bookingData.branch?._id);
-      }
-
-      await fetchModels(bookingData.customerType, bookingData.branch?._id);
-      const optionalComponents = bookingData.priceComponents?.filter((pc) => pc.header && pc.header._id)?.map((pc) => pc.header._id) || [];
       
-      // Initialize header discounts from booking data
+      // Store price components from booking
+      const priceComponents = bookingData.priceComponents || [];
+      setBookingPriceComponents(priceComponents);
+      
+      // Extract discount amounts from priceComponents for each header
       const initialDiscounts = {};
-      if (bookingData.discounts && bookingData.discounts.length > 0) {
-        bookingData.discounts.forEach(discount => {
-          if (discount.header && discount.header._id) {
-            initialDiscounts[discount.header._id] = discount.discountAmount || '';
+      if (priceComponents.length > 0) {
+        priceComponents.forEach(priceComponent => {
+          if (priceComponent.header && priceComponent.header._id) {
+            const discountAmount = priceComponent.discountAmount || 0;
+            initialDiscounts[priceComponent.header._id] = discountAmount;
           }
         });
       }
+      
+      console.log('Initial discounts from booking API:', initialDiscounts);
       setHeaderDiscounts(initialDiscounts);
+
+      // Fetch models first
+      await fetchModels(bookingData.customerType, bookingData.branch?._id);
+
+      const optionalComponents = priceComponents.filter((pc) => pc.header && pc.header._id)?.map((pc) => pc.header._id) || [];
 
       setFormData({
         model_id: bookingData.model?.id || '',
@@ -2143,7 +2150,7 @@ function BookingForm() {
         emi_plan: bookingData.payment?.emiPlan || '',
         gc_applicable: bookingData.payment?.gcApplicable || false,
         gc_amount: bookingData.payment?.gcAmount || 0,
-        discountType: bookingData.discounts[0]?.type?.toLowerCase() || 'fixed',
+        discountType: bookingData.discounts?.[0]?.type?.toLowerCase() || 'fixed',
         selected_accessories: bookingData.accessories?.map((a) => a.accessory?._id).filter(Boolean) || [],
         hpa: bookingData.hpa || false,
         is_exchange: bookingData.exchange ? 'true' : 'false',
@@ -2159,14 +2166,82 @@ function BookingForm() {
       setAccessoriesTotal(bookingData.accessoriesTotal || 0);
 
       if (bookingData.model?.id) {
-        fetchModels(bookingData.customerType, bookingData.branch?._id);
-        fetchModelHeaders(bookingData.model.id);
+        // Wait a bit for models to load, then fetch headers
+        setTimeout(() => {
+          fetchModelHeadersForEdit(bookingData.model.id, initialDiscounts);
+        }, 1000);
+        
         fetchAccessories(bookingData.model.id);
         fetchModelColors(bookingData.model.id);
       }
     } catch (error) {
       console.error('Error fetching booking details:', error);
       showFormSubmitError('Failed to load booking details');
+    }
+  };
+
+  // Special function to fetch model headers for edit mode
+  const fetchModelHeadersForEdit = async (modelId, existingDiscounts = {}) => {
+    try {
+      console.log('Fetching model headers for edit with existing discounts:', existingDiscounts);
+      
+      const response = await axiosInstance.get(`/models/${modelId}`);
+      const modelData = response.data.data.model;
+      const prices = modelData.prices || [];
+
+      const selectedModel = models.find((model) => model._id === modelId);
+      const mandatoryHeaders = selectedModel?.mandatoryHeaders || [];
+
+      setFormData((prev) => ({
+        ...prev,
+        optionalComponents: [...prev.optionalComponents, ...mandatoryHeaders]
+      }));
+
+      setSelectedModelHeaders(prices);
+      setModelDetails(modelData);
+
+      // IMPORTANT: Debug the structure of prices
+      console.log('Model prices structure:', prices);
+      
+      // Merge existing discounts from booking with new headers
+      const mergedDiscounts = {};
+      
+      prices.forEach(price => {
+        // Check different possible structures for header ID
+        let headerId;
+        
+        if (price.header && price.header._id) {
+          headerId = price.header._id;
+        } else if (price.header_id) {
+          headerId = price.header_id;
+        } else if (price.headerId) {
+          headerId = price.headerId;
+        }
+        
+        if (headerId) {
+          // Check if this header has a discount in the booking data
+          if (existingDiscounts[headerId] !== undefined) {
+            mergedDiscounts[headerId] = existingDiscounts[headerId];
+          } else {
+            // No discount for this header in booking data
+            mergedDiscounts[headerId] = '';
+          }
+        }
+      });
+      
+      console.log('Merged discounts after fetching model headers:', mergedDiscounts);
+      setHeaderDiscounts(mergedDiscounts);
+
+      const accessoriesTotal = calculateAccessoriesTotal(prices);
+      setAccessoriesTotal(accessoriesTotal);
+      
+      fetchModelColors(modelId);
+    } catch (error) {
+      console.error('Failed to fetch model headers:', error);
+      setSelectedModelHeaders([]);
+      setModelDetails(null);
+      setAccessoriesTotal(0);
+      setHeaderDiscounts({});
     }
   };
 
@@ -2455,6 +2530,7 @@ function BookingForm() {
     fetchSalesExecutive();
   }, [formData.branch]);
 
+  // Original fetchModelHeaders function (for new bookings)
   const fetchModelHeaders = async (modelId) => {
     try {
       const response = await axiosInstance.get(`/models/${modelId}`);
@@ -2472,11 +2548,23 @@ function BookingForm() {
       setModelDetails(response.data.data.model);
 
       const initialDiscounts = {};
-      prices
-        .filter(price => price.header && price.header._id)
-        .forEach(price => {
-          initialDiscounts[price.header._id] = '';
-        });
+      prices.forEach(price => {
+        let headerId;
+        
+        if (price.header && price.header._id) {
+          headerId = price.header._id;
+        } else if (price.header_id) {
+          headerId = price.header_id;
+        } else if (price.headerId) {
+          headerId = price.headerId;
+        }
+        
+        if (headerId) {
+          initialDiscounts[headerId] = '';
+        }
+      });
+      
+      console.log('Setting initial discounts for new booking:', initialDiscounts);
       setHeaderDiscounts(initialDiscounts);
 
       const accessoriesTotal = calculateAccessoriesTotal(prices);
@@ -2606,6 +2694,11 @@ function BookingForm() {
         }));
         fetchAccessories(value);
         fetchModelColors(value);
+        if (isEditMode) {
+          fetchModelHeadersForEdit(value, headerDiscounts);
+        } else {
+          fetchModelHeaders(value);
+        }
       }
     }
   };
@@ -2806,6 +2899,13 @@ function BookingForm() {
     }
     const discount = parseFloat(discountValue);
     return Math.max(0, unitPrice - discount);
+  };
+
+  // Debug function to check headerDiscounts
+  const debugHeaderDiscounts = () => {
+    console.log('Current headerDiscounts:', headerDiscounts);
+    console.log('Current formData.model_id:', formData.model_id);
+    console.log('Current models:', models);
   };
 
   return (
@@ -3639,6 +3739,14 @@ function BookingForm() {
                 {getSelectedModelHeaders().length > 0 && (
                   <div className="model-headers-section" style={{ marginTop: '20px' }}>
                     <h5>Model Options</h5>
+                    {/* Debug button */}
+                    <button 
+                      type="button" 
+                      onClick={debugHeaderDiscounts}
+                      style={{ marginBottom: '10px', padding: '5px 10px', backgroundColor: '#f0f0f0', border: '1px solid #ccc' }}
+                    >
+                      Debug Discounts
+                    </button>
                     <div className="table-responsive">
                       <CTable striped hover responsive>
                         <CTableHead>
@@ -3666,9 +3774,10 @@ function BookingForm() {
                               
                               if (!isChecked) return null;
 
-                              const discountValue = headerDiscounts[header._id] || '';
+                              // Get the discount amount from headerDiscounts state
+                              const discountValue = headerDiscounts[header._id] !== undefined ? headerDiscounts[header._id] : '';
                               const unitPrice = price.value || 0;
-                              const discountAmount = discountValue ? parseFloat(discountValue) : 0;
+                              const discountAmount = discountValue !== '' ? parseFloat(discountValue) : 0;
                               const netAmount = unitPrice - discountAmount;
                               
                               // Get GST rate from metadata
