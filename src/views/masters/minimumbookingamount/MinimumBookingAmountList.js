@@ -114,11 +114,8 @@ const MinimumBookingAmountList = () => {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+  const formatPercentage = (amount) => {
+    return `${parseFloat(amount).toFixed(2)}%`;
   };
 
   if (loading) {
@@ -181,7 +178,7 @@ const MinimumBookingAmountList = () => {
                   <CTableHeaderCell>Sr.no</CTableHeaderCell>
                   <CTableHeaderCell>Model Name</CTableHeaderCell>
                   <CTableHeaderCell>Type</CTableHeaderCell>
-                  <CTableHeaderCell>Minimum Amount (₹)</CTableHeaderCell>
+                  <CTableHeaderCell>Minimum Amount (%)</CTableHeaderCell>
                   <CTableHeaderCell>Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -207,7 +204,7 @@ const MinimumBookingAmountList = () => {
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell>
-                        ₹ {formatAmount(item?.min_amount || 0)}
+                        {formatPercentage(item?.min_amount || 0)}
                       </CTableDataCell>
                       <CTableDataCell>
                         <CButton

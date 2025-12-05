@@ -105,9 +105,11 @@ const AddMinimumBookingAmount = ({ show, onClose, onSaved, editingItem }) => {
     }
     
     if (!formData.min_amount) {
-      errors.min_amount = 'Minimum amount is required';
+      errors.min_amount = 'Minimum booking amount percentage is required';
     } else if (isNaN(formData.min_amount) || parseFloat(formData.min_amount) <= 0) {
-      errors.min_amount = 'Please enter a valid positive amount';
+      errors.min_amount = 'Please enter a valid positive percentage';
+    } else if (parseFloat(formData.min_amount) > 100) {
+      errors.min_amount = 'Percentage cannot exceed 100%';
     }
 
     setFormErrors(errors);
@@ -131,10 +133,10 @@ const AddMinimumBookingAmount = ({ show, onClose, onSaved, editingItem }) => {
 
       if (editingItem) {
         await axiosInstance.put(`/booking-min-amount/${editingItem._id}`, payload);
-        onSaved('Minimum booking amount updated successfully');
+        onSaved('Minimum booking amount percentage updated successfully');
       } else {
         await axiosInstance.post('/booking-min-amount', payload);
-        onSaved('Minimum booking amount added successfully');
+        onSaved('Minimum booking amount percentage added successfully');
       }
     } catch (error) {
       console.error('Error saving minimum booking amount:', error);
@@ -250,20 +252,27 @@ const AddMinimumBookingAmount = ({ show, onClose, onSaved, editingItem }) => {
             <CCol md={12}>
               <div className="mb-3">
                 <CFormLabel htmlFor="min_amount">
-                  Minimum Booking Amount (₹) <span className="required">*</span>
+                  Minimum Booking Amount (%) <span className="required">*</span>
                 </CFormLabel>
-                <CFormInput
-                  type="number"
-                  id="min_amount"
-                  name="min_amount"
-                  value={formData.min_amount}
-                  onChange={handleInputChange}
-                  invalid={!!formErrors.min_amount}
-                  disabled={submitting}
-                  step="0.01"
-                  min="0"
-                  placeholder="Enter minimum booking amount"
-                />
+                <div className="input-group">
+                  <CFormInput
+                    type="number"
+                    id="min_amount"
+                    name="min_amount"
+                    value={formData.min_amount}
+                    onChange={handleInputChange}
+                    invalid={!!formErrors.min_amount}
+                    disabled={submitting}
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="Enter minimum booking amount percentage"
+                  />
+                  <span className="input-group-text">%</span>
+                </div>
+                <div className="form-text">
+                  Enter the percentage of total amount (0.01 to 100)
+                </div>
                 {formErrors.min_amount && (
                   <div className="error-text">
                     {formErrors.min_amount}
