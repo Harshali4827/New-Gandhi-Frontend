@@ -279,7 +279,8 @@ import {
   CTableHeaderCell, 
   CTableRow,
   CTableDataCell,
-  CSpinner
+  CSpinner,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilCloudUpload, cilPaperclip } from '@coreui/icons';
@@ -289,10 +290,11 @@ const UploadChallan = () => {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
   const fileInputRef = useRef({});
 
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-  const { currentRecords, PaginationOptions } = usePagination(Array.isArray(filteredData) ? filteredData : []);
+  const { currentRecords } = usePagination(Array.isArray(filteredData) ? filteredData : []);
 
   useEffect(() => {
     fetchData();
@@ -305,6 +307,18 @@ const UploadChallan = () => {
       const transfers = response.data.data.transfers || [];
       setData(transfers);
       setFilteredData(transfers);
+
+      // Check for alert condition
+      const hasOverdueChallan = transfers.some(transfer => 
+        transfer.challanStatus === 'pending' && 
+        transfer.challanInfo?.isOver48Hours === true
+      );
+
+      if (hasOverdueChallan) {
+        setShowAlert(true);
+      } else {
+        setShowAlert(false);
+      }
 
       const inputs = {};
       transfers.forEach((transfer) => {
@@ -373,6 +387,12 @@ const UploadChallan = () => {
   return (
     <div>
       <div className='title'>Upload Stock Transfer Challan</div>
+      
+      {showAlert && (
+        <CAlert color="warning" className="mt-3">
+          48 hours have passed! Please upload the challan immediately.
+        </CAlert>
+      )}
     
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>

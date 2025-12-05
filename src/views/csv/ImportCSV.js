@@ -8,7 +8,6 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, C
 
 const ImportCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFiles = '.csv' }) => {
   const fileInputRef = useRef(null);
-  ``;
   const [isLoading, setIsLoading] = useState(false);
   const [branches, setBranches] = useState([]);
   const [subdealers, setSubdealers] = useState([]);
@@ -183,6 +182,7 @@ const ImportCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFil
               <option value="">-- Select Model Type --</option>
               <option value="EV">EV</option>
               <option value="ICE">ICE</option>
+              <option value="CSD">CSD</option>
             </CFormSelect>
           </div>
 

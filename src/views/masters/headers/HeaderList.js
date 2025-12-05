@@ -774,7 +774,7 @@ const HeadersList = () => {
         </CCardHeader>
         
         <CCardBody>
-        <div className="d-flex justify-content-between mb-3">
+          <div className="d-flex justify-content-between mb-3">
             <div></div>
             <div className='d-flex'>
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
@@ -930,6 +930,7 @@ const HeadersList = () => {
               <option value="">-- Select Model Type --</option>
               <option value="EV">EV</option>
               <option value="ICE">ICE</option>
+              <option value="CSD">CSD</option>
             </CFormSelect>
             {exportErrors.modelType && <div className="invalid-feedback d-block">{exportErrors.modelType}</div>}
           </div>

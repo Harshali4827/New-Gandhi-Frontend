@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/form.css';
 import { CInputGroup, CFormInput, CFormSelect } from '@coreui/react';
-
 import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
-import FormButtons from '../../utils/FormButtons'
+import FormButtons from '../../utils/FormButtons';
 import axiosInstance from '../../axiosInstance';
 
 function InwardStock() {
-
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const hasBranch = !!storedUser.branch?._id;
   const branchId = storedUser.branch?._id;
@@ -24,13 +22,15 @@ function InwardStock() {
     chassisNumber: '',
     engineNumber: '',
     motorNumber: '',
-    chargerNumber: ''
+    chargerNumber: '',
+    vertical: '' // New field
   });
 
   const [errors, setErrors] = useState({});
   const [branches, setBranches] = useState([]);
   const [models, setModels] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
+  const [verticals, setVerticals] = useState([]); // New state for verticals
   const navigate = useNavigate();
   const { id } = useParams();
   const inwardDate = new Date().toISOString().split('T')[0];
@@ -54,7 +54,8 @@ function InwardStock() {
           model_name: vehicle.modelName
         },
         color: vehicle.color || { id: '', name: '' },
-        unloadLocation: vehicle.unloadLocation?._id || ''
+        unloadLocation: vehicle.unloadLocation?._id || '',
+        vertical: vehicle.vertical || '' // Set vertical from API
       });
     } catch (error) {
       console.error('Error fetching inward:', error);
@@ -108,6 +109,23 @@ function InwardStock() {
     fetchBranches();
   }, []);
 
+  // New useEffect to fetch verticals
+  useEffect(() => {
+    const fetchVerticals = async () => {
+      try {
+        const response = await axiosInstance.get('/verticle-masters');
+        const verticalsData = response.data.data?.verticleMasters || response.data.data || [];
+        // Filter only active verticals
+        const activeVerticals = verticalsData.filter(vertical => vertical.status === 'active');
+        setVerticals(activeVerticals);
+      } catch (error) {
+        console.error('Error fetching verticals:', error);
+      }
+    };
+
+    fetchVerticals();
+  }, []);
+
   const validateForm = () => {
     let formErrors = {};
     let isValid = true;
@@ -139,6 +157,11 @@ function InwardStock() {
 
     if (!formData.chassisNumber) {
       formErrors.chassisNumber = 'Chassis number is required';
+      isValid = false;
+    }
+
+    if (!formData.vertical) {
+      formErrors.vertical = 'Vertical is required'; // New validation
       isValid = false;
     }
 
@@ -184,7 +207,8 @@ function InwardStock() {
         chassisNumber: '',
         engineNumber: '',
         motorNumber: '',
-        chargerNumber: ''
+        chargerNumber: '',
+        vertical: '' // Reset vertical when type changes
       }));
     } else if (name === 'model') {
       const selectedModel = models.find((m) => m._id === value);
@@ -234,7 +258,8 @@ function InwardStock() {
         chassisNumber: formData.chassisNumber,
         engineNumber: formData.engineNumber,
         motorNumber: formData.motorNumber,
-        chargerNumber: formData.chargerNumber
+        chargerNumber: formData.chargerNumber,
+        vertical: formData.vertical // Add vertical to payload
       };
 
       if (id) {
@@ -385,6 +410,30 @@ function InwardStock() {
                   <CFormInput type="text" name="engineNumber" value={formData.engineNumber} onChange={handleChange} />
                 </CInputGroup>
                 {errors.engineNumber && <p className="error">{errors.engineNumber}</p>}
+              </div>
+
+              {/* New Vertical Field */}
+              <div className="input-box">
+                <div className="details-container">
+                  <span className="details">Vertical</span>
+                  <span className="required">*</span>
+                </div>
+                <CInputGroup>
+                  <CFormSelect 
+                    name="vertical" 
+                    value={formData.vertical} 
+                    onChange={handleChange}
+                  >
+                    <option value="">-Select a Vertical-</option>
+                    {verticals.map((vertical) => (
+                      <option key={vertical._id} value={vertical._id}>
+                        {vertical.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CInputGroup>
+                {errors.vertical && <p className="error">{errors.vertical}</p>}
+                {verticals.length === 0 && <p className="error">No verticals available</p>}
               </div>
 
               {formData.type === 'EV' && (

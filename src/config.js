@@ -11,6 +11,8 @@ const config = {
 
   baseURL: 'http://192.168.1.8:3002/api/v1'
 
+  // baseURL: 'http://192.168.1.38:3002/api/v1'
+
   // baseURL : 'http://192.168.1.38:3002/api/v1'
 
   //  baseURL: 'http://localhost:5000/api/v1'

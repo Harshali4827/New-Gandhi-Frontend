@@ -6,6 +6,10 @@ import {
   getDefaultSearchFields,
   useTableFilter,
   axiosInstance,
+  Menu,
+  MenuItem,
+  showError,
+  showSuccess,
 } from '../../../utils/tableImports'
 import CIcon from '@coreui/icons-react'
 import { 
@@ -67,6 +71,7 @@ const SelfInsurance = () => {
     } catch (error) {
       console.log('Error fetching data', error)
       setError('Failed to fetch self insurance bookings')
+      showError('Failed to fetch self insurance bookings')
     } finally {
       setLoading(false)
     }
@@ -88,6 +93,7 @@ const SelfInsurance = () => {
   const handleSubmitDecision = async () => {
     if (!selectedBooking || !note.trim()) {
       setError('Please enter a note for the decision')
+      showError('Please enter a note for the decision')
       return
     }
 
@@ -110,18 +116,13 @@ const SelfInsurance = () => {
       setNote('')
       setError(null)
       
-      setError({
-        type: 'success',
-        message: `Self insurance request ${actionType.toLowerCase()}d successfully`
-      })
-      
-      setTimeout(() => {
-        setError(null)
-      }, 3000)
+      showSuccess(`Self insurance request ${actionType.toLowerCase()}d successfully`)
       
     } catch (err) {
       console.error('Error submitting decision:', err)
-      setError(`Failed to ${actionType.toLowerCase()} request: ${err.response?.data?.message || err.message}`)
+      const errorMessage = `Failed to ${actionType.toLowerCase()} request: ${err.response?.data?.message || err.message}`
+      setError(errorMessage)
+      showError(errorMessage)
     } finally {
       setProcessing(false)
     }
@@ -214,7 +215,7 @@ const SelfInsurance = () => {
         <CAlert 
           color={error.type === 'success' ? 'success' : 'danger'} 
           className="mb-3"
-          dismissible={error.type === 'success'}
+          dismissible
           onClose={() => setError(null)}
         >
           {error.message || error}
@@ -293,7 +294,7 @@ const SelfInsurance = () => {
                       <CTableDataCell>
                         ₹{booking.balanceAmount?.toLocaleString('en-IN') || '0'}
                       </CTableDataCell>
-                      <CTableDataCell style={{ position: 'relative' }}>
+                      <CTableDataCell>
                         <CButton
                           size="sm"
                           className='option-button btn-sm'
@@ -303,92 +304,65 @@ const SelfInsurance = () => {
                           Options
                         </CButton>
                         
-                        {/* Dropdown Menu */}
-                        {menuId === booking._id && (
-                          <div 
-                            className="dropdown-menu show" 
+                        {/* Material-UI Menu Component */}
+                        <Menu 
+                          id={`action-menu-${booking._id}`} 
+                          anchorEl={anchorEl} 
+                          open={menuId === booking._id} 
+                          onClose={handleClose}
+                          anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                          }}
+                          transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                          }}
+                          style={{
+                            marginTop: '8px',
+                          }}
+                        >
+                          <MenuItem 
+                            onClick={() => handleApproveReject(booking, 'APPROVE')}
                             style={{ 
-                              position: 'absolute', 
-                              top: '100%', 
-                              left: 0, 
-                              zIndex: 1000,
-                              backgroundColor: 'white',
-                              border: '1px solid rgba(0,0,0,.15)',
-                              borderRadius: '0.25rem',
-                              boxShadow: '0 6px 12px rgba(0,0,0,.175)',
-                              minWidth: '160px',
-                              padding: '5px 0',
-                              margin: '2px 0 0'
+                              padding: '8px 16px',
+                              minWidth: '140px',
+                              fontSize: '14px',
+                              color: '#198754',
                             }}
                           >
-                            <button
-                              className="dropdown-item d-flex align-items-center"
-                              onClick={() => handleApproveReject(booking, 'APPROVE')}
-                              style={{ 
-                                border: 'none', 
-                                background: 'none', 
-                                color: 'black',
-                                padding: '8px 16px',
-                                width: '100%',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                transition: 'background-color 0.2s'
-                              }}
-                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                            >
-                              <CIcon icon={cilCheckCircle} className="me-2" style={{ color: '#198754' }} />
-                              Approve
-                            </button>
-                            <button
-                              className="dropdown-item d-flex align-items-center"
-                              onClick={() => handleApproveReject(booking, 'REJECT')}
-                              style={{ 
-                                border: 'none', 
-                                background: 'none', 
-                                color: 'black',
-                                padding: '8px 16px',
-                                width: '100%',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                transition: 'background-color 0.2s'
-                              }}
-                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                            >
-                              <CIcon icon={cilXCircle} className="me-2" style={{ color: '#dc3545' }} />
-                              Reject
-                            </button>
-                            <div 
-                              style={{ 
-                                height: '1px', 
-                                backgroundColor: '#e9ecef', 
-                                margin: '4px 0'
-                              }}
-                            />
-                            <button
-                              className="dropdown-item d-flex align-items-center"
-                              onClick={handleClose}
-                              style={{ 
-                                border: 'none', 
-                                background: 'none', 
-                                color: '#6c757d',
-                                padding: '8px 16px',
-                                width: '100%',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                transition: 'background-color 0.2s'
-                              }}
-                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                            >
-                              Close
-                            </button>
-                          </div>
-                        )}
+                            <CIcon icon={cilCheckCircle} className="me-2" />
+                            Approve
+                          </MenuItem>
+                          <MenuItem 
+                            onClick={() => handleApproveReject(booking, 'REJECT')}
+                            style={{ 
+                              padding: '8px 16px',
+                              minWidth: '140px',
+                              fontSize: '14px',
+                              color: '#dc3545',
+                            }}
+                          >
+                            <CIcon icon={cilXCircle} className="me-2" />
+                            Reject
+                          </MenuItem>
+                          <div style={{ 
+                            height: '1px', 
+                            backgroundColor: '#e9ecef', 
+                            margin: '4px 0'
+                          }}/>
+                          <MenuItem 
+                            onClick={handleClose}
+                            style={{ 
+                              padding: '8px 16px',
+                              minWidth: '140px',
+                              fontSize: '14px',
+                              color: '#6c757d',
+                            }}
+                          >
+                            Close
+                          </MenuItem>
+                        </Menu>
                       </CTableDataCell>
                     </CTableRow>
                   ))

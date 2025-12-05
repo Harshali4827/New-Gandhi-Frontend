@@ -1920,6 +1920,7 @@ function BookingForm() {
     discountType: 'fixed',
     selected_accessories: [],
     hpa: true,
+    selfInsurance: false,
     is_exchange: false,
     broker_id: '',
     exchange_price: '',
@@ -2153,6 +2154,7 @@ function BookingForm() {
         discountType: bookingData.discounts?.[0]?.type?.toLowerCase() || 'fixed',
         selected_accessories: bookingData.accessories?.map((a) => a.accessory?._id).filter(Boolean) || [],
         hpa: bookingData.hpa || false,
+        selfInsurance: bookingData.selfInsurance || false,
         is_exchange: bookingData.exchange ? 'true' : 'false',
         broker_id: bookingData.exchangeDetails?.broker?._id || '',
         exchange_price: bookingData.exchangeDetails?.price || '',
@@ -2652,7 +2654,7 @@ function BookingForm() {
     if (type === 'checkbox') {
       setFormData((prevData) => ({ ...prevData, [name]: checked }));
     } else {
-      if (name === 'hpa') {
+      if (name === 'hpa' || name === 'selfInsurance') {
         setFormData((prevData) => ({
           ...prevData,
           [name]: value === 'true'
@@ -2835,6 +2837,7 @@ function BookingForm() {
         selected: formData.selected_accessories.map((id) => ({ id }))
       },
       hpa: formData.hpa === true,
+      selfInsurance: formData.selfInsurance === true,
       exchange: {
         is_exchange: formData.is_exchange === 'true',
         ...(formData.is_exchange === 'true' && {
@@ -3036,6 +3039,20 @@ function BookingForm() {
                         <CIcon icon={cilShieldAlt} />
                       </CInputGroupText>
                       <CFormSelect name="hpa" value={formData.hpa} onChange={handleChange}>
+                        <option value="">-Select-</option>
+                        <option value={true}>Yes</option>
+                        <option value={false}>No</option>
+                      </CFormSelect>
+                    </CInputGroup>
+                  </div>
+
+                  <div className="input-box">
+                    <span className="details">Self Insurance</span>
+                    <CInputGroup>
+                      <CInputGroupText className="input-icon">
+                        <CIcon icon={cilShieldAlt} />
+                      </CInputGroupText>
+                      <CFormSelect name="selfInsurance" value={formData.selfInsurance} onChange={handleChange}>
                         <option value="">-Select-</option>
                         <option value={true}>Yes</option>
                         <option value={false}>No</option>
