@@ -1959,7 +1959,7 @@ import {
   confirmDelete
 } from '../../../utils/tableImports';
 import CIcon from '@coreui/icons-react';
-import { cilCloudUpload, cilPrint,cilPlus, cilSettings, cilPencil, cilTrash, cilZoomOut, cilCheck, cilX, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { cilCloudUpload, cilPrint, cilPlus, cilSettings, cilPencil, cilTrash, cilZoomOut, cilCheck, cilX, cilCheckCircle, cilXCircle } from '@coreui/icons';
 import config from '../../../config';
 import ViewBooking from './BookingDetails';
 import KYCView from './KYCView';
@@ -2017,6 +2017,19 @@ const BookingList = () => {
   const [approvalNote, setApprovalNote] = useState('');
   const [approvalLoading, setApprovalLoading] = useState(false);
   
+  // Cancellation states
+  const [cancelledLoading, setCancelledLoading] = useState(false);
+  
+  // Cancellation Approval/Reject Modal States
+  const [cancelApprovalModal, setCancelApprovalModal] = useState(false);
+  const [selectedCancellationForApproval, setSelectedCancellationForApproval] = useState(null);
+  const [cancelApprovalAction, setCancelApprovalAction] = useState(''); // 'APPROVE' or 'REJECT'
+  const [editedReason, setEditedReason] = useState('');
+  const [cancellationCharges, setCancellationCharges] = useState(0);
+  const [notes, setNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [cancelActionLoading, setCancelActionLoading] = useState(false);
+  
   const navigate = useNavigate();
 
   const {
@@ -2054,12 +2067,30 @@ const BookingList = () => {
     setFilteredData: setFilteredRejected,
     handleFilter: handleRejectedFilter
   } = useTableFilter([]);
+  
+  // Cancellation filters
+  const {
+    data: cancelledPendingData,
+    setData: setCancelledPendingData,
+    filteredData: filteredCancelledPending,
+    setFilteredData: setFilteredCancelledPending,
+    handleFilter: handleCancelledPendingFilter
+  } = useTableFilter([]);
+  const {
+    data: cancelledRejectedData,
+    setData: setCancelledRejectedData,
+    filteredData: filteredCancelledRejected,
+    setFilteredData: setFilteredCancelledRejected,
+    handleFilter: handleCancelledRejectedFilter
+  } = useTableFilter([]);
 
-  const { currentRecords: pendingRecords, PaginationOptions: PendingPagination } = usePagination(filteredPending);
-  const { currentRecords: approvedRecords, PaginationOptions: ApprovedPagination } = usePagination(filteredApproved);
-  const { currentRecords: allocatedRecords, PaginationOptions: AllocatedPagination } = usePagination(filteredAllocated);
-  const { currentRecords: pendingAllocatedRecords, PaginationOptions: PendingAllocatedPagination } = usePagination(filteredPendingAllocated);
-  const { currentRecords: rejectedRecords, PaginationOptions: RejectedPagination } = usePagination(filteredRejected);
+  const { currentRecords: pendingRecords } = usePagination(filteredPending);
+  const { currentRecords: approvedRecords } = usePagination(filteredApproved);
+  const { currentRecords: allocatedRecords } = usePagination(filteredAllocated);
+  const { currentRecords: pendingAllocatedRecords } = usePagination(filteredPendingAllocated);
+  const { currentRecords: rejectedRecords } = usePagination(filteredRejected);
+  const { currentRecords: cancelledPendingRecords } = usePagination(filteredCancelledPending);
+  const { currentRecords: cancelledRejectedRecords } = usePagination(filteredCancelledRejected);
 
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -2098,6 +2129,7 @@ const BookingList = () => {
 
   useEffect(() => {
     fetchData();
+    fetchCancellationData();
   }, []);
 
   const fetchData = async () => {
@@ -2140,6 +2172,31 @@ const BookingList = () => {
     }
   };
 
+  const fetchCancellationData = async () => {
+    try {
+      setCancelledLoading(true);
+      
+      // Fetch pending cancellations
+      const pendingResponse = await axiosInstance.get(`/cancelbooking/cancellations`, {
+        params: { status: 'PENDING' }
+      });
+      setCancelledPendingData(pendingResponse.data.data);
+      setFilteredCancelledPending(pendingResponse.data.data);
+      
+      // Fetch rejected cancellations
+      const rejectedResponse = await axiosInstance.get(`/cancelbooking/cancellations`, {
+        params: { status: 'REJECTED' }
+      });
+      setCancelledRejectedData(rejectedResponse.data.data);
+      setFilteredCancelledRejected(rejectedResponse.data.data);
+      
+      setCancelledLoading(false);
+    } catch (error) {
+      console.log('Error fetching cancellation data', error);
+      setCancelledLoading(false);
+    }
+  };
+
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
     setMenuId(id);
@@ -2148,6 +2205,67 @@ const BookingList = () => {
   const handleClose = () => {
     setAnchorEl(null);
     setMenuId(null);
+  };
+
+  // Cancellation Approval Functions
+  const handleApproveCancellation = (cancellation) => {
+    setSelectedCancellationForApproval(cancellation);
+    setCancelApprovalAction('APPROVE');
+    setEditedReason(cancellation.cancellationRequest?.reason || '');
+    setCancellationCharges(cancellation.cancellationRequest?.cancellationCharges || 0);
+    setNotes('');
+    setCancelApprovalModal(true);
+  };
+
+  const handleRejectCancellation = (cancellation) => {
+    setSelectedCancellationForApproval(cancellation);
+    setCancelApprovalAction('REJECT');
+    setRejectionReason('');
+    setNotes('');
+    setCancelApprovalModal(true);
+  };
+
+  const handleCancelActionSubmit = async () => {
+    if (!selectedCancellationForApproval) return;
+
+    try {
+      setCancelActionLoading(true);
+      
+      if (cancelApprovalAction === 'APPROVE') {
+        const payload = {
+          reason: selectedCancellationForApproval.cancellationRequest?.reason || '',
+          editedReason: editedReason,
+          cancellationCharges: cancellationCharges,
+          notes: notes
+        };
+
+        await axiosInstance.put(`/cancelbooking/cancellations/${selectedCancellationForApproval._id}/cancel`, payload);
+        showSuccess('Cancellation approved successfully!');
+      } else {
+        const payload = {
+          rejectionReason: rejectionReason,
+          notes: notes
+        };
+
+        await axiosInstance.put(`/cancelbooking/cancellations/${selectedCancellationForApproval._id}/reject`, payload);
+        showSuccess('Cancellation rejected successfully!');
+      }
+
+      setCancelApprovalModal(false);
+      setSelectedCancellationForApproval(null);
+      setEditedReason('');
+      setCancellationCharges(0);
+      setNotes('');
+      setRejectionReason('');
+      
+      // Refresh cancellation data
+      fetchCancellationData();
+    } catch (error) {
+      console.error(`Error ${cancelApprovalAction === 'APPROVE' ? 'approving' : 'rejecting'} cancellation:`, error);
+      showError(error.response?.data?.message || `Failed to ${cancelApprovalAction === 'APPROVE' ? 'approve' : 'reject'} cancellation`);
+    } finally {
+      setCancelActionLoading(false);
+    }
   };
 
   // Chassis Approval Functions
@@ -2402,33 +2520,115 @@ const BookingList = () => {
     else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('booking'));
     else if (activeTab === 2) handlePendingAllocatedFilter('', getDefaultSearchFields('booking'));
     else if (activeTab === 3) handleAllocatedFilter('', getDefaultSearchFields('booking'));
-    else handleRejectedFilter('', getDefaultSearchFields('booking'));
+    else if (activeTab === 4) handleRejectedFilter('', getDefaultSearchFields('booking'));
+    else if (activeTab === 5) handleCancelledPendingFilter('', ['customer.name', 'customer.phone']);
+    else handleCancelledRejectedFilter('', ['customer.name', 'customer.phone']);
   };
 
   const renderBookingTable = (records, tabIndex) => {
+    if (tabIndex === 5 || tabIndex === 6) {
+      // Cancellation tables
+      return (
+        <div className="responsive-table-wrapper">
+          <CTable striped bordered hover className='responsive-table'>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Contact</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Cancellation Reason</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Requested At</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Requested By</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Cancellation Charges</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Refund Amount</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Status</CTableHeaderCell>
+                {tabIndex === 6 && <CTableHeaderCell scope="col">Rejection Reason</CTableHeaderCell>}
+                {tabIndex === 5 && (
+                  <CTableHeaderCell scope="col">Options</CTableHeaderCell>
+                )}
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {records.length === 0 ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={tabIndex === 6 ? 11 : 11} style={{ color: 'red', textAlign: 'center' }}>
+                    No cancellation requests available
+                  </CTableDataCell>
+                </CTableRow>
+              ) : (
+                records.map((cancellation, index) => (
+                  <CTableRow key={index}>
+                    <CTableDataCell>{index + 1}</CTableDataCell>
+                    <CTableDataCell>{cancellation.customer?.name || 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{cancellation.customer?.phone || 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{cancellation.bookingDate ? new Date(cancellation.bookingDate).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{cancellation.cancellationRequest?.reason || 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{cancellation.cancellationRequest?.requestedAt ? new Date(cancellation.cancellationRequest.requestedAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{cancellation.cancellationRequest?.requestedByDetails?.name || 'N/A'}</CTableDataCell>
+                    <CTableDataCell>₹{cancellation.cancellationRequest?.cancellationCharges || 0}</CTableDataCell>
+                    <CTableDataCell>₹{cancellation.financials?.refundAmount || 0}</CTableDataCell>
+                    <CTableDataCell>
+                      <span className={`status-badge ${cancellation.cancellationRequest?.status?.toLowerCase() || ''}`}>
+                        {cancellation.cancellationRequest?.status || 'N/A'}
+                      </span>
+                    </CTableDataCell>
+                    {tabIndex === 6 && (
+                      <CTableDataCell>{cancellation.cancellationRequest?.rejectionReason || 'N/A'}</CTableDataCell>
+                    )}
+                    {tabIndex === 5 && (
+                      <CTableDataCell>
+                        <div className="d-flex">
+                          <CButton
+                            size="sm"
+                            className="me-2"
+                            color="success"
+                            onClick={() => handleApproveCancellation(cancellation)}
+                          >
+                            <CIcon icon={cilCheck} /> Approve
+                          </CButton>
+                          <CButton
+                            size="sm"
+                            color="danger"
+                            onClick={() => handleRejectCancellation(cancellation)}
+                          >
+                            <CIcon icon={cilX} /> Reject
+                          </CButton>
+                        </div>
+                      </CTableDataCell>
+                    )}
+                  </CTableRow>
+                ))
+              )}
+            </CTableBody>
+          </CTable>
+        </div>
+      );
+    }
+
+    // Original booking tables
     return (
       <div className="responsive-table-wrapper">
         <CTable striped bordered hover className='responsive-table'>
           <CTableHead>
             <CTableRow>
-            {tabIndex != 2 && tabIndex != 4 &&   <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
               <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
               {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Type</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Color</CTableHeaderCell>
               <CTableHeaderCell scope="col">Fullname</CTableHeaderCell>
-              {tabIndex != 2 && tabIndex != 4 &&  <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>}
-              {/* <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell> */}
+              {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Contact1</CTableHeaderCell>}
               {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && <CTableHeaderCell scope="col">Finance Letter</CTableHeaderCell>}
               {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && <CTableHeaderCell scope="col">Upload Finance</CTableHeaderCell>}
-              {tabIndex != 2 && tabIndex != 4 &&  <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>}
               <CTableHeaderCell scope="col">Status</CTableHeaderCell>
               {tabIndex === 0 && <CTableHeaderCell scope="col">Altration Request</CTableHeaderCell>}
               {tabIndex === 2 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
               {tabIndex === 2 && <CTableHeaderCell scope="col">Is Claim</CTableHeaderCell>}
               {tabIndex === 3 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
-              {tabIndex != 2 && tabIndex != 4 &&   <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
-              {tabIndex === 2 &&   <CTableHeaderCell scope="col">Note</CTableHeaderCell>}
+              {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
+              {tabIndex === 2 && <CTableHeaderCell scope="col">Note</CTableHeaderCell>}
               {showActionColumn && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
             </CTableRow>
           </CTableHead>
@@ -2442,14 +2642,13 @@ const BookingList = () => {
             ) : (
               records.map((booking, index) => (
                 <CTableRow key={index}>
-                    {tabIndex != 2 && tabIndex != 4 &&  <CTableDataCell>{index + 1}</CTableDataCell>}
+                  {tabIndex != 2 && tabIndex != 4 && <CTableDataCell>{index + 1}</CTableDataCell>}
                   <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
                   <CTableDataCell>{booking.model.model_name || booking.model.name || ''}</CTableDataCell>
-                  {tabIndex != 2 && tabIndex != 4 &&  <CTableDataCell>{booking.model.type}</CTableDataCell>}
+                  {tabIndex != 2 && tabIndex != 4 && <CTableDataCell>{booking.model.type}</CTableDataCell>}
                   <CTableDataCell>{booking.color?.name || ''}</CTableDataCell>
                   <CTableDataCell>{booking.customerDetails.name || ''}</CTableDataCell>
-                  {tabIndex != 2 && tabIndex != 4 &&   <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>}
-                  {/* <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell> */}
+                  {tabIndex != 2 && tabIndex != 4 && <CTableDataCell>{booking.customerDetails.mobile1 || ''}</CTableDataCell>}
                   {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
                     <CTableDataCell>
                       {booking.payment.type === 'FINANCE' && (
@@ -2491,43 +2690,45 @@ const BookingList = () => {
                       )}
                     </CTableDataCell>
                   )}
-                   {tabIndex != 2 && tabIndex != 4 &&   <CTableDataCell>
-                    {booking.documentStatus.kyc.status === 'NOT_UPLOADED' ? (
-                      <Link
-                        to={`/upload-kyc/${booking.id}`}
-                        state={{
-                          bookingId: booking.id,
-                          customerName: booking.customerDetails.name,
-                          address: `${booking.customerDetails.address}, ${booking.customerDetails.taluka}, ${booking.customerDetails.district}, ${booking.customerDetails.pincode}`
-                        }}
-                      >
-                        <CButton size="sm" className="upload-kyc-btn icon-only">
-                          <CIcon icon={cilCloudUpload} />
-                        </CButton>
-                      </Link>
-                    ) : (
-                      <div className="d-flex align-items-center">
-                        <span className={`status-badge ${booking.documentStatus.kyc.status.toLowerCase()}`}>
-                          {booking.documentStatus.kyc.status}
-                        </span>
-                        {booking.documentStatus.kyc.status === 'REJECTED' && (
-                          <Link
-                            to={`/upload-kyc/${booking.id}`}
-                            state={{
-                              bookingId: booking.id,
-                              customerName: booking.customerDetails.name,
-                              address: `${booking.customerDetails.address}, ${booking.customerDetails.taluka}, ${booking.customerDetails.district}, ${booking.customerDetails.pincode}`
-                            }}
-                            className="ms-2"
-                          >
-                             <button className="upload-kyc-btn icon-only">
-                              <CIcon icon={cilCloudUpload} />
-                            </button>
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                  </CTableDataCell>}
+                  {tabIndex != 2 && tabIndex != 4 && (
+                    <CTableDataCell>
+                      {booking.documentStatus.kyc.status === 'NOT_UPLOADED' ? (
+                        <Link
+                          to={`/upload-kyc/${booking.id}`}
+                          state={{
+                            bookingId: booking.id,
+                            customerName: booking.customerDetails.name,
+                            address: `${booking.customerDetails.address}, ${booking.customerDetails.taluka}, ${booking.customerDetails.district}, ${booking.customerDetails.pincode}`
+                          }}
+                        >
+                          <CButton size="sm" className="upload-kyc-btn icon-only">
+                            <CIcon icon={cilCloudUpload} />
+                          </CButton>
+                        </Link>
+                      ) : (
+                        <div className="d-flex align-items-center">
+                          <span className={`status-badge ${booking.documentStatus.kyc.status.toLowerCase()}`}>
+                            {booking.documentStatus.kyc.status}
+                          </span>
+                          {booking.documentStatus.kyc.status === 'REJECTED' && (
+                            <Link
+                              to={`/upload-kyc/${booking.id}`}
+                              state={{
+                                bookingId: booking.id,
+                                customerName: booking.customerDetails.name,
+                                address: `${booking.customerDetails.address}, ${booking.customerDetails.taluka}, ${booking.customerDetails.district}, ${booking.customerDetails.pincode}`
+                              }}
+                              className="ms-2"
+                            >
+                              <button className="upload-kyc-btn icon-only">
+                                <CIcon icon={cilCloudUpload} />
+                              </button>
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </CTableDataCell>
+                  )}
                   <CTableDataCell>
                     <span className={`status-badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
                   </CTableDataCell>
@@ -2541,36 +2742,34 @@ const BookingList = () => {
                   {tabIndex === 2 && <CTableDataCell>{booking.chassisNumber}</CTableDataCell>}
                   {tabIndex === 2 && (
                     <CTableDataCell>
-                    <span className={`status-text ${booking.status}`}>
-                      {booking.claimDetails?.hasClaim ? (
-                        <CIcon icon={cilCheckCircle} className="status-icon active-icon" />
-                      ) : (
-                        <CIcon icon={cilXCircle} className="status-icon inactive-icon" />
-                      )}
-                    </span>
-                  </CTableDataCell>
+                      <span className={`status-text ${booking.status}`}>
+                        {booking.claimDetails?.hasClaim ? (
+                          <CIcon icon={cilCheckCircle} className="status-icon active-icon" />
+                        ) : (
+                          <CIcon icon={cilXCircle} className="status-icon inactive-icon" />
+                        )}
+                      </span>
+                    </CTableDataCell>
                   )}
                   {tabIndex === 3 && <CTableDataCell>{booking.chassisNumber}</CTableDataCell>}
-                  {tabIndex != 2 && tabIndex != 4 &&      <CTableDataCell>
-                    {booking.formPath && (
-                      <>
-                        {userRole === 'SALES_EXECUTIVE' && booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ? (
-                          <span className="awaiting-approval-text">Awaiting for Approval</span>
-                        ) : (
-                          <a href={`${config.baseURL}${booking.formPath}`} target="_blank" rel="noopener noreferrer">
-                            <CButton size="sm" className="upload-kyc-btn icon-only">
-                              <CIcon icon={cilPrint} />
-                            </CButton>
-                          </a>
-                        )}
-                      </>
-                    )}
-                  </CTableDataCell>}
-     
-                  {tabIndex === 2 && <CTableDataCell>
-                   {booking.note}
-                  </CTableDataCell>}    
-
+                  {tabIndex != 2 && tabIndex != 4 && (
+                    <CTableDataCell>
+                      {booking.formPath && (
+                        <>
+                          {userRole === 'SALES_EXECUTIVE' && booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ? (
+                            <span className="awaiting-approval-text">Awaiting for Approval</span>
+                          ) : (
+                            <a href={`${config.baseURL}${booking.formPath}`} target="_blank" rel="noopener noreferrer">
+                              <CButton size="sm" className="upload-kyc-btn icon-only">
+                                <CIcon icon={cilPrint} />
+                              </CButton>
+                            </a>
+                          )}
+                        </>
+                      )}
+                    </CTableDataCell>
+                  )}
+                  {tabIndex === 2 && <CTableDataCell>{booking.note}</CTableDataCell>}
                   {showActionColumn && (
                     <CTableDataCell>
                       <CButton
@@ -2780,7 +2979,35 @@ const BookingList = () => {
                   color: 'black'
                 }}
               >
-                Rejected
+                Rejected Discount
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 5}
+                onClick={() => handleTabChange(5)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 5 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
+              >
+                Cancelled Booking
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 6}
+                onClick={() => handleTabChange(6)}
+                style={{ 
+                  cursor: 'pointer',
+                  borderTop: activeTab === 6 ? '4px solid #2759a2' : '3px solid transparent',
+                  borderBottom: 'none',
+                  color: 'black'
+                }}
+              >
+                Rejected Cancelled Booking
               </CNavLink>
             </CNavItem>
           </CNav>
@@ -2800,7 +3027,9 @@ const BookingList = () => {
                   else if (activeTab === 1) handleApprovedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else if (activeTab === 2) handlePendingAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
                   else if (activeTab === 3) handleAllocatedFilter(e.target.value, getDefaultSearchFields('booking'));
-                  else handleRejectedFilter(e.target.value, getDefaultSearchFields('booking'));
+                  else if (activeTab === 4) handleRejectedFilter(e.target.value, getDefaultSearchFields('booking'));
+                  else if (activeTab === 5) handleCancelledPendingFilter(e.target.value, ['customer.name', 'customer.phone']);
+                  else handleCancelledRejectedFilter(e.target.value, ['customer.name', 'customer.phone']);
                 }}
               />
             </div>
@@ -2809,27 +3038,124 @@ const BookingList = () => {
           <CTabContent>
             <CTabPane visible={activeTab === 0}>
               {renderBookingTable(pendingRecords, 0)}
-              {/* <PendingPagination /> */}
             </CTabPane>
             <CTabPane visible={activeTab === 1}>
               {renderBookingTable(approvedRecords, 1)}
-              {/* <ApprovedPagination /> */}
             </CTabPane>
             <CTabPane visible={activeTab === 2}>
               {renderBookingTable(pendingAllocatedRecords, 2)}
-              {/* <PendingAllocatedPagination /> */}
             </CTabPane>
             <CTabPane visible={activeTab === 3}>
               {renderBookingTable(allocatedRecords, 3)}
-              {/* <AllocatedPagination /> */}
             </CTabPane>
             <CTabPane visible={activeTab === 4}>
               {renderBookingTable(rejectedRecords, 4)}
-              {/* <RejectedPagination /> */}
+            </CTabPane>
+            <CTabPane visible={activeTab === 5}>
+              {cancelledLoading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+                  <CSpinner color="primary" />
+                </div>
+              ) : (
+                renderBookingTable(cancelledPendingRecords, 5)
+              )}
+            </CTabPane>
+            <CTabPane visible={activeTab === 6}>
+              {cancelledLoading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+                  <CSpinner color="primary" />
+                </div>
+              ) : (
+                renderBookingTable(cancelledRejectedRecords, 6)
+              )}
             </CTabPane>
           </CTabContent>
         </CCardBody>
       </CCard>
+
+      {/* Cancellation Approval Modal */}
+      <CModal visible={cancelApprovalModal} onClose={() => setCancelApprovalModal(false)}>
+        <CModalHeader>
+          <CModalTitle>
+            {cancelApprovalAction === 'APPROVE' ? 'Approve Cancellation Request' : 'Reject Cancellation Request'}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {cancelApprovalAction === 'APPROVE' ? (
+            <>
+              <div className="mb-3">
+                <CFormLabel>Original Reason:</CFormLabel>
+                <CFormInput
+                  type="text"
+                  value={selectedCancellationForApproval?.cancellationRequest?.reason || ''}
+                  readOnly
+                />
+              </div>
+              <div className="mb-3">
+                <CFormLabel>Edited Reason (Optional):</CFormLabel>
+                <CFormTextarea
+                  value={editedReason}
+                  onChange={(e) => setEditedReason(e.target.value)}
+                  rows={2}
+                  placeholder="Enter edited reason if needed"
+                />
+              </div>
+              <div className="mb-3">
+                <CFormLabel>Cancellation Charges:</CFormLabel>
+                <CFormInput
+                  type="number"
+                  value={cancellationCharges}
+                  onChange={(e) => setCancellationCharges(Number(e.target.value))}
+                  min="0"
+                />
+              </div>
+              <div className="mb-3">
+                <CFormLabel>Notes (Optional):</CFormLabel>
+                <CFormTextarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Enter any additional notes"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-3">
+                <CFormLabel>Rejection Reason:</CFormLabel>
+                <CFormTextarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={2}
+                  placeholder="Enter reason for rejection"
+                />
+              </div>
+              <div className="mb-3">
+                <CFormLabel>Notes (Optional):</CFormLabel>
+                <CFormTextarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Enter any additional notes"
+                />
+              </div>
+            </>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            className={cancelApprovalAction === 'APPROVE' ? 'submit-button' : 'cancel-button'}
+            onClick={handleCancelActionSubmit}
+            disabled={cancelActionLoading || (cancelApprovalAction === 'REJECT' && !rejectionReason.trim())}
+          >
+            {cancelActionLoading ? (
+              <CSpinner size="sm" />
+            ) : (
+              cancelApprovalAction === 'APPROVE' ? 'Approve' : 'Reject'
+            )}
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       {/* Chassis Approval Modal */}
       <CModal visible={chassisApprovalModal} onClose={() => setChassisApprovalModal(false)}>

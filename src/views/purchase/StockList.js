@@ -539,6 +539,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSearch, cilSettings, cilPencil, cilTrash, cilCloudDownload, cilZoomOut } from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
+import config from '../../config';
 
 const StockList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -836,7 +837,7 @@ const StockList = () => {
                       <CTableDataCell>{vehicle.engineNumber}</CTableDataCell>
                       <CTableDataCell>{vehicle.motorNumber}</CTableDataCell>
                       <CTableDataCell>{vehicle.chargerNumber}</CTableDataCell>
-                      <CTableDataCell>
+                      {/* <CTableDataCell>
                         {vehicle.qrCode ? (
                           <QRCode 
                             value={vehicle.qrCode} 
@@ -848,7 +849,28 @@ const StockList = () => {
                         ) : (
                           'N/A'
                         )}
-                      </CTableDataCell>
+                      </CTableDataCell> */}
+                      <CTableDataCell>
+  {vehicle.qrCode && (
+    <a
+      href={`${config.baseURL || ''}${vehicle.qrCode}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: 'inline-block' }}
+    >
+      <img
+        src={`${config.baseURL || ''}${vehicle.qrCode}`}
+        alt="QR Code"
+        style={{
+          maxWidth: '100px',
+          maxHeight: '50px',
+          objectFit: 'contain',
+          cursor: 'pointer'
+        }}
+      />
+    </a>
+  )}
+</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={vehicle.status.toLowerCase() === 'available' ? 'success' : 'warning'}>
                           {vehicle.status}

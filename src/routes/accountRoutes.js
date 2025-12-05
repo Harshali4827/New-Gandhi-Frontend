@@ -3,6 +3,7 @@ const AccountDashboard = React.lazy(() => import('../views/account/AccountDashbo
 const Receipts = React.lazy(() => import('../views/account/Receipt'))
 const DebitNote = React.lazy(() => import('../views/account/debit-note/DebitNote'))
 const CustomerRefund = React.lazy(() => import('../views/account/Refund'))
+const CancelledBooking = React.lazy(() => import('../views/account/CancelledBooking'))
 const AllReceipts = React.lazy(() => import('../views/account/AllReceipt'))
 const CustomerLedger = React.lazy(() => import('../views/account/ViewLedger'))
 const ExchangeLedger = React.lazy(() => import('../views/account/ExchangeLedger'))
@@ -14,6 +15,7 @@ export const accountRoutes = [
     { path:'/account/receipt', name:'Account Receipt', element:Receipts},
     { path:'/debit-note', name:'Debit Note', element:DebitNote},
     { path:'/refund', name:'Customer Refund', element:CustomerRefund},
+    {path:'/cancelled-booking', name:'Cancelled Booking', element:CancelledBooking},
     { path:'/account/all-receipt', name:'All Receipt', element:AllReceipts},
     { path:'/view-ledgers', name:'View Ledger', element:CustomerLedger},
     { path:'/exchange-ledgers', name:'Exchange Ledger', element:ExchangeLedger},

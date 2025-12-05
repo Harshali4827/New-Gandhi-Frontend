@@ -1,5 +1,6 @@
 import React from 'react';
 const NewBooking = React.lazy(() => import('../views/sales/booking/NewBooking'))
+const SelfInsurance = React.lazy(() => import('../views/sales/booking/SelfInsurance'))
 const BookingList = React.lazy(() => import('../views/sales/booking/BookingList'))
 const DeliveryChallan = React.lazy(() => import('../views/sales/delivery-challan/DeliveryChallan'))
 const GSTInvoice = React.lazy(() => import('../views/sales/Invoice'))
@@ -12,6 +13,7 @@ const SalesReport = React.lazy(() => import('../views/sales-report/SalesReport')
 const PeriodicReport = React.lazy(() => import('../views/sales-report/PeriodicReport'))
 export const salesRoutes = [
     { path:'/new-booking', name:'New Booking', element:NewBooking},
+    { path:'/self-insurance', name:'Self Insurance', element:SelfInsurance},
     { path:'/booking-form/:id', name:'Edit Booking', element:NewBooking},
     { path:'/booking-list', name:'Booking List', element:BookingList},
     { path:'/update-booking/:id', name:'Edit Booking', element:NewBooking},

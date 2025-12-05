@@ -691,6 +691,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Self Insurance',
+        to: '/self-insurance',
+      },
+      {
+        component: CNavItem,
         name: 'Delivery Challan',
         to: '/delivery-challan',
       },
@@ -770,6 +775,11 @@ const _nav = [
         component: CNavItem,
         name: 'Refund',
         to: '/refund',
+      },
+      {
+        component: CNavItem,
+        name: 'Cancelled Booking',
+        to: '/cancelled-booking',
       },
       {
         component: CNavItem,
