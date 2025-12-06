@@ -2258,8 +2258,12 @@ const BookingList = () => {
       setNotes('');
       setRejectionReason('');
       
-      // Refresh cancellation data
-      fetchCancellationData();
+      // Refresh ALL data after cancellation action
+      await Promise.all([
+        fetchData(), // Refresh booking data
+        fetchCancellationData() // Refresh cancellation data
+      ]);
+      
     } catch (error) {
       console.error(`Error ${cancelApprovalAction === 'APPROVE' ? 'approving' : 'rejecting'} cancellation:`, error);
       showError(error.response?.data?.message || `Failed to ${cancelApprovalAction === 'APPROVE' ? 'approve' : 'reject'} cancellation`);
@@ -2304,7 +2308,10 @@ const BookingList = () => {
       setChassisApprovalModal(false);
       setSelectedBookingForApproval(null);
       setApprovalNote('');
-      fetchData();
+      
+      // Refresh ALL data after chassis approval
+      await fetchData();
+      
     } catch (error) {
       console.error(`Error ${approvalAction === 'APPROVE' ? 'approving' : 'rejecting'} chassis:`, error);
       showError(error.response?.data?.message || `Failed to ${approvalAction === 'APPROVE' ? 'approve' : 'reject'} chassis allocation`);
@@ -2436,10 +2443,13 @@ const BookingList = () => {
       });
 
       showSuccess(response.data.message);
-      fetchData();
+      
+      // Refresh data after chassis allocation
+      await fetchData();
+      
       setShowChassisModal(false);
       setIsUpdateChassis(false);
-      setSelectedBookingForChassis(null); // Reset selected booking
+      setSelectedBookingForChassis(null);
     } catch (error) {
       console.error(`Error ${isUpdateChassis ? 'updating' : 'allocating'} chassis number:`, error);
       showError(error.response?.data?.message || `Failed to ${isUpdateChassis ? 'update' : 'allocate'} chassis number`);
@@ -2459,7 +2469,10 @@ const BookingList = () => {
       setLoadingId(id);
       await axiosInstance.post(`/bookings/${id}/approve-update`, payload);
       showSuccess('Update approved successfully');
-      fetchData();
+      
+      // Refresh data
+      await fetchData();
+      
       setDetailsModalOpen(false);
     } catch (error) {
       console.log(error);
@@ -2474,7 +2487,10 @@ const BookingList = () => {
       setLoadingId(id);
       await axiosInstance.post(`/bookings/${id}/reject-update`, payload);
       showSuccess('Update rejected successfully');
-      fetchData();
+      
+      // Refresh data
+      await fetchData();
+      
       setDetailsModalOpen(false);
     } catch (error) {
       console.log(error);
@@ -2489,19 +2505,12 @@ const BookingList = () => {
     if (result.isConfirmed) {
       try {
         await axiosInstance.delete(`/bookings/${id}`);
-        setAllData(allData.filter((booking) => booking._id !== id));
-        setPendingData(pendingData.filter((booking) => booking._id !== id));
-        setFilteredPending(filteredPending.filter((booking) => booking._id !== id));
-        setApprovedData(approvedData.filter((booking) => booking._id !== id));
-        setFilteredApproved(filteredApproved.filter((booking) => booking._id !== id));
-        setAllocatedData(allocatedData.filter((booking) => booking._id !== id));
-        setFilteredAllocated(filteredAllocated.filter((booking) => booking._id !== id));
-        setPendingAllocatedData(pendingAllocatedData.filter((booking) => booking._id !== id));
-        setFilteredPendingAllocated(filteredPendingAllocated.filter((booking) => booking._id !== id));
-        setRejectedData(rejectedData.filter((booking) => booking._id !== id));
-        setFilteredRejected(filteredRejected.filter((booking) => booking._id !== id));
-
         showSuccess('Booking deleted successfully');
+        
+        // Refresh all data instead of just filtering local state
+        await fetchData();
+        await fetchCancellationData();
+        
       } catch (error) {
         console.log(error);
         showError(error.response?.data?.message || 'Failed to delete booking');
@@ -2781,91 +2790,100 @@ const BookingList = () => {
                         Options
                       </CButton>
                       <Menu 
-                        id={`action-menu-${booking.id}`} 
-                        anchorEl={anchorEl} 
-                        open={menuId === booking.id} 
-                        onClose={handleClose}
-                      >
-                        {(hasViewPermission || hasActionPermission) && (
-                          <>
-                            <MenuItem onClick={() => handleViewBooking(booking.id)} style={{ color: 'black' }}>
-                              <CIcon icon={cilZoomOut} className="me-2" /> View Booking
-                            </MenuItem>
-                            {tabIndex === 0 && booking.updateRequestStatus == 'PENDING' && (
-                              <MenuItem onClick={() => handleViewAltrationRequest(booking)} style={{ color: 'black' }}>
-                                <CIcon icon={cilZoomOut} className="me-2" /> View Altration Req
-                              </MenuItem>
-                            )}
-                          </>
-                        )}
+  id={`action-menu-${booking.id}`} 
+  anchorEl={anchorEl} 
+  open={menuId === booking.id} 
+  onClose={handleClose}
+>
+  {(hasViewPermission || hasActionPermission) && (
+    <>
+      <MenuItem onClick={() => handleViewBooking(booking.id)} style={{ color: 'black' }}>
+        <CIcon icon={cilZoomOut} className="me-2" /> View Booking
+      </MenuItem>
+      {tabIndex === 0 && booking.updateRequestStatus == 'PENDING' && (
+        <MenuItem onClick={() => handleViewAltrationRequest(booking)} style={{ color: 'black' }}>
+          <CIcon icon={cilZoomOut} className="me-2" /> View Altration Req
+        </MenuItem>
+      )}
+    </>
+  )}
 
-                        {hasEditPermission && (
-                          <>
-                            {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
-                              <Link className="Link" to={`/booking-form/${booking.id}`}>
-                                <MenuItem style={{ color: 'black' }}>
-                                  <CIcon icon={cilPencil} className="me-2" /> Edit
-                                </MenuItem>
-                              </Link>
-                            )}
-                          </>
-                        )}
+  {hasEditPermission && (
+    <>
+      {/* Add edit option to the menu - show for Rejected Discount tab (tabIndex === 4) */}
+      {(tabIndex === 4) && (
+        <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
+          <MenuItem style={{ color: 'black' }}>
+            <CIcon icon={cilPencil} className="me-2" /> Edit
+          </MenuItem>
+        </Link>
+      )}
+      {/* Keep existing edit logic for other tabs if needed */}
+      {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
+        <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
+          <MenuItem style={{ color: 'black' }}>
+            <CIcon icon={cilPencil} className="me-2" /> Edit
+          </MenuItem>
+        </Link>
+      )}
+    </>
+  )}
 
-                        {hasDeletePermission && (
-                          <>
-                            {(tabIndex === 0 || tabIndex === 4) && (
-                              <MenuItem onClick={() => handleDelete(booking.id)} style={{ color: 'black' }}>
-                                <CIcon icon={cilTrash} className="me-2" /> Delete
-                              </MenuItem>
-                            )}
-                          </>
-                        )}
+  {hasDeletePermission && (
+    <>
+      {(tabIndex === 0 || tabIndex === 4) && (
+        <MenuItem onClick={() => handleDelete(booking.id)} style={{ color: 'black' }}>
+          <CIcon icon={cilTrash} className="me-2" /> Delete
+        </MenuItem>
+      )}
+    </>
+  )}
 
-                        {booking.payment.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status !== 'NOT_UPLOADED' && (
-                          <MenuItem onClick={() => handleViewFinanceLetter(booking._id)} style={{ color: 'black' }}>
-                            <CIcon icon={cilZoomOut} className="me-2" /> View Finance Letter
-                          </MenuItem>
-                        )}
+  {booking.payment.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status !== 'NOT_UPLOADED' && (
+    <MenuItem onClick={() => handleViewFinanceLetter(booking._id)} style={{ color: 'black' }}>
+      <CIcon icon={cilZoomOut} className="me-2" /> View Finance Letter
+    </MenuItem>
+  )}
 
-                        {hasKYCPermission && (
-                          <>
-                            {booking.documentStatus?.kyc?.status !== 'NOT_UPLOADED' && (
-                              <MenuItem onClick={() => handleViewKYC(booking.id)} style={{ color: 'black' }}>
-                                <CIcon icon={cilZoomOut} className="me-2" /> View KYC
-                              </MenuItem>
-                            )}
-                          </>
-                        )}
+  {hasKYCPermission && (
+    <>
+      {booking.documentStatus?.kyc?.status !== 'NOT_UPLOADED' && (
+        <MenuItem onClick={() => handleViewKYC(booking.id)} style={{ color: 'black' }}>
+          <CIcon icon={cilZoomOut} className="me-2" /> View KYC
+        </MenuItem>
+      )}
+    </>
+  )}
 
-                        {hasChassisAllocation && (
-                          <>
-                            {tabIndex === 1 &&
-                              booking.status === 'APPROVED' &&
-                              (booking.payment?.type === 'CASH' ||
-                                (booking.payment?.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status == 'APPROVED')) && (
-                                <MenuItem onClick={() => handleAllocateChassis(booking.id)} style={{ color: 'black' }}>
-                                  <CIcon icon={cilPencil} className="me-2" /> Allocate Chassis
-                                </MenuItem>
-                              )}
-                            {tabIndex === 3 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
-                              <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>
-                                <CIcon icon={cilPencil} className="me-2" /> Update Chassis
-                              </MenuItem>
-                            )}
-                          </>
-                        )}
+  {hasChassisAllocation && (
+    <>
+      {tabIndex === 1 &&
+        booking.status === 'APPROVED' &&
+        (booking.payment?.type === 'CASH' ||
+          (booking.payment?.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status == 'APPROVED')) && (
+          <MenuItem onClick={() => handleAllocateChassis(booking.id)} style={{ color: 'black' }}>
+            <CIcon icon={cilPencil} className="me-2" /> Allocate Chassis
+          </MenuItem>
+        )}
+      {tabIndex === 3 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
+        <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>
+          <CIcon icon={cilPencil} className="me-2" /> Update Chassis
+        </MenuItem>
+      )}
+    </>
+  )}
 
-                        {hasChassisAllocation && tabIndex === 2 && booking.status === 'ON_HOLD' && (
-                          <>
-                            <MenuItem onClick={() => handleApproveChassis(booking.id)} style={{ color: 'green' }}>
-                              <CIcon icon={cilCheck} className="me-2" /> Approve Chassis
-                            </MenuItem>
-                            <MenuItem onClick={() => handleRejectChassis(booking.id)} style={{ color: 'red' }}>
-                              <CIcon icon={cilX} className="me-2" /> Reject Chassis
-                            </MenuItem>
-                          </>
-                        )}
-                      </Menu>
+  {hasChassisAllocation && tabIndex === 2 && booking.status === 'ON_HOLD' && (
+    <>
+      <MenuItem onClick={() => handleApproveChassis(booking.id)} style={{ color: 'green' }}>
+        <CIcon icon={cilCheck} className="me-2" /> Approve Chassis
+      </MenuItem>
+      <MenuItem onClick={() => handleRejectChassis(booking.id)} style={{ color: 'red' }}>
+        <CIcon icon={cilX} className="me-2" /> Reject Chassis
+      </MenuItem>
+    </>
+  )}
+</Menu>
                     </CTableDataCell>
                   )}
                 </CTableRow>
@@ -3217,7 +3235,7 @@ const BookingList = () => {
         onClose={() => {
           setShowChassisModal(false);
           setIsUpdateChassis(false);
-          setSelectedBookingForChassis(null); // Reset selected booking
+          setSelectedBookingForChassis(null);
         }}
         onSave={handleSaveChassisNumber}
         isLoading={chassisLoading}

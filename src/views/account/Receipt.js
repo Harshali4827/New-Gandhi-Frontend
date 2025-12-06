@@ -690,10 +690,10 @@ function Receipt() {
                     <CTableDataCell>
                       <CButton
                         size="sm"
-                        className="action-btn option-button"
+                        className='option-button btn-sm'
                         onClick={(event) => handleMenuClick(event, booking._id)}
                       >
-                        <CIcon icon={cilSettings} className="me-1" />
+                        <CIcon icon={cilSettings} />
                         Options
                       </CButton>
 

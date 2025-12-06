@@ -120,6 +120,8 @@ const DocumentsList = React.lazy(() => import('../views/masters/documents/Docume
 const AddCondition = React.lazy(() => import('../views/masters/terms&conditions/AddCondition'))
 const ConditionList = React.lazy(() => import('../views/masters/terms&conditions/ConditionList'))
 
+const TemplateList = React.lazy(() => import('../views/masters/templateform/TemplateList'))
+
 const AddOffers = React.lazy(() => import('../views/masters/offer/AddOffers'))
 const OffersList = React.lazy(() => import('../views/masters/offer/OffersList'))
 const AddAttachments = React.lazy(() => import('../views/masters/attachments/AddAttachments'))
@@ -160,6 +162,8 @@ export const masterRoutes = [
     { path:'/model/model-list', name:"model List", element:ModelList},
     { path:'/model/add-model', name:"Add Model", element:AddModel},
     { path:'/model/update-model/:id', name:'Update Model', element:UpdateModel},
+
+    { path:'/templateform/template-list', name:'Template List', element:TemplateList},
 
     { path:'/minimumbookingamount/minimum-booking-amount-list', name:"Minimum Booking Amount List", element:MinimumBookingAmountList},
     

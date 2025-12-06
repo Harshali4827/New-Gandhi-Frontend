@@ -112,7 +112,10 @@ export const showAppError = (error, defaultMessage = 'Something went wrong') => 
       confirmButtonColor: '#d33',
       confirmButtonText: 'Login'
     }).then(() => {
-      window.location.href = '/tvs/auth/signin-1';
+      // Clear all auth data
+      localStorage.clear();
+      // Redirect to login page
+      window.location.href = '/#/login';
     });
   }
 
@@ -125,6 +128,7 @@ export const showAppError = (error, defaultMessage = 'Something went wrong') => 
       confirmButtonText: 'OK'
     });
   }
+  
   return Swal.fire({
     title: 'Error!',
     text: message,

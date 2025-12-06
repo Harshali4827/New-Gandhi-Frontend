@@ -949,6 +949,11 @@ const _nav = [
         name: 'Minimum Booking Amount',
         to: '/minimumbookingamount/minimum-booking-amount-list',
       },
+      // {
+      //   component: CNavItem,
+      //   name: 'Template List',
+      //   to: '/templateform/template-list',
+      // },
       {
         component: CNavItem,
         name: 'Accessories',
