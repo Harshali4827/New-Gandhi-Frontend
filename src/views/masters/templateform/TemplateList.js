@@ -1,5 +1,5 @@
 // components/templates/TemplateList.jsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   CTable,
@@ -15,7 +15,6 @@ import {
   CFormInput,
   CSpinner,
   CFormLabel,
-  CFormSelect,
   CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
@@ -23,13 +22,17 @@ import {
   cilSettings, 
   cilPencil, 
   cilTrash,
-  cilPlus,
-  cilEye
+  cilPlus
 } from '@coreui/icons';
+import { cilMagnifyingGlass } from '@coreui/icons';
+
+// Import Material-UI components for the menu
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+
 import '../../../css/table.css';
 import '../../../css/importCsv.css';
-import { getDefaultSearchFields, useTableFilter } from '../../../utils/tableFilters';
-import { usePagination } from '../../../utils/pagination.js';
+import { useTableFilter } from '../../../utils/tableFilters';
 import axiosInstance from '../../../axiosInstance';
 import { confirmDelete, showError, showSuccess } from '../../../utils/sweetAlerts';
 import { hasPermission } from '../../../utils/permissionUtils';
@@ -40,9 +43,10 @@ const TemplateList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-  const { currentRecords, PaginationOptions } = usePagination(Array.isArray(filteredData) ? filteredData : []);
-  const [dropdownOpen, setDropdownOpen] = useState({});
-  const dropdownRefs = useRef({});
+  
+  // Menu state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuId, setMenuId] = useState(null);
 
   const hasEditPermission = hasPermission('TEMPLATE', 'UPDATE');
   const hasDeletePermission = hasPermission('TEMPLATE', 'DELETE');
@@ -83,35 +87,16 @@ const TemplateList = () => {
     }
   };
 
-  const toggleDropdown = (id) => {
-    setDropdownOpen(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  // Menu handlers
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setMenuId(id);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const newDropdownState = {};
-      let shouldUpdate = false;
-      
-      Object.keys(dropdownRefs.current).forEach(key => {
-        if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
-          newDropdownState[key] = false;
-          shouldUpdate = true;
-        }
-      });
-      
-      if (shouldUpdate) {
-        setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuId(null);
+  };
 
   const handleSearch = (value) => {
     setSearchTerm(value);
@@ -142,7 +127,7 @@ const TemplateList = () => {
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
             {hasCreatePermission && (
-              <Link to="/templates/create">
+              <Link to="/templateForm/template-list/create">
                 <CButton size="sm" className="action-btn me-1">
                   <CIcon icon={cilPlus} className='icon'/> New Template
                 </CButton>
@@ -181,18 +166,20 @@ const TemplateList = () => {
                 </CTableRow>
               </CTableHead>
               <CTableBody>
-                {currentRecords.length === 0 ? (
+                {filteredData.length === 0 ? (
                   <CTableRow>
                     <CTableDataCell colSpan={showActionColumn ? "9" : "8"} className="text-center">
                       No templates available
                     </CTableDataCell>
                   </CTableRow>
                 ) : (
-                  currentRecords.map((template, index) => (
+                  filteredData.map((template, index) => (
                     <CTableRow key={template._id || index}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>{template.template_name}</CTableDataCell>
-                      <CTableDataCell>{template.subject}</CTableDataCell>
+                      <CTableDataCell className="text-truncate" style={{ maxWidth: '200px' }} title={template.subject}>
+                        {template.subject}
+                      </CTableDataCell>
                       <CTableDataCell>
                         {template.header_ids?.length || 0} headers
                       </CTableDataCell>
@@ -213,36 +200,57 @@ const TemplateList = () => {
                       </CTableDataCell>
                       {showActionColumn && (
                         <CTableDataCell>
-                          <div className="dropdown-container" ref={el => dropdownRefs.current[template._id] = el}>
-                            <CButton 
-                              size="sm"
-                              className='option-button btn-sm'
-                              onClick={() => toggleDropdown(template._id)}
-                            >
-                              <CIcon icon={cilSettings} />
-                              Options
-                            </CButton>
-                            {dropdownOpen[template._id] && (
-                              <div className="dropdown-menu show">
-                                <Link className="dropdown-item" to={`/templates/preview/${template._id}`}>
-                                  <CIcon icon={cilEye} className="me-2" /> Preview
+                          <CButton
+                            size="sm"
+                            className='option-button btn-sm'
+                            onClick={(event) => handleClick(event, template._id)}
+                          >
+                            <CIcon icon={cilSettings} />
+                            Options
+                          </CButton>
+                          <Menu 
+                            id={`action-menu-${template._id}`} 
+                            anchorEl={anchorEl} 
+                            open={menuId === template._id} 
+                            onClose={handleClose}
+                            anchorOrigin={{
+                              vertical: 'bottom',
+                              horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                              vertical: 'top',
+                              horizontal: 'right',
+                            }}
+                          >
+                            <MenuItem onClick={handleClose}>
+                              <Link 
+                                className="Link" 
+                                to={`/templateform/template-list/preview/${template._id}`}
+                                style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                              >
+                                <CIcon icon={cilMagnifyingGlass} className="me-2" /> Preview
+                              </Link>
+                            </MenuItem>
+                            {hasEditPermission && (
+                              <MenuItem onClick={handleClose}>
+                                <Link 
+                                  className="Link" 
+                                  to={`/templateform/template-list/edit/${template._id}`}
+                                  style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                                >
+                                  <CIcon icon={cilPencil} className="me-2" /> Edit
                                 </Link>
-                                {hasEditPermission && (
-                                  <Link className="dropdown-item" to={`/templates/edit/${template._id}`}>
-                                    <CIcon icon={cilPencil} className="me-2" /> Edit
-                                  </Link>
-                                )}
-                                {hasDeletePermission && (
-                                  <button 
-                                    className="dropdown-item"
-                                    onClick={() => handleDelete(template._id)}
-                                  >
-                                    <CIcon icon={cilTrash} className="me-2" /> Delete
-                                  </button>
-                                )}
-                              </div>
+                              </MenuItem>
                             )}
-                          </div>
+                            {hasDeletePermission && (
+                              <MenuItem onClick={() => {
+                                handleDelete(template._id);
+                                handleClose();
+                              }}>
+                                <CIcon icon={cilTrash} className="me-2" /> Delete
+                              </MenuItem>
+                            )}
+                          </Menu>
                         </CTableDataCell>
                       )}
                     </CTableRow>
@@ -251,7 +259,6 @@ const TemplateList = () => {
               </CTableBody>
             </CTable>
           </div>
-          <PaginationOptions />
         </CCardBody>
       </CCard>
     </div>

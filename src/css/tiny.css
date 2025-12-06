@@ -1,0 +1,242 @@
+/* components/templates/tiny.css */
+
+/* TinyMCE Editor Wrapper - Full Width */
+.tiny-editor-wrapper {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.full-width-editor .tox-tinymce {
+  width: 100% !important;
+  border-radius: 4px;
+  border: 1px solid #ced4da !important;
+}
+
+.tiny-editor-wrapper .tox-tinymce:hover {
+  border-color: #86b7fe !important;
+}
+
+.tiny-editor-wrapper .tox-tinymce:focus-within {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Fix TinyMCE width */
+.tox-tinymce-aux {
+  width: 100% !important;
+}
+
+/* Variables grid - Proper spacing */
+.variables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin: 15px 0;
+}
+
+.variable-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  min-height: 70px;
+}
+
+.variable-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.variable-item .form-check {
+  margin-bottom: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.variable-item .form-check-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.variable-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.variable-actions .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: 40px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Variable code styling */
+.variable-code {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ffeaa7;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  margin: 0 2px;
+  display: inline-block;
+}
+
+/* Input box spacing */
+.input-box {
+  margin-bottom: 20px;
+}
+
+/* Details container spacing */
+.details-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  min-height: 24px;
+}
+
+/* Form sections spacing */
+.mb-4 {
+  margin-bottom: 2rem !important;
+}
+
+.mt-4 {
+  margin-top: 2rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Scrollbar for variables grid */
+.variables-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.variables-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.variables-grid::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.variables-grid::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Form footer spacing */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #dee2e6;
+}
+
+/* Card body padding */
+.form-card .card-body {
+  padding: 2rem !important;
+}
+
+/* Error message spacing */
+.error {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  margin-bottom: 0;
+  display: block;
+}
+
+/* Required asterisk */
+.required {
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+/* Text muted styling */
+.text-muted {
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Alert spacing */
+.alert {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Table spacing */
+.table-responsive {
+  margin-top: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .variables-grid {
+    grid-template-columns: 1fr;
+    max-height: none;
+    padding: 15px;
+  }
+  
+  .variable-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: auto;
+  }
+  
+  .variable-actions {
+    align-self: flex-end;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .tiny-editor-wrapper .tox-tinymce {
+    min-height: 300px;
+  }
+  
+  .form-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .submit-button, .cancel-button {
+    width: 100%;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 576px) {
+  .form-card .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .variables-grid {
+    gap: 10px;
+    padding: 12px;
+  }
+}

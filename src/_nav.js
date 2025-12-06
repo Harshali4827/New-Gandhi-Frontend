@@ -949,10 +949,25 @@ const _nav = [
         name: 'Minimum Booking Amount',
         to: '/minimumbookingamount/minimum-booking-amount-list',
       },
+      {
+        component: CNavItem,
+        name: 'Template List',
+        to: '/templateform/template-list',
+      },
       // {
       //   component: CNavItem,
-      //   name: 'Template List',
-      //   to: '/templateform/template-list',
+      //   name: 'Template Form',
+      //   to: '/templateform/template-list/create',
+      // },
+      // {
+      //   component: CNavItem,
+      //   name: 'Template Edit',
+      //   to: '/templateform/template-list/edit/:id',
+      // },
+      // {
+      //   component: CNavItem,
+      //   name: 'Template Preview',
+      //   to: '/templateform/template-list/preview/:id',
       // },
       {
         component: CNavItem,
