@@ -26,6 +26,11 @@ import {
   CTableDataCell,
   CSpinner,
   CAlert,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
 } from '@coreui/react'
 
 const DeliveryChallan = () => {
@@ -40,6 +45,12 @@ const DeliveryChallan = () => {
   })
   const [bookingData, setBookingData] = useState(null)
   const [declarations, setDeclarations] = useState([])
+  
+  // Documents Modal States
+  const [documentsModal, setDocumentsModal] = useState(false)
+  const [selectedBookingForDocs, setSelectedBookingForDocs] = useState(null)
+  const [selectedDocuments, setSelectedDocuments] = useState([])
+  const [loadingDocuments, setLoadingDocuments] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -110,6 +121,42 @@ const DeliveryChallan = () => {
       setBookingData(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Fetch selected documents for a booking
+  const handleOpenDocuments = async (bookingId) => {
+    try {
+      setLoadingDocuments(true)
+      setSelectedBookingForDocs(bookingId)
+      
+      const response = await axiosInstance.get(`/booking-templates/selected/${bookingId}`)
+      setSelectedDocuments(response.data.data.selections || [])
+      setDocumentsModal(true)
+      
+    } catch (error) {
+      console.error('Error fetching selected documents:', error)
+      setError('Failed to fetch selected documents')
+    } finally {
+      setLoadingDocuments(false)
+    }
+  }
+
+  // Preview document - opens in new tab with print design
+  const handlePreviewDocument = async (selectionId, templateName) => {
+    try {
+      const response = await axiosInstance.get(`/booking-templates/preview/${selectionId}`)
+      const previewData = response.data.data
+      
+      // Open in new tab with print design
+      const printWindow = window.open('', '_blank')
+      printWindow.document.write(generateTemplatePrintHTML(previewData))
+      printWindow.document.close()
+      printWindow.focus()
+      
+    } catch (error) {
+      console.error('Error fetching document preview:', error)
+      setError('Failed to fetch document preview')
     }
   }
 
@@ -411,7 +458,7 @@ tr.data-row td:nth-child(4) {
                 <td>Total</td>
                 <td>:</td>
                 <td><span class="bold">₹${data.discountedAmount}</span></td>
-              </tr>
+            </tr>
             </table>
 
             <div class='account-details'>ACC.DETAILS:
@@ -590,6 +637,194 @@ tr.data-row td:nth-child(4) {
     `
   }
 
+  // Generate template print HTML with the same design as Customer/Office Copy
+  const generateTemplatePrintHTML = (previewData) => {
+    const bookingInfo = previewData.booking_info
+    const templateInfo = previewData.template_info
+    const generatedContent = previewData.generated_content
+    const currentDate = new Date().toLocaleDateString('en-GB')
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${templateInfo.name} - ${bookingInfo.booking_number}</title>
+    <style>
+        body {
+            font-family: Courier New;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 5mm;
+            box-sizing: border-box;
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5mm;
+        }
+        .logo {
+            width: 30mm;
+            height: auto;
+            margin-right: 5mm;
+        }
+        .header-text {
+            color:#555555;
+            flex-grow: 1;
+            text-align: center;
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5mm;
+        }
+        td {
+            padding: 1mm 0;
+            font-size: 11pt;
+        }
+        tr.border-top-bottom td {
+            padding: 1mm;
+            width: auto;
+        }
+
+        tr.data-row td:nth-child(1) {
+            width: 25%;
+            padding-right: 1mm;
+        }
+        tr.data-row td:nth-child(2) {
+            width: 3%;
+            padding: 0;
+        }
+        tr.data-row td:nth-child(3),
+        tr.data-row td:nth-child(4) {
+            width: auto;
+            padding-left: 1mm;
+        }
+        .border-top-bottom {
+            border-top: 2px solid #AAAAAA;
+            border-bottom: 2px solid #AAAAAA;
+        }
+        .content-section {
+            margin: 5mm 0;
+            padding: 5mm;
+            border: 1px solid #AAAAAA;
+        }
+        .content-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555555;
+            margin-bottom: 3mm;
+            text-align: center;
+            border-bottom: 1px solid #AAAAAA;
+            padding-bottom: 2mm;
+        }
+        .generated-content {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #555555;
+            text-align: justify;
+        }
+        .signature-box {
+            border-top: 2px solid #AAAAAA;
+            border-bottom: 2px solid #AAAAAA;
+            padding: 1px 0;
+            text-align: right;
+            color:#555555;
+            font-weight:bold;
+            margin-top: 10mm;
+        }
+        .jurisdiction {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #555555;
+            margin-top: 10mm;
+        }
+        .bold {
+            font-weight: 700;
+            color:#555555;
+        }
+        .account-details {
+            color:#555555;
+            font-weight:bold;
+            margin: 2mm 0;
+        }
+        @page {
+            size: A4;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header-container">
+            <img src="${tvsLogo}" class="logo" alt="TVS Logo">
+            <div class="header-text">${templateInfo.name}</div>
+        </div>
+
+        <table>
+            <tr class="border-top-bottom">
+                <td width="20%">Booking No.:</td>
+                <td width="25%"><span class="bold">${bookingInfo.booking_number || 'N/A'}</span></td>
+                <td width="15%">Date</td>
+                <td width="40%"><span class="bold">${currentDate}</span></td>
+            </tr>
+            <tr class="data-row">
+                <td>Customer Name</td>
+                <td>:</td>
+                <td colspan="2"><span class="bold">${bookingInfo.customer_name || 'N/A'}</span></td>
+            </tr>
+            <tr class="data-row">
+                <td>Booking Date</td>
+                <td>:</td>
+                <td colspan="2"><span class="bold">${currentDate}</span></td>
+            </tr>
+            <tr class="data-row">
+                <td>Total Amount</td>
+                <td>:</td>
+                <td><span class="bold">₹${bookingInfo.total_amount || 0}</span></td>
+                <td>Balance: <span class="bold">₹${bookingInfo.balance_amount || 0}</span></td>
+            </tr>
+            <tr class="data-row">
+                <td>Received Amount</td>
+                <td>:</td>
+                <td colspan="2"><span class="bold">₹${bookingInfo.received_amount || 0}</span></td>
+            </tr>
+        </table>
+
+        <div class="content-section">
+            <div class="content-title">${generatedContent.subject}</div>
+            <div class="generated-content">
+                ${generatedContent.content}
+            </div>
+        </div>
+
+        <div class="account-details">
+            Generated On: ${new Date(generatedContent.generated_at).toLocaleDateString('en-GB')}
+        </div>
+
+        <div class="signature-box">
+            <div><b>Authorised Signature</b></div>
+        </div>
+
+        <div>
+            <p class="bold">Customer Signature</p>
+        </div>
+
+        <p class="jurisdiction">Subject To Sangamner Jurisdiction</p>
+    </div>
+</body>
+</html>
+    `
+  }
+
   const handleSearch = (value) => {
     setSearchTerm(value)
     handleFilter(value, getDefaultSearchFields('booking'))
@@ -605,7 +840,7 @@ tr.data-row td:nth-child(4) {
 
   return (
     <div>
-      <div className="title">Delivery Challan/Helmet Declaration</div>
+      <div className="title">Delivery Challan/Documents</div>
 
       <CCard className="table-container mt-4">
         <CCardHeader className="card-header d-flex justify-content-between align-items-center">
@@ -639,7 +874,7 @@ tr.data-row td:nth-child(4) {
                   <CTableHeaderCell>Chassis Number</CTableHeaderCell>
                   <CTableHeaderCell>Customer Copy</CTableHeaderCell>
                   <CTableHeaderCell>Office Copy</CTableHeaderCell>
-                  <CTableHeaderCell>Helmet Declaration</CTableHeaderCell>
+                  <CTableHeaderCell>Documents</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -682,12 +917,12 @@ tr.data-row td:nth-child(4) {
                       <CTableDataCell>
                         <CButton
                           size="sm"
-                          color="warning"
+                          color="success"
                           className="action-btn"
-                          onClick={() => handlePrint(booking, 'Helmet')}
+                          onClick={() => handleOpenDocuments(booking._id)}
                         >
-                          <CIcon icon={cilPrint} className="me-1" />
-                          Print
+                          <CIcon className="me-1" />
+                          View
                         </CButton>
                       </CTableDataCell>
                     </CTableRow>
@@ -698,6 +933,82 @@ tr.data-row td:nth-child(4) {
           </div>
         </CCardBody>
       </CCard>
+
+      {/* Selected Documents Modal */}
+      <CModal 
+        visible={documentsModal} 
+        onClose={() => {
+          setDocumentsModal(false)
+          setSelectedBookingForDocs(null)
+          setSelectedDocuments([])
+        }}
+        size="lg"
+      >
+        <CModalHeader>
+          <CModalTitle>
+            <CIcon className="me-2" />
+            Selected Documents
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {loadingDocuments ? (
+            <div className="text-center py-5">
+              <CSpinner color="primary" />
+              <p className="mt-3">Loading documents...</p>
+            </div>
+          ) : selectedDocuments.length === 0 ? (
+            <div className="text-center py-5">
+              <CIcon size="xl" className="text-muted mb-3" />
+              <p className="text-muted">No documents selected for this booking</p>
+            </div>
+          ) : (
+            <div className="border rounded p-3">
+              {selectedDocuments.map((selection, index) => (
+                <div key={selection.selection_id} className="mb-3 p-2 border-bottom">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                      <h6 className="mb-0">{selection.template.template_name}</h6>
+                      <small className="text-muted">
+                        Selected by: {selection.selected_by.name} • 
+                        {new Date(selection.selected_at).toLocaleDateString()}
+                      </small>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <CButton
+                        size="sm"
+                        color="primary"
+                        onClick={() => handlePreviewDocument(selection.selection_id, selection.template.template_name)}
+                      >
+                        <CIcon icon={cilPrint} className="me-1" />
+                        Preview
+                      </CButton>
+                    </div>
+                  </div>
+                  {selection.notes && (
+                    <div className="alert alert-info p-2 mt-2">
+                      <small>
+                        <strong>Notes:</strong> {selection.notes}
+                      </small>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            color="secondary" 
+            onClick={() => {
+              setDocumentsModal(false)
+              setSelectedBookingForDocs(null)
+              setSelectedDocuments([])
+            }}
+          >
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
     </div>
   )
 }

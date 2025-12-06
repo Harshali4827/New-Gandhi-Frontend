@@ -1959,7 +1959,20 @@ import {
   confirmDelete
 } from '../../../utils/tableImports';
 import CIcon from '@coreui/icons-react';
-import { cilCloudUpload, cilPrint, cilPlus, cilSettings, cilPencil, cilTrash, cilZoomOut, cilCheck, cilX, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { 
+  cilCloudUpload, 
+  cilPrint, 
+  cilPlus, 
+  cilSettings, 
+  cilPencil, 
+  cilTrash, 
+  cilZoomOut, 
+  cilCheck, 
+  cilX, 
+  cilCheckCircle, 
+  cilXCircle,
+  cilFile
+} from '@coreui/icons';
 import config from '../../../config';
 import ViewBooking from './BookingDetails';
 import KYCView from './KYCView';
@@ -1989,7 +2002,8 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CFormTextarea
+  CFormTextarea,
+  CFormCheck
 } from '@coreui/react';
 import PrintModal from './PrintFinance';
 import PendingUpdateDetailsModal from './ViewPendingUpdates';
@@ -2023,12 +2037,21 @@ const BookingList = () => {
   // Cancellation Approval/Reject Modal States
   const [cancelApprovalModal, setCancelApprovalModal] = useState(false);
   const [selectedCancellationForApproval, setSelectedCancellationForApproval] = useState(null);
-  const [cancelApprovalAction, setCancelApprovalAction] = useState(''); // 'APPROVE' or 'REJECT'
+  const [cancelApprovalAction, setCancelApprovalAction] = useState('');
   const [editedReason, setEditedReason] = useState('');
   const [cancellationCharges, setCancellationCharges] = useState(0);
   const [notes, setNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [cancelActionLoading, setCancelActionLoading] = useState(false);
+  
+  // Available Documents States
+  const [availableDocsModal, setAvailableDocsModal] = useState(false);
+  const [selectedBookingForDocs, setSelectedBookingForDocs] = useState(null);
+  const [availableTemplates, setAvailableTemplates] = useState(null);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
+  const [templateNotes, setTemplateNotes] = useState('');
+  const [submittingSelection, setSubmittingSelection] = useState(false);
   
   const navigate = useNavigate();
 
@@ -2068,7 +2091,6 @@ const BookingList = () => {
     handleFilter: handleRejectedFilter
   } = useTableFilter([]);
   
-  // Cancellation filters
   const {
     data: cancelledPendingData,
     setData: setCancelledPendingData,
@@ -2117,15 +2139,6 @@ const BookingList = () => {
   const hasFinancePermission = hasPermission('FINANCE_LETTER', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
   const hasKYCPermission = hasPermission('KYC', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
   const hasChassisApprovalPermission = hasPermission('BOOKING', 'CHASSIS_APPROVAL');
-  const showActionColumn =
-    hasEditPermission ||
-    hasDeletePermission ||
-    hasActionPermission ||
-    hasFinancePermission ||
-    hasKYCPermission ||
-    hasViewPermission ||
-    hasChassisAllocation ||
-    hasChassisApprovalPermission;
 
   useEffect(() => {
     fetchData();
@@ -2150,7 +2163,6 @@ const BookingList = () => {
       setApprovedData(approvedBookings);
       setFilteredApproved(approvedBookings);
 
-      // Fetch pending allocated data (ON_HOLD status)
       const pendingAllocatedBookings = branchBookings.filter((booking) => booking.status === 'ON_HOLD');
       setPendingAllocatedData(pendingAllocatedBookings);
       setFilteredPendingAllocated(pendingAllocatedBookings);
@@ -2159,7 +2171,6 @@ const BookingList = () => {
       setAllocatedData(allocatedBookings);
       setFilteredAllocated(allocatedBookings);
       
-      // Fetch rejected bookings
       const rejectedBookings = branchBookings.filter((booking) => booking.status === 'REJECTED');
       setRejectedData(rejectedBookings);
       setFilteredRejected(rejectedBookings);
@@ -2176,14 +2187,12 @@ const BookingList = () => {
     try {
       setCancelledLoading(true);
       
-      // Fetch pending cancellations
       const pendingResponse = await axiosInstance.get(`/cancelbooking/cancellations`, {
         params: { status: 'PENDING' }
       });
       setCancelledPendingData(pendingResponse.data.data);
       setFilteredCancelledPending(pendingResponse.data.data);
       
-      // Fetch rejected cancellations
       const rejectedResponse = await axiosInstance.get(`/cancelbooking/cancellations`, {
         params: { status: 'REJECTED' }
       });
@@ -2205,6 +2214,84 @@ const BookingList = () => {
   const handleClose = () => {
     setAnchorEl(null);
     setMenuId(null);
+  };
+
+  // Available Documents Functions
+  const handleOpenAvailableDocs = async (bookingId) => {
+    try {
+      setLoadingTemplates(true);
+      setSelectedBookingForDocs(bookingId);
+      
+      const response = await axiosInstance.get(`/templates/booking/${bookingId}/available`);
+      setAvailableTemplates(response.data.data);
+      setAvailableDocsModal(true);
+      setSelectedTemplateIds([]);
+      setTemplateNotes('');
+      
+    } catch (error) {
+      console.error('Error fetching available templates:', error);
+      showError('Failed to fetch available documents');
+    } finally {
+      setLoadingTemplates(false);
+    }
+    handleClose();
+  };
+
+  const handleTemplateSelection = (templateId, canDownload) => {
+    if (!canDownload) return; // Don't allow selection if can't download
+    
+    setSelectedTemplateIds(prev => {
+      if (prev.includes(templateId)) {
+        return prev.filter(id => id !== templateId);
+      } else {
+        return [...prev, templateId];
+      }
+    });
+  };
+
+  const handleSelectAllAvailable = () => {
+    if (availableTemplates?.available_templates?.templates) {
+      const allAvailableIds = availableTemplates.available_templates.templates
+        .filter(template => template.can_download)
+        .map(template => template.template_id);
+      setSelectedTemplateIds(allAvailableIds);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedTemplateIds([]);
+  };
+
+  const handleSubmitTemplateSelection = async () => {
+    if (!selectedBookingForDocs || selectedTemplateIds.length === 0) {
+      showError('Please select at least one template');
+      return;
+    }
+
+    try {
+      setSubmittingSelection(true);
+      
+      const payload = {
+        bookingId: selectedBookingForDocs,
+        templateIds: selectedTemplateIds,
+        notes: templateNotes.trim() || undefined
+      };
+
+      await axiosInstance.post('/booking-templates/select', payload);
+      
+      showSuccess('Templates selected successfully!');
+      setAvailableDocsModal(false);
+      setSelectedBookingForDocs(null);
+      setAvailableTemplates(null);
+      setSelectedTemplateIds([]);
+      setTemplateNotes('');
+      
+    } catch (error) {
+      console.error('Error selecting templates:', error);
+      showError(error.response?.data?.message || 'Failed to select templates');
+    } finally {
+      setSubmittingSelection(false);
+    }
   };
 
   // Cancellation Approval Functions
@@ -2258,10 +2345,9 @@ const BookingList = () => {
       setNotes('');
       setRejectionReason('');
       
-      // Refresh ALL data after cancellation action
       await Promise.all([
-        fetchData(), // Refresh booking data
-        fetchCancellationData() // Refresh cancellation data
+        fetchData(),
+        fetchCancellationData()
       ]);
       
     } catch (error) {
@@ -2309,7 +2395,6 @@ const BookingList = () => {
       setSelectedBookingForApproval(null);
       setApprovalNote('');
       
-      // Refresh ALL data after chassis approval
       await fetchData();
       
     } catch (error) {
@@ -2396,14 +2481,14 @@ const BookingList = () => {
 
   const handleAllocateChassis = (bookingId) => {
     setSelectedBookingForChassis(bookingId);
-    setIsUpdateChassis(false); // Make sure this is false for allocation
+    setIsUpdateChassis(false);
     setShowChassisModal(true);
     handleClose();
   };
 
   const handleUpdateChassis = (bookingId) => {
     setSelectedBookingForChassis(bookingId);
-    setIsUpdateChassis(true); // This is true for update
+    setIsUpdateChassis(true);
     setShowChassisModal(true);
     handleClose();
   };
@@ -2444,7 +2529,6 @@ const BookingList = () => {
 
       showSuccess(response.data.message);
       
-      // Refresh data after chassis allocation
       await fetchData();
       
       setShowChassisModal(false);
@@ -2470,7 +2554,6 @@ const BookingList = () => {
       await axiosInstance.post(`/bookings/${id}/approve-update`, payload);
       showSuccess('Update approved successfully');
       
-      // Refresh data
       await fetchData();
       
       setDetailsModalOpen(false);
@@ -2488,7 +2571,6 @@ const BookingList = () => {
       await axiosInstance.post(`/bookings/${id}/reject-update`, payload);
       showSuccess('Update rejected successfully');
       
-      // Refresh data
       await fetchData();
       
       setDetailsModalOpen(false);
@@ -2507,7 +2589,6 @@ const BookingList = () => {
         await axiosInstance.delete(`/bookings/${id}`);
         showSuccess('Booking deleted successfully');
         
-        // Refresh all data instead of just filtering local state
         await fetchData();
         await fetchCancellationData();
         
@@ -2536,7 +2617,6 @@ const BookingList = () => {
 
   const renderBookingTable = (records, tabIndex) => {
     if (tabIndex === 5 || tabIndex === 6) {
-      // Cancellation tables
       return (
         <div className="responsive-table-wrapper">
           <CTable striped bordered hover className='responsive-table'>
@@ -2615,7 +2695,6 @@ const BookingList = () => {
       );
     }
 
-    // Original booking tables
     return (
       <div className="responsive-table-wrapper">
         <CTable striped bordered hover className='responsive-table'>
@@ -2638,7 +2717,7 @@ const BookingList = () => {
               {tabIndex === 3 && <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>}
               {tabIndex != 2 && tabIndex != 4 && <CTableHeaderCell scope="col">Print</CTableHeaderCell>}
               {tabIndex === 2 && <CTableHeaderCell scope="col">Note</CTableHeaderCell>}
-              {showActionColumn && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+              <CTableHeaderCell scope="col">Action</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
@@ -2779,113 +2858,114 @@ const BookingList = () => {
                     </CTableDataCell>
                   )}
                   {tabIndex === 2 && <CTableDataCell>{booking.note}</CTableDataCell>}
-                  {showActionColumn && (
-                    <CTableDataCell>
-                      <CButton
-                        size="sm"
-                        className='option-button btn-sm'
-                        onClick={(event) => handleClick(event, booking.id)}
-                      >
-                        <CIcon icon={cilSettings} />
-                        Options
-                      </CButton>
-                      <Menu 
-  id={`action-menu-${booking.id}`} 
-  anchorEl={anchorEl} 
-  open={menuId === booking.id} 
-  onClose={handleClose}
->
-  {(hasViewPermission || hasActionPermission) && (
-    <>
-      <MenuItem onClick={() => handleViewBooking(booking.id)} style={{ color: 'black' }}>
-        <CIcon icon={cilZoomOut} className="me-2" /> View Booking
-      </MenuItem>
-      {tabIndex === 0 && booking.updateRequestStatus == 'PENDING' && (
-        <MenuItem onClick={() => handleViewAltrationRequest(booking)} style={{ color: 'black' }}>
-          <CIcon icon={cilZoomOut} className="me-2" /> View Altration Req
-        </MenuItem>
-      )}
-    </>
-  )}
+                  <CTableDataCell>
+                    <CButton
+                      size="sm"
+                      className='option-button btn-sm'
+                      onClick={(event) => handleClick(event, booking.id)}
+                    >
+                      <CIcon icon={cilSettings} />
+                      Options
+                    </CButton>
+                    <Menu 
+                      id={`action-menu-${booking.id}`} 
+                      anchorEl={anchorEl} 
+                      open={menuId === booking.id} 
+                      onClose={handleClose}
+                    >
+                      {hasViewPermission && (
+                        <MenuItem onClick={() => handleViewBooking(booking.id)} style={{ color: 'black' }}>
+                          <CIcon icon={cilZoomOut} className="me-2" /> View Booking
+                        </MenuItem>
+                      )}
+                      {tabIndex === 0 && booking.updateRequestStatus == 'PENDING' && (
+                        <MenuItem onClick={() => handleViewAltrationRequest(booking)} style={{ color: 'black' }}>
+                          <CIcon icon={cilZoomOut} className="me-2" /> View Altration Req
+                        </MenuItem>
+                      )}
 
-  {hasEditPermission && (
-    <>
-      {/* Add edit option to the menu - show for Rejected Discount tab (tabIndex === 4) */}
-      {(tabIndex === 4) && (
-        <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
-          <MenuItem style={{ color: 'black' }}>
-            <CIcon icon={cilPencil} className="me-2" /> Edit
-          </MenuItem>
-        </Link>
-      )}
-      {/* Keep existing edit logic for other tabs if needed */}
-      {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
-        <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
-          <MenuItem style={{ color: 'black' }}>
-            <CIcon icon={cilPencil} className="me-2" /> Edit
-          </MenuItem>
-        </Link>
-      )}
-    </>
-  )}
+                      {hasEditPermission && (
+                        <>
+                          {(tabIndex === 4) && (
+                            <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
+                              <MenuItem style={{ color: 'black' }}>
+                                <CIcon icon={cilPencil} className="me-2" /> Edit
+                              </MenuItem>
+                            </Link>
+                          )}
+                          {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
+                            <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
+                              <MenuItem style={{ color: 'black' }}>
+                                <CIcon icon={cilPencil} className="me-2" /> Edit
+                              </MenuItem>
+                            </Link>
+                          )}
+                        </>
+                      )}
 
-  {hasDeletePermission && (
-    <>
-      {(tabIndex === 0 || tabIndex === 4) && (
-        <MenuItem onClick={() => handleDelete(booking.id)} style={{ color: 'black' }}>
-          <CIcon icon={cilTrash} className="me-2" /> Delete
-        </MenuItem>
-      )}
-    </>
-  )}
+                      {hasDeletePermission && (
+                        <>
+                          {(tabIndex === 0 || tabIndex === 4) && (
+                            <MenuItem onClick={() => handleDelete(booking.id)} style={{ color: 'black' }}>
+                              <CIcon icon={cilTrash} className="me-2" /> Delete
+                            </MenuItem>
+                          )}
+                        </>
+                      )}
 
-  {booking.payment.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status !== 'NOT_UPLOADED' && (
-    <MenuItem onClick={() => handleViewFinanceLetter(booking._id)} style={{ color: 'black' }}>
-      <CIcon icon={cilZoomOut} className="me-2" /> View Finance Letter
-    </MenuItem>
-  )}
+                      {booking.payment.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status !== 'NOT_UPLOADED' && (
+                        <MenuItem onClick={() => handleViewFinanceLetter(booking._id)} style={{ color: 'black' }}>
+                          <CIcon icon={cilZoomOut} className="me-2" /> View Finance Letter
+                        </MenuItem>
+                      )}
 
-  {hasKYCPermission && (
-    <>
-      {booking.documentStatus?.kyc?.status !== 'NOT_UPLOADED' && (
-        <MenuItem onClick={() => handleViewKYC(booking.id)} style={{ color: 'black' }}>
-          <CIcon icon={cilZoomOut} className="me-2" /> View KYC
-        </MenuItem>
-      )}
-    </>
-  )}
+                      {hasKYCPermission && (
+                        <>
+                          {booking.documentStatus?.kyc?.status !== 'NOT_UPLOADED' && (
+                            <MenuItem onClick={() => handleViewKYC(booking.id)} style={{ color: 'black' }}>
+                              <CIcon icon={cilZoomOut} className="me-2" /> View KYC
+                            </MenuItem>
+                          )}
+                        </>
+                      )}
 
-  {hasChassisAllocation && (
-    <>
-      {tabIndex === 1 &&
-        booking.status === 'APPROVED' &&
-        (booking.payment?.type === 'CASH' ||
-          (booking.payment?.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status == 'APPROVED')) && (
-          <MenuItem onClick={() => handleAllocateChassis(booking.id)} style={{ color: 'black' }}>
-            <CIcon icon={cilPencil} className="me-2" /> Allocate Chassis
-          </MenuItem>
-        )}
-      {tabIndex === 3 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
-        <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>
-          <CIcon icon={cilPencil} className="me-2" /> Update Chassis
-        </MenuItem>
-      )}
-    </>
-  )}
+                      {hasChassisAllocation && (
+                        <>
+                          {tabIndex === 1 &&
+                            booking.status === 'APPROVED' &&
+                            (booking.payment?.type === 'CASH' ||
+                              (booking.payment?.type === 'FINANCE' && booking.documentStatus?.financeLetter?.status == 'APPROVED')) && (
+                              <MenuItem onClick={() => handleAllocateChassis(booking.id)} style={{ color: 'black' }}>
+                                <CIcon icon={cilPencil} className="me-2" /> Allocate Chassis
+                              </MenuItem>
+                            )}
+                          {tabIndex === 3 && booking.status === 'ALLOCATED' && booking.chassisNumberChangeAllowed && (
+                            <MenuItem onClick={() => handleUpdateChassis(booking.id)} style={{ color: 'black' }}>
+                              <CIcon icon={cilPencil} className="me-2" /> Update Chassis
+                            </MenuItem>
+                          )}
+                        </>
+                      )}
 
-  {hasChassisAllocation && tabIndex === 2 && booking.status === 'ON_HOLD' && (
-    <>
-      <MenuItem onClick={() => handleApproveChassis(booking.id)} style={{ color: 'green' }}>
-        <CIcon icon={cilCheck} className="me-2" /> Approve Chassis
-      </MenuItem>
-      <MenuItem onClick={() => handleRejectChassis(booking.id)} style={{ color: 'red' }}>
-        <CIcon icon={cilX} className="me-2" /> Reject Chassis
-      </MenuItem>
-    </>
-  )}
-</Menu>
-                    </CTableDataCell>
-                  )}
+                      {hasChassisAllocation && tabIndex === 2 && booking.status === 'ON_HOLD' && (
+                        <>
+                          <MenuItem onClick={() => handleApproveChassis(booking.id)} style={{ color: 'green' }}>
+                            <CIcon icon={cilCheck} className="me-2" /> Approve Chassis
+                          </MenuItem>
+                          <MenuItem onClick={() => handleRejectChassis(booking.id)} style={{ color: 'red' }}>
+                            <CIcon icon={cilX} className="me-2" /> Reject Chassis
+                          </MenuItem>
+                        </>
+                      )}
+
+                      {/* Available Documents Option - Only for Approved tab */}
+                      {tabIndex === 1 && booking.status === 'APPROVED' && (
+                        <MenuItem onClick={() => handleOpenAvailableDocs(booking.id)} style={{ color: 'black' }}>
+                          <CIcon icon={cilFile} className="me-2" /> Available Documents
+                        </MenuItem>
+                      )}
+                    </Menu>
+                  </CTableDataCell>
                 </CTableRow>
               ))
             )}
@@ -3090,6 +3170,149 @@ const BookingList = () => {
           </CTabContent>
         </CCardBody>
       </CCard>
+
+      {/* Available Documents Modal */}
+      <CModal 
+        visible={availableDocsModal} 
+        onClose={() => {
+          setAvailableDocsModal(false);
+          setSelectedBookingForDocs(null);
+          setAvailableTemplates(null);
+          setSelectedTemplateIds([]);
+          setTemplateNotes('');
+        }}
+        size="lg"
+      >
+        <CModalHeader>
+          <CModalTitle>
+            <CIcon icon={cilFile} className="me-2" />
+            Available Documents - {availableTemplates?.booking_number || ''}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {loadingTemplates ? (
+            <div className="text-center py-5">
+              <CSpinner color="primary" />
+              <p className="mt-3">Loading available documents...</p>
+            </div>
+          ) : availableTemplates ? (
+            <div>
+              <div className="mb-3">
+                <h6>Customer: {availableTemplates.customer_name}</h6>
+                <div className="alert alert-info mb-3">
+                  <small>
+                    <strong>Summary:</strong> {availableTemplates.summary.available_for_download} of {availableTemplates.summary.total_templates} templates are available for download.
+                  </small>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h6 className="mb-0">Available Templates ({availableTemplates.available_templates.count})</h6>
+                  <div className="d-flex gap-2">
+                    <CButton 
+                      size="sm" 
+                      color="primary" 
+                      variant="outline"
+                      onClick={handleSelectAllAvailable}
+                      disabled={!availableTemplates?.available_templates?.templates?.length}
+                    >
+                      Select All
+                    </CButton>
+                    <CButton 
+                      size="sm" 
+                      color="secondary" 
+                      variant="outline"
+                      onClick={handleClearSelection}
+                    >
+                      Clear All
+                    </CButton>
+                  </div>
+                </div>
+                
+                {availableTemplates.available_templates.templates.length > 0 ? (
+                  <div className="border rounded p-3">
+                    {availableTemplates.available_templates.templates.map((template) => (
+                      <div key={template.template_id} className="mb-3">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`template-${template.template_id}`}
+                            checked={selectedTemplateIds.includes(template.template_id)}
+                            onChange={() => handleTemplateSelection(template.template_id, template.can_download)}
+                            disabled={!template.can_download}
+                          />
+                          <label 
+                            className="form-check-label d-flex justify-content-between align-items-center w-100"
+                            htmlFor={`template-${template.template_id}`}
+                            style={{ cursor: template.can_download ? 'pointer' : 'not-allowed', opacity: template.can_download ? 1 : 0.6 }}
+                          >
+                            <div>
+                              <strong>{template.template_name}</strong>
+                              <br />
+                              <small className="text-muted">
+                                {template.can_download ? 'Available for download' : 'Not available for download'}
+                              </small>
+                            </div>
+                            {!template.can_download && (
+                              <small className="text-danger">
+                                <CIcon icon={cilXCircle} className="me-1" />
+                                Disabled
+                              </small>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-3 border rounded">
+                    <CIcon icon={cilFile} size="lg" className="text-muted mb-2" />
+                    <p className="text-muted mb-0">No templates available for download</p>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <CFormLabel>Notes (Optional):</CFormLabel>
+                  <CFormTextarea
+                    value={templateNotes}
+                    onChange={(e) => setTemplateNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Add any notes about the selected templates..."
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </CModalBody>
+        <CModalFooter>
+          <CButton 
+            color="secondary" 
+            onClick={() => {
+              setAvailableDocsModal(false);
+              setSelectedBookingForDocs(null);
+              setAvailableTemplates(null);
+              setSelectedTemplateIds([]);
+              setTemplateNotes('');
+            }}
+          >
+            Cancel
+          </CButton>
+          <CButton 
+            color="primary"
+            onClick={handleSubmitTemplateSelection}
+            disabled={selectedTemplateIds.length === 0 || submittingSelection}
+          >
+            {submittingSelection ? (
+              <>
+                <CSpinner size="sm" className="me-2" />
+                Processing...
+              </>
+            ) : (
+              `Select (${selectedTemplateIds.length}) Templates`
+            )}
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       {/* Cancellation Approval Modal */}
       <CModal visible={cancelApprovalModal} onClose={() => setCancelApprovalModal(false)}>

@@ -989,27 +989,23 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
 
 
   const getChassisDisplayText = (chassis) => {
-  const oldestChassis = getOldestChassis();
-  const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
-  
-  
   const isCurrentChassis = chassis.chassisNumber === booking?.chassisNumber;
   
-  
+
   if (isCurrentChassis) {
     return chassis.chassisNumber;
   }
   
-
+ 
   if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
     const days = chassis.ageInDays;
-    if (days === 0) {
-      return `${chassis.chassisNumber}`;
-    }
-    return `${chassis.chassisNumber} (${days} day${days !== 1 ? 's' : ''})`;
+    const ageText = `${days} day${days !== 1 ? 's' : ''}`;
+    
+   
+    return `${chassis.chassisNumber} (${ageText})`;
   }
   
-
+ 
   return chassis.chassisNumber;
 };
 
