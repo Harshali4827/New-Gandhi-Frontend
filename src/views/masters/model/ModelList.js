@@ -547,10 +547,12 @@ const ModelList = () => {
   const [headers, setHeaders] = useState([]);
   const [branches, setBranches] = useState([]);
   const [subdealers, setSubdealers] = useState([]);
-  const [verticles, setVerticles] = useState([]);
+  const [allVerticles, setAllVerticles] = useState([]); // All verticles from API
+  const [userVerticles, setUserVerticles] = useState([]); // Verticles from user profile
+  const [userVerticleIds, setUserVerticleIds] = useState([]); // Just the IDs for filtering
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedSubdealer, setSelectedSubdealer] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
+  const [selectedType, setSelectedType] = useState('EV'); // Set first type as default
   const [selectedVerticle, setSelectedVerticle] = useState(null);
   const [isFiltered, setIsFiltered] = useState(false);
   const [showBranchFilterModal, setShowBranchFilterModal] = useState(false);
@@ -572,10 +574,15 @@ const ModelList = () => {
   const hasCreatePermission = hasPermission('MODEL', 'CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
+  // Define available types in order
+  const availableTypes = ['EV', 'ICE', 'CSD'];
+
   // Function to get verticle name by ID
   const getVerticleNameById = (verticleId) => {
     if (!verticleId) return '-';
-    const verticle = verticles.find(v => v._id === verticleId);
+    // Check in userVerticles first, then in allVerticles
+    const verticle = userVerticles.find(v => v._id === verticleId) || 
+                     allVerticles.find(v => v._id === verticleId);
     return verticle ? verticle.name : verticleId;
   };
 
@@ -605,15 +612,29 @@ const ModelList = () => {
   const filteredHeaders = getFilteredHeaders();
 
   useEffect(() => {
-    fetchData();
+    // Fetch user profile to get assigned verticles
+    fetchUserProfile();
+    
+    // Set first type as default
+    setSelectedType(availableTypes[0]);
+    setTempSelectedType(availableTypes[0]);
+    
+    // Fetch other data
     fetchBranches();
     fetchSubdealers();
-    fetchVerticles();
   }, []);
 
-  // Update verticle names when verticles data is loaded or changes
+  // Fetch data when userVerticleIds are loaded
   useEffect(() => {
-    if (verticles.length > 0 && data.length > 0) {
+    if (userVerticleIds.length > 0) {
+      // Fetch initial data with default type
+      fetchData(null, null, availableTypes[0], null);
+    }
+  }, [userVerticleIds]);
+
+  // Update verticle names when userVerticles data is loaded or changes
+  useEffect(() => {
+    if (userVerticles.length > 0 && data.length > 0) {
       const updatedData = data.map(model => ({
         ...model,
         verticle_name: model.verticleDetails?.name || getVerticleNameById(model.verticle_id)
@@ -621,13 +642,60 @@ const ModelList = () => {
       setData(updatedData);
       setFilteredData(updatedData);
     }
-  }, [verticles]);
+  }, [userVerticles]);
+
+  // Filter data based on user's verticles whenever data changes
+  useEffect(() => {
+    if (userVerticleIds.length > 0 && data.length > 0) {
+      const filteredModels = data.filter(model => 
+        model.verticle_id && userVerticleIds.includes(model.verticle_id)
+      );
+      setFilteredData(filteredModels);
+    }
+  }, [data, userVerticleIds]);
+
+  // Fetch user profile to get assigned verticles
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me');
+      const verticleIds = response.data.data?.verticles || [];
+      setUserVerticleIds(verticleIds);
+      
+      // Now fetch all verticles and filter only those assigned to user
+      await fetchAllVerticles(verticleIds);
+    } catch (error) {
+      console.log('Error fetching user profile', error);
+    }
+  };
+
+  // Fetch all verticles and filter based on user's verticles
+  const fetchAllVerticles = async (userVerticleIds) => {
+    try {
+      const response = await axiosInstance.get('/verticle-masters');
+      const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
+      setAllVerticles(verticlesData);
+      
+      // Filter verticles to only show those assigned to the user
+      const filteredVerticles = verticlesData.filter(verticle => 
+        userVerticleIds.includes(verticle._id)
+      );
+      setUserVerticles(filteredVerticles);
+    } catch (error) {
+      console.log('Error fetching verticles', error);
+    }
+  };
 
   const fetchData = async (branchId = null, subdealerId = null, type = null, verticleId = null) => {
     try {
       setLoading(true);
       let url = '/models/all/status';
       const params = {};
+
+      // Use selectedType as default if no type is provided
+      const finalType = type || selectedType || availableTypes[0];
+      
+      // Always include type in params
+      params.type = finalType;
 
       if (branchId) {
         params.branch_id = branchId;
@@ -637,23 +705,27 @@ const ModelList = () => {
         setIsFiltered(true);
       }
 
-      if (type) {
-        params.type = type;
-        setIsFiltered(true);
-      }
-
       if (verticleId) {
         params.verticle_id = verticleId;
         setIsFiltered(true);
       }
 
-      // If no filters are applied
-      if (!branchId && !subdealerId && !type && !verticleId) {
+      // If no filters are applied except type
+      if (!branchId && !subdealerId && !verticleId) {
         setIsFiltered(false);
+      } else {
+        setIsFiltered(true);
       }
 
       const response = await axiosInstance.get(url, { params });
       let models = response.data.data?.models || response.data.data || [];
+
+      // Filter models based on user's assigned verticles
+      if (userVerticleIds.length > 0) {
+        models = models.filter(model => 
+          model.verticle_id && userVerticleIds.includes(model.verticle_id)
+        );
+      }
 
       models = models.map((model) => ({
         ...model,
@@ -664,6 +736,11 @@ const ModelList = () => {
 
       setData(models);
       setFilteredData(models);
+      
+      // Update selectedType state if it's different
+      if (type && type !== selectedType) {
+        setSelectedType(type);
+      }
     } catch (error) {
       console.error('Error fetching data', error);
       setError(error.message);
@@ -688,16 +765,6 @@ const ModelList = () => {
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
       console.log('Error fetching subdealers', error);
-    }
-  };
-
-  const fetchVerticles = async () => {
-    try {
-      const response = await axiosInstance.get('/verticle-masters');
-      const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
-      setVerticles(verticlesData);
-    } catch (error) {
-      console.log('Error fetching verticles', error);
     }
   };
 
@@ -754,9 +821,9 @@ const ModelList = () => {
   const clearFilters = () => {
     setSelectedBranch(null);
     setSelectedSubdealer(null);
-    setSelectedType(null);
+    setSelectedType(availableTypes[0]); // Reset to first type
     setSelectedVerticle(null);
-    fetchData();
+    fetchData(null, null, availableTypes[0], null); // Fetch with first type
   };
 
   const getPriceForHeader = (model, headerId) => {
@@ -815,24 +882,30 @@ const ModelList = () => {
   const getFilterText = () => {
     let filterText = '';
     
-    if (selectedBranch) {
-      filterText += `(Filtered by Branch: ${getBranchNameById(selectedBranch)})`;
-    } else if (selectedSubdealer) {
-      filterText += `(Filtered by Subdealer: ${getSubdealerNameById(selectedSubdealer)})`;
-    }
+    // Always show the type filter
+    filterText += `(Type: ${selectedType})`;
     
-    if (selectedType) {
-      if (filterText) filterText += ' ';
-      filterText += `(Type: ${selectedType})`;
+    if (selectedBranch) {
+      filterText += ` (Branch: ${getBranchNameById(selectedBranch)})`;
+    } else if (selectedSubdealer) {
+      filterText += ` (Subdealer: ${getSubdealerNameById(selectedSubdealer)})`;
     }
     
     if (selectedVerticle) {
-      if (filterText) filterText += ' ';
-      filterText += `(Verticle: ${getVerticleNameById(selectedVerticle)})`;
+      filterText += ` (Verticle: ${getVerticleNameById(selectedVerticle)})`;
     }
     
     return filterText;
   };
+
+  // Helper function to check if a model should be shown based on user's verticles
+  const shouldShowModel = (model) => {
+    if (!model.verticle_id) return false;
+    return userVerticleIds.includes(model.verticle_id);
+  };
+
+  // Filter currentRecords based on user's verticles
+  const filteredCurrentRecords = currentRecords.filter(shouldShowModel);
 
   if (loading) {
     return (
@@ -873,7 +946,7 @@ const ModelList = () => {
               <CIcon icon={cilSearch} className='icon' /> Search
             </CButton>
 
-            {(selectedBranch || selectedSubdealer || selectedType || selectedVerticle) && (
+            {(selectedBranch || selectedSubdealer || selectedVerticle || (selectedType && selectedType !== availableTypes[0])) && (
               <CButton 
                 size="sm" 
                 color="secondary" 
@@ -881,7 +954,7 @@ const ModelList = () => {
                 onClick={clearFilters}
               >
                 <CIcon icon={cilZoomOut} className='icon' /> 
-               Reset Search
+                Reset Search
               </CButton>
             )}
 
@@ -889,7 +962,7 @@ const ModelList = () => {
           </div>
         </CCardHeader>             
         <CCardBody>
-        <div className="d-flex justify-content-between mb-3">
+          <div className="d-flex justify-content-between mb-3">
             <div></div>
             <div className='d-flex'>
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
@@ -918,14 +991,16 @@ const ModelList = () => {
                 </CTableRow>
               </CTableHead>
               <CTableBody>
-                {currentRecords.length === 0 ? (
+                {filteredCurrentRecords.length === 0 ? (
                   <CTableRow>
                     <CTableDataCell colSpan={filteredHeaders.length + 6} className="text-center">
-                      No models available
+                      {userVerticles.length === 0 ? 
+                        "No verticles assigned to your account. Please contact administrator." : 
+                        `No models available for ${selectedType} in your assigned verticles`}
                     </CTableDataCell>
                   </CTableRow>
                 ) : (
-                  currentRecords.map((model, index) => (
+                  filteredCurrentRecords.map((model, index) => (
                     <CTableRow key={model._id}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>{model.model_name}</CTableDataCell>
@@ -1031,10 +1106,11 @@ const ModelList = () => {
               value={tempSelectedType || ''}
               onChange={(e) => setTempSelectedType(e.target.value || null)}
             >
-              <option value="">-- All Types --</option>
-              <option value="EV">EV</option>
-              <option value="ICE">ICE</option>
-              <option value="CSD">CSD</option>
+              {availableTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </CFormSelect>
           </div>
 
@@ -1045,7 +1121,7 @@ const ModelList = () => {
               onChange={(e) => setTempSelectedVerticle(e.target.value || null)}
             >
               <option value="">-- All Verticles --</option>
-              {verticles
+              {userVerticles
                 .filter(vertical => vertical.status === 'active')
                 .map((vertical) => (
                   <option key={vertical._id} value={vertical._id}>

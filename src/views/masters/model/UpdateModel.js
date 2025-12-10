@@ -20,19 +20,41 @@ const UpdateModel = () => {
     verticle_id: '',  // Added verticle_id field
     prices: []
   });
-  const [verticles, setVerticles] = useState([]);
+  const [allVerticles, setAllVerticles] = useState([]); // All verticles from API
+  const [userVerticles, setUserVerticles] = useState([]); // Verticles from user profile
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchVerticles();
+    // Fetch user profile to get assigned verticles
+    fetchUserProfile();
     fetchModelDetails();
   }, [id, branchId]);
 
-  const fetchVerticles = async () => {
+  // Fetch user profile to get assigned verticles
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me');
+      const userVerticleIds = response.data.data?.verticles || [];
+      
+      // Now fetch all verticles and filter only those assigned to user
+      await fetchAllVerticles(userVerticleIds);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  // Fetch all verticles and filter based on user's verticles
+  const fetchAllVerticles = async (userVerticleIds) => {
     try {
       const response = await axiosInstance.get('/verticle-masters');
       const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
-      setVerticles(verticlesData);
+      setAllVerticles(verticlesData);
+      
+      // Filter verticles to only show those assigned to the user
+      const filteredVerticles = verticlesData.filter(verticle => 
+        userVerticleIds.includes(verticle._id)
+      );
+      setUserVerticles(filteredVerticles);
     } catch (error) {
       console.error('Error fetching verticles:', error);
     }
@@ -149,7 +171,7 @@ const UpdateModel = () => {
                     onChange={handleChange}
                   >
                     <option value="">-Select Verticle-</option>
-                    {verticles
+                    {userVerticles
                       .filter(vertical => vertical.status === 'active')
                       .map((vertical) => (
                         <option key={vertical._id} value={vertical._id}>
@@ -159,7 +181,7 @@ const UpdateModel = () => {
                   </CFormSelect>
                 </CInputGroup>
                 {errors.verticle_id && <p className="error">{errors.verticle_id}</p>}
-                {verticles.filter(v => v.status === 'active').length === 0 && (
+                {userVerticles.filter(v => v.status === 'active').length === 0 && (
                   <small className="text-muted">No active verticles available.</small>
                 )}
               </div>

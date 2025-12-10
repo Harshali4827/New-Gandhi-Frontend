@@ -35,7 +35,6 @@ import '../../../css/importCsv.css';
 import { useTableFilter } from '../../../utils/tableFilters';
 import axiosInstance from '../../../axiosInstance';
 import { confirmDelete, showError, showSuccess } from '../../../utils/sweetAlerts';
-import { hasPermission } from '../../../utils/permissionUtils';
 
 const TemplateList = () => {
   const [templates, setTemplates] = useState([]);
@@ -47,11 +46,6 @@ const TemplateList = () => {
   // Menu state
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
-
-  const hasEditPermission = hasPermission('TEMPLATE', 'UPDATE');
-  const hasDeletePermission = hasPermission('TEMPLATE', 'DELETE');
-  const hasCreatePermission = hasPermission('TEMPLATE', 'CREATE');
-  const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {
     fetchTemplates();
@@ -126,13 +120,11 @@ const TemplateList = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
-            {hasCreatePermission && (
-              <Link to="/templateForm/template-list/create">
-                <CButton size="sm" className="action-btn me-1">
-                  <CIcon icon={cilPlus} className='icon'/> New Template
-                </CButton>
-              </Link>
-            )}
+            <Link to="/templateForm/template-list/create">
+              <CButton size="sm" className="action-btn me-1">
+                <CIcon icon={cilPlus} className='icon'/> New Template
+              </CButton>
+            </Link>
           </div>
         </CCardHeader>
         
@@ -162,13 +154,13 @@ const TemplateList = () => {
                   <CTableHeaderCell>Status</CTableHeaderCell>
                   <CTableHeaderCell>Created By</CTableHeaderCell>
                   <CTableHeaderCell>Created Date</CTableHeaderCell>
-                  {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
+                  <CTableHeaderCell>Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
                 {filteredData.length === 0 ? (
                   <CTableRow>
-                    <CTableDataCell colSpan={showActionColumn ? "9" : "8"} className="text-center">
+                    <CTableDataCell colSpan="9" className="text-center">
                       No templates available
                     </CTableDataCell>
                   </CTableRow>
@@ -198,61 +190,55 @@ const TemplateList = () => {
                       <CTableDataCell>
                         {new Date(template.created_at).toLocaleDateString()}
                       </CTableDataCell>
-                      {showActionColumn && (
-                        <CTableDataCell>
-                          <CButton
-                            size="sm"
-                            className='option-button btn-sm'
-                            onClick={(event) => handleClick(event, template._id)}
-                          >
-                            <CIcon icon={cilSettings} />
-                            Options
-                          </CButton>
-                          <Menu 
-                            id={`action-menu-${template._id}`} 
-                            anchorEl={anchorEl} 
-                            open={menuId === template._id} 
-                            onClose={handleClose}
-                            anchorOrigin={{
-                              vertical: 'bottom',
-                              horizontal: 'right',
-                            }}
-                            transformOrigin={{
-                              vertical: 'top',
-                              horizontal: 'right',
-                            }}
-                          >
-                            <MenuItem onClick={handleClose}>
-                              <Link 
-                                className="Link" 
-                                to={`/templateform/template-list/preview/${template._id}`}
-                                style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
-                              >
-                                <CIcon icon={cilMagnifyingGlass} className="me-2" /> Preview
-                              </Link>
-                            </MenuItem>
-                            {hasEditPermission && (
-                              <MenuItem onClick={handleClose}>
-                                <Link 
-                                  className="Link" 
-                                  to={`/templateform/template-list/edit/${template._id}`}
-                                  style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
-                                >
-                                  <CIcon icon={cilPencil} className="me-2" /> Edit
-                                </Link>
-                              </MenuItem>
-                            )}
-                            {hasDeletePermission && (
-                              <MenuItem onClick={() => {
-                                handleDelete(template._id);
-                                handleClose();
-                              }}>
-                                <CIcon icon={cilTrash} className="me-2" /> Delete
-                              </MenuItem>
-                            )}
-                          </Menu>
-                        </CTableDataCell>
-                      )}
+                      <CTableDataCell>
+                        <CButton
+                          size="sm"
+                          className='option-button btn-sm'
+                          onClick={(event) => handleClick(event, template._id)}
+                        >
+                          <CIcon icon={cilSettings} />
+                          Options
+                        </CButton>
+                        <Menu 
+                          id={`action-menu-${template._id}`} 
+                          anchorEl={anchorEl} 
+                          open={menuId === template._id} 
+                          onClose={handleClose}
+                          anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                          }}
+                          transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                          }}
+                        >
+                          <MenuItem onClick={handleClose}>
+                            <Link 
+                              className="Link" 
+                              to={`/templateform/template-list/preview/${template._id}`}
+                              style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                            >
+                              <CIcon icon={cilMagnifyingGlass} className="me-2" /> Preview
+                            </Link>
+                          </MenuItem>
+                          <MenuItem onClick={handleClose}>
+                            <Link 
+                              className="Link" 
+                              to={`/templateform/template-list/edit/${template._id}`}
+                              style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                            >
+                              <CIcon icon={cilPencil} className="me-2" /> Edit
+                            </Link>
+                          </MenuItem>
+                          <MenuItem onClick={() => {
+                            handleDelete(template._id);
+                            handleClose();
+                          }}>
+                            <CIcon icon={cilTrash} className="me-2" /> Delete
+                          </MenuItem>
+                        </Menu>
+                      </CTableDataCell>
                     </CTableRow>
                   ))
                 )}

@@ -816,7 +816,8 @@ import {
   FaFileAlt,
   FaFileInvoiceDollar,
   FaBuilding,
-  FaStickyNote
+  FaStickyNote,
+  FaTag
 } from 'react-icons/fa';
 import '../../../css/bookingView.css';
 import '../../../css/form.css';
@@ -958,10 +959,8 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
         response = await axiosInstance.post(`/bookings/${booking.id}/${currentAction}`, requestBody);
       }
   
-      // Use API response message if available, otherwise fallback to static message
       const successMessage = response?.data?.message || `Booking ${currentAction}d successfully!`;
       
-      // Show success message with red icon for rejections
       if (currentAction === 'reject') {
         Swal.fire({
           title: 'Success!',
@@ -1072,6 +1071,41 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
            booking?.status !== 'CANCELLED' && 
            booking?.status !== 'COMPLETED' && 
            booking?.status !== 'REJECTED';
+  };
+
+  // Function to render verticles with names from verticlesSummary.list
+  const renderVerticles = () => {
+    // First check if we have verticlesSummary with names
+    if (booking.verticlesSummary?.list && booking.verticlesSummary.list.length > 0) {
+      return (
+        <div className="verticles-container">
+          {booking.verticlesSummary.list.map((verticle, index) => (
+            <CBadge key={index} color="info" className="me-2 mb-1">
+              {verticle.name}
+            </CBadge>
+          ))}
+        </div>
+      );
+    }
+    
+    // Fallback to original verticles array if verticlesSummary doesn't exist
+    if (!booking.verticles || booking.verticles.length === 0) {
+      return <span className="detail-value">No verticles assigned</span>;
+    }
+
+    // Handle case where verticles might contain objects or strings
+    return (
+      <div className="verticles-container">
+        {booking.verticles.map((verticle, index) => {
+          const verticleName = verticle.name || verticle;
+          return (
+            <CBadge key={index} color="info" className="me-2 mb-1">
+              {verticleName}
+            </CBadge>
+          );
+        })}
+      </div>
+    );
   };
 
   if (!booking) {
@@ -1208,6 +1242,24 @@ const ViewBooking = ({ open, onClose, booking, refreshData }) => {
                   </CRow>
                 </CCardBody>
               </CCard>
+
+              {/* Verticles Section */}
+              {((booking.verticlesSummary?.list && booking.verticlesSummary.list.length > 0) || 
+                (booking.verticles && booking.verticles.length > 0)) && (
+                <CCard className="booking-section mb-3">
+                  <CCardHeader>
+                    <h5>
+                      <FaTag /> Verticles
+                    </h5>
+                  </CCardHeader>
+                  <CCardBody>
+                    <div className="detail-row">
+                      <span className="detail-label">Verticles:</span>
+                      {renderVerticles()}
+                    </div>
+                  </CCardBody>
+                </CCard>
+              )}
 
               <div className="booking-details-grid">
                 <div className="details-column">
@@ -1662,6 +1714,16 @@ ViewBooking.propTypes = {
       mobile1: PropTypes.string,
       mobile2: PropTypes.string,
       aadharNumber: PropTypes.string
+    }),
+    verticles: PropTypes.array,
+    verticlesSummary: PropTypes.shape({
+      list: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          name: PropTypes.string,
+          status: PropTypes.string
+        })
+      )
     })
   }),
   refreshData: PropTypes.func

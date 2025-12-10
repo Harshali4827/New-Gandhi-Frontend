@@ -5,6 +5,7 @@ import CIcon from '@coreui/icons-react';
 import { cilCarAlt, cilPrint, cilReload } from '@coreui/icons';
 import axiosInstance from '../../axiosInstance';
 import '../../css/form.css';
+import { Api } from '@mui/icons-material';
 
 function HelmetInvoice() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,24 @@ function HelmetInvoice() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [typingTimeout, setTypingTimeout] = useState(null);
+
+  // Static values for helmet invoice
+  const helmetStaticData = {
+    particulars: 'TVS HELMET',
+    hsnCode: '000000',
+    quantity: 2,
+    unitCost: 1500.00,
+    taxableValue: 1271.20,
+    cgstRate: 9,
+    cgstAmount: 114.40,
+    sgstRate: 9,
+    sgstAmount: 114.40,
+    totalTaxable: 1271.20,
+    totalGST: 228.80,
+    grandTotal: 1500.00,
+    roundOff: 0.00,
+    netTotal: 1500
+  };
 
   useEffect(() => {
     return () => {
@@ -78,18 +97,6 @@ function HelmetInvoice() {
 
   const generateHelmetInvoiceHTML = (data) => {
     const invoiceDate = new Date(data.createdAt).toLocaleDateString('en-GB');
-
-    const helmetComponent = data.priceComponents.find((c) => c.header.header_key === 'TVS HELMET');
-
-    const qty = 2;
-    const unitCost = helmetComponent ? helmetComponent.originalValue : 0;
-    const gstRate = helmetComponent ? parseFloat(helmetComponent.header.metadata.gst_rate) / 100 : 0;
-    const taxableValue = helmetComponent ? unitCost / (1 + gstRate) : 0;
-    const totalGST = helmetComponent ? unitCost - taxableValue : 0;
-    const cgstAmount = totalGST / 2;
-    const sgstAmount = totalGST / 2;
-    const roundOff = Math.round(unitCost) - unitCost;
-    const netTotal = Math.round(unitCost);
 
     return `
 <!DOCTYPE html>
@@ -167,6 +174,9 @@ function HelmetInvoice() {
         }
         .text-center {
             text-align: center;
+        }
+        .text-right {
+            text-align: right;
         }
         .bold {
             font-weight: bold;
@@ -250,44 +260,73 @@ function HelmetInvoice() {
                         <th>Unit Cost</th>
                         <th>Taxable</th>
                         <th>CGST%</th>
-                        <th>Amount</th>
+                        <th>CGST Amount</th>
                         <th>SGST%</th>
-                        <th>Amount</th>
+                        <th>SGST Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>${helmetComponent ? helmetComponent.header.header_key : 'TVS HELMET'}</td>
-                        <td>${helmetComponent ? helmetComponent.header.metadata.hsn_code : '000000'}</td>
-                        <td >${qty}</td>
-                        <td >${unitCost.toFixed(2)}</td>
-                        <td >${taxableValue.toFixed(2)}</td>
-                        <td >${((gstRate * 100) / 2).toFixed(2)}%</td>
-                        <td >${cgstAmount.toFixed(2)}</td>
-                        <td >${((gstRate * 100) / 2).toFixed(2)}%</td>
-                        <td >${sgstAmount.toFixed(2)}</td>
+                        <td>${helmetStaticData.particulars}</td>
+                        <td>${helmetStaticData.hsnCode}</td>
+                        <td class="text-right">${helmetStaticData.quantity}</td>
+                        <td class="text-right">${helmetStaticData.unitCost.toFixed(2)}</td>
+                        <td class="text-right">${helmetStaticData.taxableValue.toFixed(2)}</td>
+                        <td class="text-right">${helmetStaticData.cgstRate.toFixed(0)}%</td>
+                        <td class="text-right">${helmetStaticData.cgstAmount.toFixed(2)}</td>
+                        <td class="text-right">${helmetStaticData.sgstRate.toFixed(0)}%</td>
+                        <td class="text-right">${helmetStaticData.sgstAmount.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td colspan="4" class="bold">Total</td>
-                        <td class="text-right bold">${taxableValue.toFixed(2)}</td>
+                        <td class="text-right bold">${helmetStaticData.totalTaxable.toFixed(2)}</td>
                         <td class="text-right bold"></td>
-                        <td class="text-right bold">${cgstAmount.toFixed(2)}</td>
+                        <td class="text-right bold">${helmetStaticData.cgstAmount.toFixed(2)}</td>
                         <td class="text-right bold"></td>
-                        <td class="text-right bold">${sgstAmount.toFixed(2)}</td>
+                        <td class="text-right bold">${helmetStaticData.sgstAmount.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td colspan="8" class="text-right bold">GRAND TOTAL</td>
-                        <td class="text-right bold">${unitCost.toFixed(2)}</td>
+                        <td class="text-right bold">${helmetStaticData.grandTotal.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td colspan="8" >ROUND OFF</td>
-                        <td >${roundOff >= 0 ? '+' : ''}${roundOff.toFixed(2)}</td>
+                        <td class="text-right">${helmetStaticData.roundOff >= 0 ? '+' : ''}${helmetStaticData.roundOff.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td colspan="8" class="text-right bold">NET TOTAL</td>
-                        <td class="text-right bold">₹ ${netTotal}</td>
+                        <td class="text-right bold">₹ ${helmetStaticData.netTotal}</td>
                     </tr>
                 </tbody>
+            </table>
+        
+            <div class="divider"></div>
+            
+            <table style="margin-top: 10mm;">
+                <tr>
+                    <td width="50%"><strong>Description</strong></td>
+                    <td width="50%" class="text-right"><strong>Amount</strong></td>
+                </tr>
+                <tr>
+                    <td>Total Taxable</td>
+                    <td class="text-right">₹${helmetStaticData.totalTaxable.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Total GST</td>
+                    <td class="text-right">₹${helmetStaticData.totalGST.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Grand Total (${helmetStaticData.totalTaxable.toFixed(2)} + ${helmetStaticData.totalGST.toFixed(2)})</td>
+                    <td class="text-right">₹${helmetStaticData.grandTotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Round Off</td>
+                    <td class="text-right">${helmetStaticData.roundOff >= 0 ? '+' : ''}${helmetStaticData.roundOff.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td><strong>NET TOTAL</strong></td>
+                    <td class="text-right"><strong>₹ ${helmetStaticData.netTotal}</strong></td>
+                </tr>
             </table>
         
             <div class="divider"></div>

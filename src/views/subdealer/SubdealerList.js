@@ -181,6 +181,7 @@ const SubdealerList = () => {
                 <CTableRow>
                   <CTableHeaderCell>Sr.no</CTableHeaderCell>
                   <CTableHeaderCell>Name</CTableHeaderCell>
+                  <CTableHeaderCell>Branch</CTableHeaderCell>
                   <CTableHeaderCell>Location</CTableHeaderCell>
                   <CTableHeaderCell>Rate Of Interest</CTableHeaderCell>
                   <CTableHeaderCell>Type</CTableHeaderCell>
@@ -194,7 +195,8 @@ const SubdealerList = () => {
                     <CTableRow key={subdealer.id}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>{subdealer.name}</CTableDataCell>
-                      <CTableDataCell>{subdealer.location}</CTableDataCell>
+                      <CTableDataCell>{subdealer.name}</CTableDataCell>
+                      <CTableDataCell>{subdealer.branchDetails?.name || ''}</CTableDataCell>
                       <CTableDataCell>{subdealer.rateOfInterest}</CTableDataCell>
                       <CTableDataCell>{subdealer.type}</CTableDataCell>
                       <CTableDataCell>

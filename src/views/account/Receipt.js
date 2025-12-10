@@ -231,7 +231,7 @@ function Receipt() {
       
       printWindow.onload = function() {
         printWindow.focus();
-        printWindow.print();
+        // printWindow.print();
       };
       
     } catch (error) {

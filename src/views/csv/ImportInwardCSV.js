@@ -13,6 +13,9 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
   const [showModal, setShowModal] = useState(false);
   const [branchError, setBranchError] = useState('');
   const [typeError, setTypeError] = useState('');
+  
+  // Track if form was validated
+  const [isValidated, setIsValidated] = useState(false);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -37,19 +40,17 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
 
   const validateForm = () => {
     let isValid = true;
+    setBranchError('');
+    setTypeError('');
 
     if (!selectedBranchId) {
       setBranchError('Please select a branch');
       isValid = false;
-    } else {
-      setBranchError('');
     }
 
     if (!selectedType) {
       setTypeError('Please select a type (EV / ICE)');
       isValid = false;
-    } else {
-      setTypeError('');
     }
 
     return isValid;
@@ -57,33 +58,52 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
 
   const handleModalConfirm = () => {
     if (validateForm()) {
+      setIsValidated(true);
       setShowModal(false);
-      fileInputRef.current.click();
+      // Use setTimeout to ensure modal is closed before opening file dialog
+      setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        }
+      }, 100);
     }
   };
 
   const handleModalCancel = () => {
     setShowModal(false);
-    setSelectedBranchId('');
-    setSelectedType('');
+    // Only reset on explicit cancel, not on modal close
     setBranchError('');
     setTypeError('');
+  };
+
+  // Handle modal backdrop click - don't reset form
+  const handleModalClose = () => {
+    setShowModal(false);
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!validateForm()) {
-      setShowModal(true);
-      return;
+    // Re-validate if needed
+    if (!isValidated) {
+      if (!validateForm()) {
+        // Show modal again if validation fails
+        setShowModal(true);
+        return;
+      }
     }
 
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
 
-    const url = `${endpoint}?type=${selectedType}&branch_id=${selectedBranchId}`;
+    // Build URL with parameters
+    const params = new URLSearchParams();
+    params.append('type', selectedType);
+    params.append('branch_id', selectedBranchId);
+    
+    const url = `${endpoint}?${params.toString()}`;
 
     try {
       const response = await axiosInstance.post(url, formData, {
@@ -97,12 +117,16 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
       if (onSuccess) {
         onSuccess();
       }
+      
+      // Reset form only after successful import
+      resetForm();
     } catch (error) {
       console.error('Error uploading file:', error);
 
       if (error.response) {
         console.error('Server response:', error.response.data);
         if (error.response.data.error === 'Type is required and must be EV or ICE') {
+          // Re-open modal with error
           setShowModal(true);
           setTypeError('Please select a valid vehicle type (EV or ICE)');
         }
@@ -111,10 +135,19 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
       showFormSubmitError(error);
     } finally {
       setIsLoading(false);
+      setIsValidated(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  const resetForm = () => {
+    setSelectedBranchId('');
+    setSelectedType('');
+    setBranchError('');
+    setTypeError('');
+    setIsValidated(false);
   };
 
   return (
@@ -135,7 +168,8 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
         {isLoading ? 'Uploading...' : buttonText}
       </CButton>
 
-      <CModal visible={showModal} onClose={handleModalCancel}>
+      {/* Modal - don't reset on backdrop click */}
+      <CModal visible={showModal} onClose={handleModalClose}>
         <CModalHeader>
           <CModalTitle>Import Excel</CModalTitle>
         </CModalHeader>
@@ -144,7 +178,10 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
             <label className="form-label">Branch:</label>
             <CFormSelect
               value={selectedBranchId}
-              onChange={(e) => setSelectedBranchId(e.target.value)}
+              onChange={(e) => {
+                setSelectedBranchId(e.target.value);
+                setBranchError('');
+              }}
             >
               <option value="">-- Select Branch --</option>
               {branches.map((branch) => (
@@ -160,7 +197,10 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
             <label className="form-label">Vehicle Type:</label>
             <CFormSelect
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={(e) => {
+                setSelectedType(e.target.value);
+                setTypeError('');
+              }}
             >
               <option value="">-- Select Vehicle Type --</option>
               <option value="EV">EV</option>
@@ -171,7 +211,7 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={handleModalCancel}>
-            Close
+            Cancel
           </CButton>
           <CButton className='submit-button' onClick={handleModalConfirm}>
             Continue
@@ -183,7 +223,6 @@ const ImportInwardCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', accep
 };
 
 export default ImportInwardCSV;
-
 
 
 

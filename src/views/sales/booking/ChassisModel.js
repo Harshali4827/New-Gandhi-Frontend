@@ -801,6 +801,7 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
   const [isDeviation, setIsDeviation] = useState('NO');
   const [showNonFifoNote, setShowNonFifoNote] = useState(false);
   const [nonFifoReason, setNonFifoReason] = useState('');
+  const [showReasonField, setShowReasonField] = useState(false);
 
   const isCashPayment = booking?.payment?.type?.toLowerCase() === 'cash';
 
@@ -820,6 +821,7 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
       setIsDeviation(booking?.is_deviation === 'YES' ? 'YES' : 'NO');
       setShowNonFifoNote(false);
       setNonFifoReason('');
+      setShowReasonField(false);
       
       if (booking) {
         fetchAvailableChassisNumbers();
@@ -831,26 +833,85 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
   useEffect(() => {
     if (chassisNumber && availableChassisData.length > 0) {
       const selectedChassis = availableChassisData.find(chassis => chassis.chassisNumber === chassisNumber);
-      const oldestChassis = getOldestChassis();
       
       console.log('Selected Chassis:', selectedChassis);
-      console.log('Oldest Chassis:', oldestChassis);
-      console.log('Should show note:', selectedChassis && oldestChassis && selectedChassis.ageInDays !== oldestChassis.ageInDays);
+      console.log('Booking ID:', booking?._id);
+      console.log('Selected allocatedBooking:', selectedChassis?.allocatedBooking);
       
-      // Show note if selected chassis is not the oldest one
-      const shouldShowNote =
-        selectedChassis &&
-        oldestChassis &&
-        selectedChassis.chassisNumber !== oldestChassis.chassisNumber;
-      
-      setShowNonFifoNote(shouldShowNote);
-      
-      // Reset reason when switching back to FIFO chassis
-      if (selectedChassis && selectedChassis.ageInDays === oldestChassis?.ageInDays) {
-        setNonFifoReason('');
+      if (selectedChassis) {
+        // Check if this is current chassis (allocatedBooking matches bookingId)
+        const isCurrentChassis = selectedChassis.allocatedBooking === booking?._id;
+        
+        // LOGIC: If status is booked → NEVER show note field or reason field
+        if (selectedChassis.status === 'booked') {
+          console.log('Booked chassis - no note or reason field');
+          setShowNonFifoNote(false);
+          setShowReasonField(false);
+          return;
+        }
+        
+        // LOGIC: If status is in_stock
+        if (selectedChassis.status === 'in_stock') {
+          // Check if there's any current chassis in the ENTIRE list
+          const hasCurrentChassisInList = availableChassisData.some(chassis => chassis.allocatedBooking === booking?._id);
+          
+          console.log('Has current chassis in entire list?', hasCurrentChassisInList);
+          
+          if (hasCurrentChassisInList) {
+            // When there is current chassis in the list
+            if (isCurrentChassis) {
+              // Current chassis: show note field only
+              console.log('Current chassis selected - show note field only');
+              setShowNonFifoNote(true);
+              setShowReasonField(false);
+            } else {
+              // All other chassis AFTER current: show BOTH note AND reason fields
+              console.log('Non-current chassis selected (current exists) - show BOTH fields');
+              setShowNonFifoNote(true);
+              setShowReasonField(true);
+            }
+          } else {
+            // When there is NO current chassis in the list
+            console.log('No current chassis in list');
+            
+            // Get all in_stock chassis
+            const inStockChassis = availableChassisData.filter(chassis => chassis.status === 'in_stock');
+            
+            if (inStockChassis.length > 0) {
+              // Sort in_stock chassis by ageInDays (descending) - oldest first
+              const sortedInStock = [...inStockChassis].sort((a, b) => b.ageInDays - a.ageInDays);
+              
+              // Get the oldest in_stock chassis (first one after sorting)
+              const oldestInStockChassis = sortedInStock[0];
+              
+              console.log('Oldest in_stock chassis:', oldestInStockChassis.chassisNumber);
+              
+              // Show note field for all in_stock chassis
+              setShowNonFifoNote(true);
+              
+              // Show reason field only if NOT the oldest in_stock chassis
+              const shouldShowReason = selectedChassis.chassisNumber !== oldestInStockChassis.chassisNumber;
+              console.log('Should show reason field?', shouldShowReason);
+              
+              setShowReasonField(shouldShowReason);
+              
+              // Reset reason if switching to oldest chassis without reason field
+              if (!shouldShowReason) {
+                setNonFifoReason('');
+              }
+            }
+          }
+        } else {
+          // For other statuses (allocated, etc.)
+          setShowNonFifoNote(false);
+          setShowReasonField(false);
+        }
       }
+    } else {
+      setShowNonFifoNote(false);
+      setShowReasonField(false);
     }
-  }, [chassisNumber, availableChassisData]);
+  }, [chassisNumber, availableChassisData, booking]);
 
   const fetchAvailableChassisNumbers = async () => {
     try {
@@ -878,10 +939,18 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
       if (isUpdate && booking.chassisNumber && !chassisNumberStrings.includes(booking.chassisNumber)) {
         setAvailableChassisNumbers([booking.chassisNumber, ...chassisNumberStrings]);
         // Also add current chassis to the data array for display
-        setAvailableChassisData((prev) => [
-          { chassisNumber: booking.chassisNumber, age: 'Current', ageInDays: 0, addedDate: 'Current' },
-          ...prev
-        ]);
+        const currentChassisData = {
+          chassisNumber: booking.chassisNumber, 
+          age: 'Current', 
+          ageInDays: 0, 
+          addedDate: 'Current',
+          status: 'allocated',
+          isBookedOrBlocked: false,
+          eligibilityMessage: 'Current Allocation',
+          allocatedBooking: booking._id // Set allocatedBooking to match booking ID
+        };
+        
+        setAvailableChassisData((prev) => [currentChassisData, ...prev]);
       }
     } catch (error) {
       console.error('Error fetching chassis numbers:', error);
@@ -889,14 +958,6 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     } finally {
       setLoadingChassisNumbers(false);
     }
-  };
-
-  // Get the oldest chassis (FIFO - first in first out)
-  const getOldestChassis = () => {
-    if (availableChassisData.length === 0) return null;
-    
-    // Since we sorted by ageInDays descending, the first one is the oldest
-    return availableChassisData[0];
   };
 
   const handleDocumentUpload = (e) => {
@@ -933,30 +994,94 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
 
   const handleSubmit = () => {
     if (!chassisNumber.trim()) {
-      showError('Please enter a chassis number');
+      showError('Please select a chassis number');
       return;
     }
+    
+    // Get selected chassis
+    const selectedChassis = availableChassisData.find(chassis => chassis.chassisNumber === chassisNumber);
+    
+    // Check if it's current chassis (allocatedBooking matches bookingId)
+    const isCurrentChassis = selectedChassis?.allocatedBooking === booking?._id;
+    
+    // Check if there's any current chassis in the ENTIRE list
+    const hasCurrentChassisInList = availableChassisData.some(chassis => chassis.allocatedBooking === booking?._id);
+    
+    // Validate note field (always required when shown)
+    if (showNonFifoNote && !nonFifoReason.trim()) {
+      showError('Please enter a reason in the note field');
+      return;
+    }
+    
+    // Validate reason param field (when shown)
+    if (showReasonField && !reason.trim()) {
+      showError('Please enter a reason for selecting this chassis');
+      return;
+    }
+    
+    // In update mode, always require update reason
     if (isUpdate && !reason.trim()) {
       showError('Please enter a reason for updating');
       return;
     }
-    if (showNonFifoNote && !nonFifoReason.trim()) {
-      showError('Please enter a reason for selecting newer chassis while older chassis are available');
-      return;
+    
+    // Additional validation based on scenario
+    if (selectedChassis && selectedChassis.status === 'in_stock') {
+      // Scenario 1: When there is current chassis in list
+      if (hasCurrentChassisInList) {
+        if (isCurrentChassis) {
+          // Current chassis: requires note only
+          if (!nonFifoReason.trim()) {
+            showError('Please enter a note for the current chassis');
+            return;
+          }
+        } else {
+          // Non-current chassis (after current): requires both note AND reason
+          if (!nonFifoReason.trim()) {
+            showError('Please enter a note for selecting this chassis');
+            return;
+          }
+          if (!reason.trim()) {
+            showError('Please enter a reason for selecting this chassis');
+            return;
+          }
+        }
+      } else {
+        // Scenario 2: No current chassis in list
+        // Get all in_stock chassis
+        const inStockChassis = availableChassisData.filter(chassis => chassis.status === 'in_stock');
+        
+        if (inStockChassis.length > 0) {
+          // Sort to find the oldest
+          const sortedInStock = [...inStockChassis].sort((a, b) => b.ageInDays - a.ageInDays);
+          const oldestInStockChassis = sortedInStock[0];
+          
+          // Oldest chassis: requires note only
+          if (selectedChassis.chassisNumber === oldestInStockChassis.chassisNumber) {
+            if (!nonFifoReason.trim()) {
+              showError('Please enter a note for selecting this chassis');
+              return;
+            }
+          } else {
+            // Non-oldest chassis: requires both note AND reason
+            if (!nonFifoReason.trim()) {
+              showError('Please enter a note for selecting this chassis');
+              return;
+            }
+            if (!reason.trim()) {
+              showError('Please enter a reason for selecting this chassis');
+              return;
+            }
+          }
+        }
+      }
     }
 
-    const selectedChassis = availableChassisData.find(chassis => chassis.chassisNumber === chassisNumber);
-    const oldestChassis = getOldestChassis();
-    const isNonFifoSelection = selectedChassis && oldestChassis && selectedChassis.ageInDays !== oldestChassis.ageInDays;
-
-    console.log('Submit - showNonFifoNote:', showNonFifoNote);
-    console.log('Submit - isNonFifoSelection:', isNonFifoSelection);
-    console.log('Submit - nonFifoReason:', nonFifoReason);
-
+    // Build payload - reason will be passed as query parameter
     const payload = {
       chassisNumber: chassisNumber.trim(),
-      ...(isUpdate && { reason }),
-      ...((showNonFifoNote || isNonFifoSelection) && nonFifoReason.trim() && { note: nonFifoReason.trim() }),
+      ...(reason.trim() && { reason: reason.trim() }), // Always include if not empty
+      ...(nonFifoReason.trim() && { note: nonFifoReason.trim() }),
       ...(hasClaim && {
         claimDetails: {
           price: claimDetails.price,
@@ -972,47 +1097,39 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     onSave(payload);
   };
 
-  // const getChassisDisplayText = (chassis) => {
-  //   const oldestChassis = getOldestChassis();
-  //   const isOldest = oldestChassis && chassis.chassisNumber === oldestChassis.chassisNumber;
-    
-  //   let displayText = `${chassis.chassisNumber} (${chassis.age})`;
-    
-  //   if (chassis.chassisNumber === booking?.chassisNumber) {
-  //     displayText += ' (Current)';
-  //   } else if (isOldest) {
-  //     displayText += '';
-  //   }
-    
-  //   return displayText;
-  // };
-
-
   const getChassisDisplayText = (chassis) => {
-  const isCurrentChassis = chassis.chassisNumber === booking?.chassisNumber;
-  
-
-  if (isCurrentChassis) {
-    return chassis.chassisNumber;
-  }
-  
- 
-  if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
-    const days = chassis.ageInDays;
-    const ageText = `${days} day${days !== 1 ? 's' : ''}`;
+    // Check if this is current chassis (allocatedBooking matches bookingId)
+    const isCurrentChassis = chassis.allocatedBooking === booking?._id;
     
-   
-    return `${chassis.chassisNumber} (${ageText})`;
-  }
-  
- 
-  return chassis.chassisNumber;
-};
+    if (isCurrentChassis) {
+      return `${chassis.chassisNumber} (Current)`;
+    }
+    
+    let displayText = chassis.chassisNumber;
+    let ageText = '';
+    
+    // Add age information if available
+    if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
+      const days = chassis.ageInDays;
+      ageText = ` (${days} day${days !== 1 ? 's' : ''})`;
+    }
+    
+    // Add eligibility message if chassis is booked or blocked
+    if (chassis.isBookedOrBlocked && chassis.eligibilityMessage) {
+      displayText = `${chassis.chassisNumber} - ${chassis.eligibilityMessage}${ageText}`;
+    } else {
+      // For available chassis, just show chassis number with age
+      displayText = `${chassis.chassisNumber}${ageText}`;
+    }
+    
+    return displayText;
+  };
 
   const handleCloseModal = () => {
- 
+    // Reset form state
     setHasClaim(null);
     setShowNonFifoNote(false);
+    setShowReasonField(false);
     setNonFifoReason('');
     setClaimDetails({
       price: '',
@@ -1111,10 +1228,25 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
               </div>
             )}
 
-            {isUpdate && (
+            {/* Reason Field (param) - Show only for certain conditions */}
+            {showReasonField && (
               <div className="mb-3">
-                <CFormLabel htmlFor="reason">Reason for Update</CFormLabel>
-                <CFormTextarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} required rows={3} />
+                <CFormLabel htmlFor="reason">Reason<span className='required'>*</span></CFormLabel>
+                <CFormTextarea 
+                  id="reason" 
+                  value={reason} 
+                  onChange={(e) => setReason(e.target.value)} 
+                  required 
+                  rows={3}
+                />
+              </div>
+            )}
+
+            {/* Update Reason Field (only for update mode and not shown above) */}
+            {isUpdate && !showReasonField && (
+              <div className="mb-3">
+                <CFormLabel htmlFor="updateReason">Reason for Update<span className='required'>*</span></CFormLabel>
+                <CFormTextarea id="updateReason" value={reason} onChange={(e) => setReason(e.target.value)} required rows={3} />
               </div>
             )}
 
@@ -1216,3 +1348,7 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
 };
 
 export default ChassisNumberModal;
+
+
+
+

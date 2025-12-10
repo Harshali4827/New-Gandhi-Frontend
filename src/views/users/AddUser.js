@@ -508,7 +508,7 @@ function AddUser() {
     name: '',
     type: 'employee',
     branch: '',
-    subdealerType: '',
+    subdealer: '',
     roleId: '',
     email: '',
     mobile: '',
@@ -567,8 +567,15 @@ function AddUser() {
       console.log('User verticles array:', userData.verticles);
       console.log('User verticlesDetails array:', userData.verticlesDetails);
       
+      // Extract permission IDs from role permissions
       const rolePermissions = userData.roles[0]?.permissions || [];
-      const userPermissions = userData.permissions?.map(p => p.permission) || [];
+      const rolePermissionIds = rolePermissions.map(p => p._id);
+      
+      // Extract permission IDs from user's direct permissions
+      const userPermissions = userData.permissions?.map(p => p.permission?._id || p.permission) || [];
+      
+      // Combine both role and direct permissions (avoid duplicates)
+      const allPermissionIds = [...new Set([...rolePermissionIds, ...userPermissions])];
       
       // Extract verticles IDs from the response
       let userVerticles = [];
@@ -586,17 +593,18 @@ function AddUser() {
       }
       
       console.log('Extracted verticles IDs:', userVerticles);
+      console.log('Extracted permission IDs:', allPermissionIds);
       
       setFormData({
         name: userData.name,
         type: userData.type || 'employee',
         branch: userData.branchDetails?._id || '',
-        subdealerType: userData.subdealerType || '',
+        subdealer: userData.subdealer || '',
         roleId: userData.roles[0]?._id || '',
         email: userData.email,
         mobile: userData.mobile,
         discount: userData.discount || '',
-        permissions: [...rolePermissions],
+        permissions: allPermissionIds,
         totalDeviationAmount: userData.totalDeviationAmount || '',
         perTransactionDeviationLimit: userData.perTransactionDeviationLimit || '',
         verticles: userVerticles
@@ -620,7 +628,6 @@ function AddUser() {
       showFormSubmitError(error);
     }
   };
-  
 
   const fetchBranches = async () => {
     try {
@@ -688,9 +695,15 @@ function AddUser() {
       const res = await axiosInstance.get(`/roles/${roleId}`);
       const rolePermissions = res.data.data.permissions || [];
       
+      // Extract just the permission IDs from the role's permissions array
+      const permissionIds = rolePermissions.map(permission => permission._id);
+      
+      console.log('Fetched role permissions:', rolePermissions);
+      console.log('Extracted permission IDs:', permissionIds);
+      
       setFormData(prev => ({
         ...prev,
-        permissions: rolePermissions
+        permissions: permissionIds
       }));
     } catch (error) {
       console.error('Error fetching role permissions:', error);
@@ -705,6 +718,7 @@ function AddUser() {
     setErrors(prev => ({ ...prev, [name]: '' }));
 
     if (name === 'roleId') {
+      console.log('Role selected:', value);
       setShowPermissions(true);
       await fetchRolePermissions(value);
     }
@@ -725,11 +739,13 @@ function AddUser() {
         setFormData(prev => ({ 
           ...prev, 
           type: value,
-          subdealerType: ''
+          subdealer: ''
         }));
       }
     }
   };
+
+  
 
   const handleVerticalChange = (e) => {
     const selectedId = e.target.value;
@@ -791,31 +807,36 @@ function AddUser() {
 
   const isPermissionEnabled = (module, action) => {
     const permission = permissionsData.find(p => p.module === module && p.action === action);
-    return permission && formData.permissions.includes(permission._id);
+    
+    if (!permission) {
+      console.log(`Permission not found for module: ${module}, action: ${action}`);
+      return false;
+    }
+    
+    const isEnabled = formData.permissions.includes(permission._id);
+    return isEnabled;
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.type) newErrors.type = 'Type is required';
-    if (!formData.branch) newErrors.branch = 'Branch is required';
-    if (formData.type === 'subdealer' && !formData.subdealerType) newErrors.subdealerType = 'Subdealer Type is required';
+    if (formData.type === 'employee' && !formData.branch) {
+      newErrors.branch = 'Branch is required for employee';
+    }
+    if (formData.type === 'subdealer' && !formData.subdealer) {
+      newErrors.subdealer = 'Subdealer is required';
+    }
     if (!formData.roleId) newErrors.roleId = 'Role is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile is required';
     if (!formData.discount) newErrors.discount = 'Discount is required';
-    
-    // REMOVED: No longer validating verticles as required for any role
-    // Verticles are now optional for all roles
-    
-    // Validate manager-specific fields
+ 
     const selectedRole = roles.find(role => role._id === formData.roleId);
     if (selectedRole?.name === 'MANAGER') {
       if (!formData.totalDeviationAmount) newErrors.totalDeviationAmount = 'Total Deviation Amount is required';
       if (!formData.perTransactionDeviationLimit) newErrors.perTransactionDeviationLimit = 'Per Transaction Deviation Limit is required';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -827,14 +848,14 @@ function AddUser() {
     const payload = {
       name: formData.name,
       type: formData.type,
-      branch: formData.branch,
       roleId: formData.roleId,
       email: formData.email,
       mobile: formData.mobile,
       permissions: formData.permissions,
-      verticles: formData.verticles, // Verticles are included for all roles, can be empty array
+      verticles: formData.verticles,
       ...(formData.discount !== '' && { discount: Number(formData.discount) }),
-      ...(formData.type === 'subdealer' && { subdealerType: formData.subdealerType }),
+      ...(formData.type === 'employee' && formData.branch && { branch: formData.branch }),
+      ...(formData.type === 'subdealer' && formData.subdealer && { subdealer: formData.subdealer }),
       ...(formData.totalDeviationAmount && { totalDeviationAmount: Number(formData.totalDeviationAmount) }),
       ...(formData.perTransactionDeviationLimit && { perTransactionDeviationLimit: Number(formData.perTransactionDeviationLimit) })
     };
@@ -862,7 +883,6 @@ function AddUser() {
 
   const selectedRole = roles.find(role => role._id === formData.roleId);
   const isManager = selectedRole?.name === 'MANAGER';
-  // REMOVED: No longer restricting verticles to specific roles
 
   const getSelectedVerticalNames = () => {
     return formData.verticles.map(verticalId => {
@@ -917,7 +937,8 @@ function AddUser() {
                 </CInputGroup>
                 {errors.type && <p className="error">{errors.type}</p>}
               </div>
-
+              
+                  {formData.type === 'employee' && (
               <div className="input-box">
                 <div className="details-container">
                   <span className="details">Branch</span>
@@ -942,6 +963,7 @@ function AddUser() {
                 </CInputGroup>
                 {errors.branch && <p className="error">{errors.branch}</p>}
               </div>
+                  )}
 
               {formData.type === 'subdealer' && (
                 <div className="input-box">
@@ -954,8 +976,8 @@ function AddUser() {
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
                     <CFormSelect 
-                      name="subdealerType" 
-                      value={formData.subdealerType} 
+                      name="subdealer" 
+                      value={formData.subdealer} 
                       onChange={handleChange}
                     >
                       <option value="">-Select Subdealer-</option>
@@ -966,7 +988,7 @@ function AddUser() {
                       ))}
                     </CFormSelect>
                   </CInputGroup>
-                  {errors.subdealerType && <p className="error">{errors.subdealerType}</p>}
+                  {errors.subdealer && <p className="error">{errors.subdealer}</p>}
                 </div>
               )}
               
@@ -1057,11 +1079,9 @@ function AddUser() {
                 {errors.discount && <p className="error">{errors.discount}</p>}
               </div>
 
-              {/* Verticles field - now available for all roles and optional */}
               <div className="input-box">
                 <div className="details-container">
                   <span className="details">Verticles</span>
-                  {/* Removed required asterisk */}
                 </div>
                 <CInputGroup>
                   <CInputGroupText className="input-icon">
@@ -1086,9 +1106,7 @@ function AddUser() {
                       ))}
                   </CFormSelect>
                 </CInputGroup>
-                {/* Removed error display for verticles since it's optional */}
                 
-                {/* Display selected verticles as badges */}
                 <div className="mt-2">
                   <div className="d-flex flex-wrap gap-2">
                     {getSelectedVerticalNames().map((verticalName, index) => (
@@ -1286,7 +1304,7 @@ export default AddUser;
 //     name: '',
 //     type: 'employee',
 //     branch: '',
-//     subdealerType: '',
+//     subdealer: '',
 //     roleId: '',
 //     email: '',
 //     mobile: '',
@@ -1423,7 +1441,7 @@ export default AddUser;
 //         name: userData.name,
 //         type: userData.type || 'employee',
 //         branch: userData.branchDetails?._id || '',
-//         subdealerType: userData.subdealerType || '',
+//         subdealer: userData.subdealer || '',
 //         roleId: userData.roles[0]?._id || '',
 //         email: userData.email,
 //         mobile: userData.mobile,
@@ -1531,7 +1549,7 @@ export default AddUser;
 //         setFormData(prev => ({ 
 //           ...prev, 
 //           type: value,
-//           subdealerType: ''
+//           subdealer: ''
 //         }));
 //       }
 //     }
@@ -1681,7 +1699,7 @@ export default AddUser;
 //     if (!formData.name.trim()) newErrors.name = 'Name is required';
 //     if (!formData.type) newErrors.type = 'Type is required';
 //     if (!formData.branch) newErrors.branch = 'Branch is required';
-//     if (formData.type === 'subdealer' && !formData.subdealerType) newErrors.subdealerType = 'Subdealer Type is required';
+//     if (formData.type === 'subdealer' && !formData.subdealer) newErrors.subdealer = 'Subdealer Type is required';
 //     if (!formData.roleId) newErrors.roleId = 'Role is required';
 //     if (!formData.email.trim()) newErrors.email = 'Email is required';
 //     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile is required';
@@ -1719,7 +1737,7 @@ export default AddUser;
 //       permissions: formData.permissions,
 //       verticles: formData.verticles,
 //       ...(formData.discount !== '' && { discount: Number(formData.discount) }),
-//       ...(formData.type === 'subdealer' && { subdealerType: formData.subdealerType }),
+//       ...(formData.type === 'subdealer' && { subdealer: formData.subdealer }),
 //       ...(formData.totalDeviationAmount && { totalDeviationAmount: Number(formData.totalDeviationAmount) }),
 //       ...(formData.perTransactionDeviationLimit && { perTransactionDeviationLimit: Number(formData.perTransactionDeviationLimit) })
 //     };
@@ -1858,8 +1876,8 @@ export default AddUser;
 //                       <CIcon icon={cilUser} />
 //                     </CInputGroupText>
 //                     <CFormSelect 
-//                       name="subdealerType" 
-//                       value={formData.subdealerType} 
+//                       name="subdealer" 
+//                       value={formData.subdealer} 
 //                       onChange={handleChange}
 //                     >
 //                       <option value="">-Select Subdealer-</option>
@@ -1870,7 +1888,7 @@ export default AddUser;
 //                       ))}
 //                     </CFormSelect>
 //                   </CInputGroup>
-//                   {errors.subdealerType && <p className="error">{errors.subdealerType}</p>}
+//                   {errors.subdealer && <p className="error">{errors.subdealer}</p>}
 //                 </div>
 //               )}
               

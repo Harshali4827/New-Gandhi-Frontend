@@ -436,7 +436,9 @@ const UploadChallan = () => {
                       <CTableRow>
                         <CTableDataCell rowSpan={transfer.items?.length + 1 || 1}>{index + 1}</CTableDataCell>
                         <CTableDataCell rowSpan={transfer.items?.length + 1 || 1}>{transfer.fromBranchDetails?.name || 'N/A'}</CTableDataCell>
-                        <CTableDataCell rowSpan={transfer.items?.length + 1 || 1}>{transfer.toBranchDetails?.name || 'N/A'}</CTableDataCell>
+                        
+<CTableDataCell rowSpan={transfer.items?.length + 1 || 1}>{transfer.toBranchDetails?.name || transfer.toSubdealerDetails?.name || ''}</CTableDataCell>
+ 
                         <CTableDataCell rowSpan={transfer.items?.length + 1 || 1}>
                           {transfer.transferDate ? new Date(transfer.transferDate).toLocaleDateString('en-GB') : 'N/A'}
                         </CTableDataCell>

@@ -7,15 +7,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts.js';
 import axiosInstance from 'src/axiosInstance.js';
 import FormButtons from 'src/utils/FormButtons';
+import { showError } from '../../utils/sweetAlerts';
 
 function AddSubdealer() {
   const [formData, setFormData] = useState({
     name: '',
+    branch:'',
     location: '',
     rateOfInterest: '',
     type: ''
   });
   const [errors, setErrors] = useState({});
+  const [branches, setBranches] = useState([]);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -23,7 +26,9 @@ function AddSubdealer() {
     if (id) {
       fetchSubdealer(id);
     }
+    fetchBranches();
   }, [id]);
+
   const fetchSubdealer = async (id) => {
     try {
       const res = await axiosInstance.get(`/subdealers/${id}`);
@@ -32,7 +37,15 @@ function AddSubdealer() {
       console.error('Error fetching subdealer:', error);
     }
   };
-
+  const fetchBranches = async () => {
+    try {
+      const response = await axiosInstance.get('/branches');
+      setBranches(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      showError(error);
+    }
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
@@ -44,6 +57,7 @@ function AddSubdealer() {
     let formErrors = {};
 
     if (!formData.name) formErrors.name = 'This field is required';
+    if (!formData.branch) formErrors.branch = 'This field is required';
     if (!formData.location) formErrors.location = 'This field is required';
     if (!formData.rateOfInterest) formErrors.rateOfInterest = 'This field is required';
     if (!formData.type) formErrors.type = 'This field is required';
@@ -94,6 +108,31 @@ function AddSubdealer() {
                 </CInputGroup>
                 {errors.name && <p className="error">{errors.name}</p>}
               </div>
+              <div className="input-box">
+                <div className="details-container">
+                  <span className="details">Branch</span>
+                  <span className="required">*</span>
+                </div>
+                <CInputGroup>
+                  <CInputGroupText className="input-icon">
+                    <CIcon icon={cilLocationPin} />
+                  </CInputGroupText>
+                  <CFormSelect 
+                    name="branch" 
+                    value={formData.branch} 
+                    onChange={handleChange}
+                  >
+                    <option value="">-Select-</option>
+                    {branches.map(branch => (
+                      <option key={branch._id} value={branch._id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CInputGroup>
+                {errors.branch && <p className="error">{errors.branch}</p>}
+              </div>
+
               <div className="input-box">
                 <div className="details-container">
                   <span className="details">Location</span>

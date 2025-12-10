@@ -67,9 +67,9 @@ const UsersList = () => {
         ...user,
         id: user._id || user.id,
         primaryRole: user.roles?.[0]?.name || 'No Role',
-        branchName: user.branchDetails?.name || user.branch || 'N/A'
+        branchName: user.branchDetails?.name || user.branch || '',
+        subdealerName: user.subdealerDetails?.name || user.subdealer || ''
       }));
-
       setData(users);
       setFilteredData(users);
     } catch (error) {
@@ -226,7 +226,7 @@ const UsersList = () => {
                   <CTableHeaderCell>Name</CTableHeaderCell>
                   <CTableHeaderCell>Email</CTableHeaderCell>
                   <CTableHeaderCell>Mobile Number</CTableHeaderCell>
-                  <CTableHeaderCell>Branch</CTableHeaderCell>
+                  <CTableHeaderCell>Branch/Subdealer</CTableHeaderCell>
                   <CTableHeaderCell>Role(s)</CTableHeaderCell>
                   <CTableHeaderCell>Discount</CTableHeaderCell>
                   <CTableHeaderCell>Last Login</CTableHeaderCell>
@@ -242,7 +242,7 @@ const UsersList = () => {
                       <CTableDataCell>{user.name}</CTableDataCell>
                       <CTableDataCell>{user.email}</CTableDataCell>
                       <CTableDataCell>{user.mobile}</CTableDataCell>
-                      <CTableDataCell>{user.branchName}</CTableDataCell>
+                      <CTableDataCell>{user.branchName || user.subdealerName}</CTableDataCell>
                       <CTableDataCell>{getRoleNames(user.roles)}</CTableDataCell>
                       <CTableDataCell>{user.discount || '0'}</CTableDataCell>
                       <CTableDataCell>{formatDate(user.lastLogin)}</CTableDataCell>

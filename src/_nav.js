@@ -625,7 +625,8 @@ import {
   cilSettings,
   cilApps,
   cilWarning,
-  cilLayers, // Add this icon for vertical master
+  cilLayers,
+  cilInbox, // Add this icon for vertical master
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -1090,6 +1091,12 @@ const _nav = [
     name: 'SUBDEALER',
   },
   {
+    component: CNavItem,
+    name: 'Subdealer Stock Audit',
+    to: '/stock-audit-list',
+    icon: <CIcon icon={cilInbox} customClassName="nav-icon" />,
+  },
+  {
     component: CNavGroup,
     name: 'Master',
     icon: <CIcon icon={cilApps} customClassName="nav-icon" />,
@@ -1098,6 +1105,11 @@ const _nav = [
         component: CNavItem,
         name: 'Subdealer List',
         to: '/subdealer-list',
+      },
+      {
+        component: CNavItem,
+        name: 'Subdealer Audit List',
+        to: '/subdealer-audit-list',
       },
       {
         component: CNavItem,
@@ -1240,6 +1252,7 @@ const _nav = [
     to: '/users/manager-deviation',
     icon: <CIcon icon={cilWarning} customClassName="nav-icon" />,
   },
+  
 ]
 
 export default _nav

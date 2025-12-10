@@ -826,7 +826,7 @@ const StockList = () => {
                   currentRecords.map((vehicle, index) => (
                     <CTableRow key={index}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
-                      <CTableDataCell>{vehicle.unloadLocation?.name || ''}</CTableDataCell>
+                       <CTableDataCell>{vehicle.unloadLocation?.name || vehicle.subdealerLocation?.name}</CTableDataCell>
                       <CTableDataCell>{new Date(vehicle.createdAt).toLocaleDateString()}</CTableDataCell>
                       <CTableDataCell>{vehicle.type}</CTableDataCell>
                       <CTableDataCell>{vehicle.modelName || ''}</CTableDataCell>

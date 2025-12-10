@@ -639,12 +639,11 @@ tr.data-row td:nth-child(4) {
 
   // Generate template print HTML with the same design as Customer/Office Copy
   const generateTemplatePrintHTML = (previewData) => {
-    const bookingInfo = previewData.booking_info
-    const templateInfo = previewData.template_info
-    const generatedContent = previewData.generated_content
-    const currentDate = new Date().toLocaleDateString('en-GB')
+  const bookingInfo = previewData.booking_info
+  const templateInfo = previewData.template_info
+  const generatedContent = previewData.generated_content
 
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -679,82 +678,26 @@ tr.data-row td:nth-child(4) {
             font-size: 21px;
             font-weight: 700;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5mm;
-        }
-        td {
-            padding: 1mm 0;
-            font-size: 11pt;
-        }
-        tr.border-top-bottom td {
-            padding: 1mm;
-            width: auto;
-        }
-
-        tr.data-row td:nth-child(1) {
-            width: 25%;
-            padding-right: 1mm;
-        }
-        tr.data-row td:nth-child(2) {
-            width: 3%;
-            padding: 0;
-        }
-        tr.data-row td:nth-child(3),
-        tr.data-row td:nth-child(4) {
-            width: auto;
-            padding-left: 1mm;
-        }
-        .border-top-bottom {
-            border-top: 2px solid #AAAAAA;
-            border-bottom: 2px solid #AAAAAA;
-        }
         .content-section {
-            margin: 5mm 0;
-            padding: 5mm;
-            border: 1px solid #AAAAAA;
+            margin: 10mm 0;
         }
         .content-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #555555;
-            margin-bottom: 3mm;
+            margin-bottom: 5mm;
             text-align: center;
-            border-bottom: 1px solid #AAAAAA;
-            padding-bottom: 2mm;
         }
         .generated-content {
             font-size: 12px;
             line-height: 1.4;
             color: #555555;
             text-align: justify;
-        }
-        .signature-box {
-            border-top: 2px solid #AAAAAA;
-            border-bottom: 2px solid #AAAAAA;
-            padding: 1px 0;
-            text-align: right;
-            color:#555555;
-            font-weight:bold;
-            margin-top: 10mm;
-        }
-        .jurisdiction {
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #555555;
-            margin-top: 10mm;
+            white-space: pre-wrap;
         }
         .bold {
             font-weight: 700;
             color:#555555;
-        }
-        .account-details {
-            color:#555555;
-            font-weight:bold;
-            margin: 2mm 0;
         }
         @page {
             size: A4;
@@ -769,61 +712,17 @@ tr.data-row td:nth-child(4) {
             <div class="header-text">${templateInfo.name}</div>
         </div>
 
-        <table>
-            <tr class="border-top-bottom">
-                <td width="20%">Booking No.:</td>
-                <td width="25%"><span class="bold">${bookingInfo.booking_number || 'N/A'}</span></td>
-                <td width="15%">Date</td>
-                <td width="40%"><span class="bold">${currentDate}</span></td>
-            </tr>
-            <tr class="data-row">
-                <td>Customer Name</td>
-                <td>:</td>
-                <td colspan="2"><span class="bold">${bookingInfo.customer_name || 'N/A'}</span></td>
-            </tr>
-            <tr class="data-row">
-                <td>Booking Date</td>
-                <td>:</td>
-                <td colspan="2"><span class="bold">${currentDate}</span></td>
-            </tr>
-            <tr class="data-row">
-                <td>Total Amount</td>
-                <td>:</td>
-                <td><span class="bold">₹${bookingInfo.total_amount || 0}</span></td>
-                <td>Balance: <span class="bold">₹${bookingInfo.balance_amount || 0}</span></td>
-            </tr>
-            <tr class="data-row">
-                <td>Received Amount</td>
-                <td>:</td>
-                <td colspan="2"><span class="bold">₹${bookingInfo.received_amount || 0}</span></td>
-            </tr>
-        </table>
-
         <div class="content-section">
-            <div class="content-title">${generatedContent.subject}</div>
+            ${generatedContent.subject ? `<div class="content-title">${generatedContent.subject}</div>` : ''}
             <div class="generated-content">
                 ${generatedContent.content}
             </div>
         </div>
-
-        <div class="account-details">
-            Generated On: ${new Date(generatedContent.generated_at).toLocaleDateString('en-GB')}
-        </div>
-
-        <div class="signature-box">
-            <div><b>Authorised Signature</b></div>
-        </div>
-
-        <div>
-            <p class="bold">Customer Signature</p>
-        </div>
-
-        <p class="jurisdiction">Subject To Sangamner Jurisdiction</p>
     </div>
 </body>
 </html>
     `
-  }
+}
 
   const handleSearch = (value) => {
     setSearchTerm(value)

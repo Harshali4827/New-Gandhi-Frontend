@@ -1,3 +1,5 @@
+
+
 // import React, { useState, useEffect } from 'react';
 // import {
 //   CCard,
@@ -8,15 +10,13 @@
 //   CTableHeaderCell,
 //   CTableRow,
 //   CTableDataCell,
-//   CButton,
-//   CFormCheck
+//   CButton
 // } from '@coreui/react';
 // import './challan.css';
 // import axiosInstance from '../../axiosInstance';
 // import tvsLogo from '../../assets/images/logo1.png';
 
-// const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) => {
-//   const [modelAccessories, setModelAccessories] = useState({});
+// const TransferChallan = ({ transferDetails, fromBranch, toBranch,toSubdealer, toType, vehicles }) => {
 //   const [declarations, setDeclarations] = useState([]);
 
 //   const formatDate = (dateString) => {
@@ -26,29 +26,6 @@
 
 //   useEffect(() => {
 //     const fetchData = async () => {
-//       if (vehicles?.length > 0) {
-//         try {
-//           const modelIds = [...new Set(vehicles.map((v) => v.model?._id || v.model).filter((id) => id))];
-//           const newModelAccessories = {};
-
-//           await Promise.all(
-//             modelIds.map(async (modelId) => {
-//               try {
-//                 const response = await axiosInstance.get(`/accessories/model/${modelId}`);
-//                 newModelAccessories[modelId] = response.data.data.accessories || [];
-//               } catch (error) {
-//                 console.error(`Error fetching accessories for model ${modelId}:`, error);
-//                 newModelAccessories[modelId] = [];
-//               }
-//             })
-//           );
-
-//           setModelAccessories(newModelAccessories);
-//         } catch (error) {
-//           console.error('Error fetching accessories:', error);
-//         }
-//       }
-
 //       try {
 //         const response = await axiosInstance.get('/declarations?formType=stock_transfer');
 //         if (response.data.status === 'success') {
@@ -61,16 +38,12 @@
 //     };
 
 //     fetchData();
-//   }, [vehicles]);
-
-//   const getModelId = (vehicle) => {
-//     return vehicle.model?._id || vehicle.model;
-//   };
+//   }, []);
 
 //   const generateDeclarationHTML = () => {
 //     if (declarations.length === 0) {
 //       return `
-//         <b>Declaration</b> - I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
+//         I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
 //         us, However getting the vehicle insured from Insurance company & getting the vehicle registered from RTO is entirely my/our sole
 //         responsibility. Registration Number alloted by RTO will be acceptable to me as else I will pre book for choise number at RTO at
 //         my own. Dealership has no role in RTO Number allocation. I/We are exclusively responsible for any loss /personally/legal action
@@ -93,7 +66,9 @@
 
 //   const generateTransferChallanHTML = () => {
 //     const currentDate = formatDate(transferDetails?.createdAt || new Date());
-
+//     const unloadLocation = toType === 'branch' 
+//       ? (toBranch?.name || 'N/A')
+//       : (toSubdealer?.name || 'N/A');
 //     return `
 //     <!DOCTYPE html>
 //     <html>
@@ -175,34 +150,6 @@
 //             text-align: center;
 //             text-transform: uppercase;
 //           }
-//           .model-accessories-container {
-//             margin-top: 5px;
-//             padding: 5px;
-//             background: #f8f9fa;
-//             border-radius: 5px;
-//           }
-//           .print-checkbox-container {
-//             display: flex;
-//             align-items: center;
-//             margin: 2px 0;
-//           }
-//           .print-checkbox {
-//             -webkit-appearance: none;
-//             -moz-appearance: none;
-//             appearance: none;
-//             width: 14px;
-//             height: 14px;
-//             border: 1px solid #333;
-//             border-radius: 3px;
-//             margin-right: 6px;
-//             position: relative;
-//             cursor: pointer;
-//           }
-//           .accessories-grid {
-//             display: grid;
-//             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-//             gap: 10px;
-//           }
 //           .notes-section {
 //             margin-bottom: 20px;
 //             padding-top: 15px;
@@ -237,41 +184,6 @@
 //             size: A4;
 //             margin: 0;
 //           }
-//           .print-checkbox-container {
-//             display: flex;
-//             align-items: center;
-//             margin: 2px 0;
-//           }
-//           .print-checkbox {
-//             -webkit-appearance: none;
-//             -moz-appearance: none;
-//             appearance: none;
-//             width: 14px;
-//             height: 14px;
-//             border: 1px solid #333;
-//             border-radius: 3px;
-//             margin-right: 6px;
-//             position: relative;
-//             cursor: pointer;
-//           }
-//           .print-checkbox:checked::before {
-//             content: "✓";
-//             position: absolute;
-//             font-size: 12px;
-//             color: #333;
-//             top: 50%;
-//             left: 50%;
-//             transform: translate(-50%, -50%);
-//           }
-//           .print-checkbox-label {
-//             font-size: 12px;
-//           }
-//           .print-accessories-grid {
-//             display: grid;
-//             grid-template-columns: repeat(5, 1fr);
-//             gap: 8px;
-//             padding: 5px;
-//           }
 //       </style>
 //     </head>
 //     <body>
@@ -290,7 +202,7 @@
 //             <div class="location-item">
 //               <p>
 //                 <span class="location-label">Load Location:</span>
-//                 ${fromBranch?.name || 'N/A'}
+//                 ${unloadLocation}
 //               </p>
 //             </div>
 //             <div class="location-item">
@@ -316,9 +228,6 @@
 //             <tbody>
 //               ${vehicles
 //                 .map((vehicle, index) => {
-//                   const modelId = getModelId(vehicle);
-//                   const vehicleAccessories = modelId ? modelAccessories[modelId] || [] : [];
-
 //                   return `
 //                   <tr>
 //                     <td><strong>${vehicle.modelName || 'N/A'}</strong></td>
@@ -329,30 +238,6 @@
 //                     <td>${vehicle.motorNumber || 'N/A'}</td>
 //                     <td>${vehicle.batteryNumber || 'N/A'}</td>
 //                   </tr>
-//                   ${
-//                     vehicleAccessories.length > 0
-//                       ? `
-//                     <tr>
-//                       <td colspan="7">
-//                         <div class="print-accessories-grid">
-//                           ${vehicleAccessories
-//                             .map(
-//                               (acc) => `
-//                             <div class="print-checkbox-container">
-//                               <input type="checkbox" class="print-checkbox" id="print-acc-${modelId}-${acc._id}">
-//                               <label class="print-checkbox-label" for="print-acc-${modelId}-${acc._id}">
-//                                 ${acc.name}
-//                               </label>
-//                             </div>
-//                           `
-//                             )
-//                             .join('')}
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   `
-//                       : ''
-//                   }
 //                 `;
 //                 })
 //                 .join('')}
@@ -361,7 +246,7 @@
 //         </div>
 
 //         <div class="notes-section">
-//           <p class="section-title">Notes:</p>
+//           <p class="section-title">Notes: All Standard Fitments Received</p>
 //           <p class="notes-text">
 //             ${generateDeclarationHTML()}
 //           </p>
@@ -385,7 +270,7 @@
 //     if (declarations.length === 0) {
 //       return (
 //         <p className="notes-text">
-//           <b>Declaration</b> - I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
+//           I/We Authorised the dealer or its representative to register the vehicle at RTO in my/Our name as booked by
 //           us, However getting the vehicle insured from Insurance company & getting the vehicle registered from RTO is entirely my/our sole
 //           responsibility. Registration Number alloted by RTO will be acceptable to me as else I will pre book for choise number at RTO at my
 //           own. Dealership has no role in RTO Number allocation. I/We are exclusively responsible for any loss /personally/legal action
@@ -398,26 +283,15 @@
 //       );
 //     }
 
-//     // return declarations.map((declaration, index) => (
-//     //   <p key={declaration._id} className="notes-text">
-//     //     <b>Declaration</b> - {declaration.content}
-//     //     {index < declarations.length - 1}
-//     //   </p>
-//     // ));
 //     return (
-//       <>
-//         <p>
-//           <b>Declaration:</b>
-//         </p>
-//         <div className="notes-text">
-//           {declarations.map((declaration, index) => (
-//             <p key={declaration._id}>
-//               {declaration.content}
-//               {index < declarations.length - 1}
-//             </p>
-//           ))}
-//         </div>
-//       </>
+//       <div className="notes-text">
+//         {declarations.map((declaration, index) => (
+//           <p key={declaration._id}>
+//             {declaration.content}
+//             {index < declarations.length - 1}
+//           </p>
+//         ))}
+//       </div>
 //     );
 //   };
 
@@ -429,6 +303,10 @@
 //     // printWindow.print();
 //   };
 
+
+//   const unloadLocation = toType === 'branch' 
+//     ? (toBranch?.name || 'N/A')
+//     : (toSubdealer?.name || 'N/A');
 //   return (
 //     <CCard className="mb-4 challan-card">
 //       <CCardBody className="challan-body">
@@ -454,7 +332,7 @@
 //           <div className="location-item">
 //             <p>
 //               <span className="location-label"> Unload Location:</span>
-//               {toBranch?.name || 'N/A'}
+//               {unloadLocation}
 //             </p>
 //           </div>
 //         </div>
@@ -474,49 +352,26 @@
 //               </CTableRow>
 //             </CTableHead>
 //             <CTableBody>
-//               {vehicles.map((vehicle, index) => {
-//                 const modelId = getModelId(vehicle);
-//                 const vehicleAccessories = modelId ? modelAccessories[modelId] : [];
-
-//                 return (
-//                   <React.Fragment key={vehicle._id || index}>
-//                     <CTableRow>
-//                       <CTableDataCell>{index + 1}</CTableDataCell>
-//                       <CTableDataCell>
-//                         <strong>{vehicle.modelName || 'N/A'}</strong>
-//                       </CTableDataCell>
-//                       <CTableDataCell>{vehicle.color?.name || 'N/A'}</CTableDataCell>
-//                       <CTableDataCell>{vehicle.keyNumber || '0'}</CTableDataCell>
-//                       <CTableDataCell>{vehicle.chassisNumber || 'N/A'}</CTableDataCell>
-//                       <CTableDataCell>{vehicle.engineNumber || 'N/A'}</CTableDataCell>
-//                       <CTableDataCell>{vehicle.motorNumber || 'N/A'}</CTableDataCell>
-//                       <CTableDataCell>{vehicle.batteryNumber || 'N/A'}</CTableDataCell>
-//                     </CTableRow>
-
-//                     {vehicleAccessories?.length > 0 && (
-//                       <CTableRow>
-//                         <CTableDataCell colSpan="8">
-//                           <div className="model-accessories-container">
-//                             <div className="accessories-grid">
-//                               {vehicleAccessories.map((acc) => (
-//                                 <div key={acc._id}>
-//                                   <CFormCheck id={`acc-${modelId}-${acc._id}`} label={acc.name} />
-//                                 </div>
-//                               ))}
-//                             </div>
-//                           </div>
-//                         </CTableDataCell>
-//                       </CTableRow>
-//                     )}
-//                   </React.Fragment>
-//                 );
-//               })}
+//               {vehicles.map((vehicle, index) => (
+//                 <CTableRow key={vehicle._id || index}>
+//                   <CTableDataCell>{index + 1}</CTableDataCell>
+//                   <CTableDataCell>
+//                     <strong>{vehicle.modelName || 'N/A'}</strong>
+//                   </CTableDataCell>
+//                   <CTableDataCell>{vehicle.color?.name || 'N/A'}</CTableDataCell>
+//                   <CTableDataCell>{vehicle.keyNumber || '0'}</CTableDataCell>
+//                   <CTableDataCell>{vehicle.chassisNumber || 'N/A'}</CTableDataCell>
+//                   <CTableDataCell>{vehicle.engineNumber || 'N/A'}</CTableDataCell>
+//                   <CTableDataCell>{vehicle.motorNumber || 'N/A'}</CTableDataCell>
+//                   <CTableDataCell>{vehicle.batteryNumber || 'N/A'}</CTableDataCell>
+//                 </CTableRow>
+//               ))}
 //             </CTableBody>
 //           </CTable>
 //         </div>
 
 //         <div className="notes-section">
-//           <p className="section-title">Notes:</p>
+//           <p className="section-title">Notes: All Standard Fitments Received</p>
 //           {generateDeclarationPreview()}
 //         </div>
 
@@ -528,7 +383,6 @@
 //             <p>Receiver's Signature</p>
 //           </div>
 //         </div>
-        
 
 //         <div className="challan-actions">
 //           <CButton color="primary" onClick={handlePrint}>
@@ -541,6 +395,7 @@
 // };
 
 // export default TransferChallan;
+
 
 
 
@@ -562,7 +417,14 @@ import './challan.css';
 import axiosInstance from '../../axiosInstance';
 import tvsLogo from '../../assets/images/logo1.png';
 
-const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) => {
+const TransferChallan = ({ 
+  transferDetails, 
+  fromBranch, 
+  toBranch, 
+  toSubdealer, 
+  toType, 
+  vehicles 
+}) => {
   const [declarations, setDeclarations] = useState([]);
 
   const formatDate = (dateString) => {
@@ -585,6 +447,21 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
 
     fetchData();
   }, []);
+
+  // Determine the destination based on type
+  const getDestination = () => {
+    if (toType === 'branch') {
+      return {
+        label: 'Unload Location',
+        name: toBranch?.name || 'N/A'
+      };
+    } else {
+      return {
+        label: 'Subdealer',
+        name: toSubdealer?.name || 'N/A'
+      };
+    }
+  };
 
   const generateDeclarationHTML = () => {
     if (declarations.length === 0) {
@@ -612,6 +489,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
 
   const generateTransferChallanHTML = () => {
     const currentDate = formatDate(transferDetails?.createdAt || new Date());
+    const destination = getDestination();
 
     return `
     <!DOCTYPE html>
@@ -751,8 +629,8 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
             </div>
             <div class="location-item">
               <p>
-                <span class="location-label">Unload Location:</span>
-                ${toBranch?.name || 'N/A'}
+                <span class="location-label">${destination.label}:</span>
+                ${destination.name}
               </p>
             </div>
           </div>
@@ -847,6 +725,8 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
     // printWindow.print();
   };
 
+  const destination = getDestination();
+
   return (
     <CCard className="mb-4 challan-card">
       <CCardBody className="challan-body">
@@ -862,6 +742,7 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
           <p className="dealer-name">Authorized Main Dealer: TVS Motor Company Ltd.</p>
           <p className="challan-date">Date: {formatDate(transferDetails?.createdAt || new Date())}</p>
         </div>
+        
         <div className="locations-container">
           <div className="location-item">
             <p>
@@ -871,8 +752,8 @@ const TransferChallan = ({ transferDetails, fromBranch, toBranch, vehicles }) =>
           </div>
           <div className="location-item">
             <p>
-              <span className="location-label"> Unload Location:</span>
-              {toBranch?.name || 'N/A'}
+              <span className="location-label">{destination.label}:</span>
+              {destination.name}
             </p>
           </div>
         </div>

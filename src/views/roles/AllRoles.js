@@ -61,7 +61,7 @@ const AllRoles = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/roles`);
-      const filteredRoles = response.data.data.filter((role) => role.name.toLowerCase() !== 'superadmin');
+      const filteredRoles = response.data.data.filter((role) => role.name.toLowerCase() !== 'ad');
       setData(filteredRoles);
       setFilteredData(filteredRoles);
     } catch (error) {

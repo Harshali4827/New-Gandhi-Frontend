@@ -104,7 +104,8 @@ const TemplateForm = () => {
   });
 
   // TinyMCE API Key
-  const TINYMCE_API_KEY = 'vuj23uxel40osrwcszrejqoyg35ykdf7kyrr81hm6t952kgy';
+  // const TINYMCE_API_KEY = 'vuj23uxel40osrwcszrejqoyg35ykdf7kyrr81hm6t952kgy';
+   const TINYMCE_API_KEY = 'nteatj08qpc0uc5h1bt2kzidhousrmqp32cheq7x73spev3l';
 
   const isInitialLoad = useRef(false);
   const animatedComponents = makeAnimated();

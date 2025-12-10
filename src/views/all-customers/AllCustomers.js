@@ -503,315 +503,347 @@ const AllCustomers = () => {
   };
 
   const handleViewLedger = async (customer) => {
-    try {
-      const res = await axiosInstance.get(`/ledger/customer/${customer._id}`);
-      const ledgerData = res.data.data;
-      const ledgerUrl = `${config.baseURL}/ledger.html?customerId=${customer._id}`;
+  try {
+    const res = await axiosInstance.get(`/ledger/customer/${customer._id}`);
+    const ledgerData = res.data.data;
+    const ledgerUrl = `${config.baseURL}/ledger.html?customerId=${customer._id}`;
 
-      const bookingSummaryRows = ledgerData.bookingWiseSummary
-        .map((booking) => {
-          const bookingRow = `
+    // Process each booking to check if chassisNumber exists
+    const bookingSummaryRows = ledgerData.bookingWiseSummary
+      .map((booking) => {
+        const hasChassisNumber = booking.chassisNumber && booking.chassisNumber.trim() !== '';
+        const bookingRow = `
+          <tr>
+            <td>${new Date(booking.lastTransactionDate).toLocaleDateString('en-GB')}</td>
+            <td>Booking: ${booking.vehicleModel || 'Unknown Model'}</td>
+            <td>${booking.bookingNumber}</td>
+            <td class="text-right">-</td>
+            <td class="text-right">${hasChassisNumber ? booking.totalDebited.toLocaleString('en-IN') : '-'}</td>
+            <td class="text-right">${hasChassisNumber ? booking.totalDebited.toLocaleString('en-IN') : '-'}</td>
+          </tr>
+        `;
+
+        const paymentRows = booking.ledgerEntries
+          .filter((entry) => entry.type === 'CREDIT')
+          .map(
+            (entry) => `
             <tr>
-              <td>${new Date(booking.lastTransactionDate).toLocaleDateString('en-GB')}</td>
-              <td>Booking: ${booking.vehicleModel || 'Unknown Model'}</td>
+              <td>${new Date(entry.date).toLocaleDateString('en-GB')}</td>
+              <td>${entry.description}</td>
               <td>${booking.bookingNumber}</td>
+              <td class="text-right">${entry.credit.toLocaleString('en-IN')}</td>
               <td class="text-right">-</td>
-              <td class="text-right">${booking.totalDebited.toLocaleString('en-IN')}</td>
-              <td class="text-right">${booking.totalDebited.toLocaleString('en-IN')}</td>
+              <td class="text-right">${entry.balance.toLocaleString('en-IN')}</td>
             </tr>
-          `;
+          `
+          )
+          .join('');
 
-          const paymentRows = booking.ledgerEntries
-            .filter((entry) => entry.type === 'CREDIT')
-            .map(
-              (entry) => `
-              <tr>
-                <td>${new Date(entry.date).toLocaleDateString('en-GB')}</td>
-                <td>${entry.description}</td>
-                <td>${booking.bookingNumber}</td>
-                <td class="text-right">${entry.credit.toLocaleString('en-IN')}</td>
-                <td class="text-right">-</td>
-                <td class="text-right">${entry.balance.toLocaleString('en-IN')}</td>
-              </tr>
-            `
-            )
-            .join('');
+        return bookingRow + paymentRows;
+      })
+      .join('');
 
-          return bookingRow + paymentRows;
-        })
-        .join('');
+    const accessoryBillingRows = ledgerData.transactions
+      .filter((transaction) => transaction.type.includes('ACCESSORY_BILLING'))
+      .map((transaction) => {
+        const amount = transaction.netAmount || transaction.amount;
+        const bookingNumber = transaction.booking?.bookingNumber || '-';
+        const booking = ledgerData.bookingWiseSummary.find(b => b.bookingNumber === bookingNumber);
+        const hasChassisNumber = booking?.chassisNumber && booking.chassisNumber.trim() !== '';
 
-      const accessoryBillingRows = ledgerData.transactions
-        .filter((transaction) => transaction.type.includes('ACCESSORY_BILLING'))
-        .map((transaction) => {
-          const amount = transaction.netAmount || transaction.amount;
-          const bookingNumber = transaction.booking?.bookingNumber || '-';
+        return `
+          <tr>
+            <td>${new Date(transaction.receiptDate || transaction.createdAt).toLocaleDateString('en-GB')}</td>
+            <td>${transaction.type}: ${transaction.remark || ''}</td>
+            <td>${bookingNumber}</td>
+            <td class="text-right">-</td>
+            <td class="text-right">${hasChassisNumber ? amount.toLocaleString('en-IN') : '-'}</td>
+            <td class="text-right">${''}</td>
+          </tr>
+        `;
+      })
+      .join('');
 
-          return `
-            <tr>
-              <td>${new Date(transaction.receiptDate || transaction.createdAt).toLocaleDateString('en-GB')}</td>
-              <td>${transaction.type}: ${transaction.remark || ''}</td>
-              <td>${bookingNumber}</td>
-              <td class="text-right">-</td>
-              <td class="text-right">${amount.toLocaleString('en-IN')}</td>
-              <td class="text-right">${''}</td>
-            </tr>
-          `;
-        })
-        .join('');
+    const exchangeCreditRows = ledgerData.transactions
+      .filter((transaction) => transaction.type.includes('EXCHANGE_CREDIT'))
+      .map((transaction) => {
+        const amount = transaction.netAmount || transaction.amount;
+        const bookingNumber = transaction.booking?.bookingNumber || '-';
 
-      const exchangeCreditRows = ledgerData.transactions
-        .filter((transaction) => transaction.type.includes('EXCHANGE_CREDIT'))
-        .map((transaction) => {
-          const amount = transaction.netAmount || transaction.amount;
-          const bookingNumber = transaction.booking?.bookingNumber || '-';
+        return `
+          <tr>
+            <td>${new Date(transaction.receiptDate || transaction.createdAt).toLocaleDateString('en-GB')}</td>
+            <td>${transaction.type}: ${transaction.remark || ''}</td>
+            <td>${bookingNumber}</td>
+            <td class="text-right">${amount.toLocaleString('en-IN')}</td>
+            <td class="text-right">-</td>
+            <td class="text-right">${''}</td>
+          </tr>
+        `;
+      })
+      .join('');
 
-          return `
-        <tr>
-          <td>${new Date(transaction.receiptDate || transaction.createdAt).toLocaleDateString('en-GB')}</td>
-          <td>${transaction.type}: ${transaction.remark || ''}</td>
-          <td>${bookingNumber}</td>
-          <td class="text-right">${amount.toLocaleString('en-IN')}</td>
-          <td class="text-right">-</td>
-          <td class="text-right">${''}</td>
-        </tr>
-      `;
-        })
-        .join('');
-
-      // Add transaction rows
-      // Add transaction rows
-const transactionRows = ledgerData.transactions
-  .map((transaction) => {
-    const amount = transaction.netAmount || transaction.amount;
-    const bookingNumber = transaction.booking?.bookingNumber || '-';
-    const date = transaction.receiptDate || transaction.createdAt;
+    // Calculate totals based on chassisNumber
+    let totalDebited = 0;
+    let totalBalance = 0;
     
-    // Check if it's a debit transaction
-    const isDebit = transaction.isDebit === true;
-    
-    return `
-      <tr>
-        <td>${new Date(date).toLocaleDateString('en-GB')}</td>
-        <td>${transaction.remark || ''}</td>
-        <td>${bookingNumber}</td>
-        <td class="text-right">${!isDebit ? amount.toLocaleString('en-IN') : '-'}</td>
-        <td class="text-right">${isDebit ? amount.toLocaleString('en-IN') : '-'}</td>
-        <td class="text-right">${''}</td>
-      </tr>
-    `;
-  })
-  .join('');
+    // Calculate total debited only for bookings with chassisNumber
+    ledgerData.bookingWiseSummary.forEach((booking) => {
+      const hasChassisNumber = booking.chassisNumber && booking.chassisNumber.trim() !== '';
+      if (hasChassisNumber) {
+        totalDebited += booking.totalDebited || 0;
+        // Also add accessory billing amounts for this booking
+        const accessoryBillingAmounts = ledgerData.transactions
+          .filter(t => t.type.includes('ACCESSORY_BILLING') && 
+                      t.booking?.bookingNumber === booking.bookingNumber)
+          .reduce((sum, t) => sum + (t.netAmount || t.amount || 0), 0);
+        totalDebited += accessoryBillingAmounts;
+      }
+    });
 
-      const totalReceived = ledgerData.customerDetails?.totalReceived || 0;
-      const totalDebited = ledgerData.customerDetails?.totalDebited || 0;
-      const totalBalance = ledgerData.customerDetails?.currentBalance || 0;
+    // Add debit transactions only for bookings with chassisNumber
+    ledgerData.transactions.forEach((transaction) => {
+      const isDebit = transaction.isDebit === true;
+      const bookingNumber = transaction.booking?.bookingNumber || '-';
+      const booking = ledgerData.bookingWiseSummary.find(b => b.bookingNumber === bookingNumber);
+      const hasChassisNumber = booking?.chassisNumber && booking.chassisNumber.trim() !== '';
+      
+      if (isDebit && hasChassisNumber) {
+        totalDebited += transaction.netAmount || transaction.amount || 0;
+      }
+    });
 
-      const win = window.open('', '_blank');
-      win.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Customer Ledger - Booking Summary</title>
-              <style>
-                @page {
-                  size: A4;
-                  margin: 15mm 10mm;
-                }
+    const totalReceived = ledgerData.customerDetails?.totalReceived || 0;
+    totalBalance = totalReceived - totalDebited;
+
+    // Add transaction rows
+    const transactionRows = ledgerData.transactions
+      .map((transaction) => {
+        const amount = transaction.netAmount || transaction.amount;
+        const bookingNumber = transaction.booking?.bookingNumber || '-';
+        const date = transaction.receiptDate || transaction.createdAt;
+        const isDebit = transaction.isDebit === true;
+        const booking = ledgerData.bookingWiseSummary.find(b => b.bookingNumber === bookingNumber);
+        const hasChassisNumber = booking?.chassisNumber && booking.chassisNumber.trim() !== '';
+        
+        return `
+          <tr>
+            <td>${new Date(date).toLocaleDateString('en-GB')}</td>
+            <td>${transaction.remark || ''}</td>
+            <td>${bookingNumber}</td>
+            <td class="text-right">${!isDebit ? amount.toLocaleString('en-IN') : '-'}</td>
+            <td class="text-right">${(isDebit && hasChassisNumber) ? amount.toLocaleString('en-IN') : '-'}</td>
+            <td class="text-right">${''}</td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Customer Ledger - Booking Summary</title>
+            <style>
+              @page {
+                size: A4;
+                margin: 15mm 10mm;
+              }
+              body {
+                font-family: Arial;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                font-size: 14px;
+                line-height: 1.3;
+                font-family: Courier New;
+              }
+              .container {
+                width: 190mm;
+                margin: 0 auto;
+                padding: 5mm;
+              }
+              .header-container {
+                display: flex;
+                justify-content:space-between;
+                margin-bottom: 3mm;
+              }
+              .header-text{
+                font-size:20px;
+                font-weight:bold;
+              }
+              .logo {
+                width: 30mm;
+                height: auto;
+                margin-right: 5mm;
+              }
+              .header {
+                text-align: left;
+              }
+              .divider {
+                border-top: 2px solid #AAAAAA;
+                margin: 3mm 0;
+              }
+              .header h2 {
+                margin: 2mm 0;
+                font-size: 12pt;
+                font-weight: bold;
+              }
+              .header div {
+                font-size: 14px;
+              }
+              .customer-info {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2mm;
+                margin-bottom: 5mm;
+                font-size: 14px;
+              }
+              .customer-info div {
+                display: flex;
+              }
+              .customer-info strong {
+                min-width: 30mm;
+                display: inline-block;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 5mm;
+                font-size: 14px;
+                page-break-inside: avoid;
+              }
+              th, td {
+                border: 1px solid #000;
+                padding: 2mm;
+                text-align: left;
+              }
+              th {
+                background-color: #f0f0f0;
+                font-weight: bold;
+              }
+              .footer {
+                margin-top: 10mm;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                font-size: 14px;
+              }
+              .footer-left {
+                text-align: left;
+              }
+              .footer-right {
+                text-align: right;
+              }
+              .qr-code {
+                width: 35mm;
+                height: 35mm;
+              }
+              .text-right {
+                text-align: right;
+              }
+              .text-left {
+                text-align: left;
+              }
+              .text-center {
+                text-align: center;
+              }
+              .note {
+                font-style: italic;
+                color: #666;
+                margin-bottom: 5mm;
+                text-align: center;
+              }
+              @media print {
                 body {
-                  font-family: Arial;
-                  width: 100%;
-                  margin: 0;
-                  padding: 0;
-                  font-size: 14px;
-                  line-height: 1.3;
-                  font-family: Courier New;
-                }
-                .container {
                   width: 190mm;
-                  margin: 0 auto;
-                  padding: 5mm;
+                  height: 277mm;
                 }
-                .header-container {
-                  display: flex;
-                  justify-content:space-between;
-                  margin-bottom: 3mm;
+                .no-print {
+                  display: none;
                 }
-                .header-text{
-                  font-size:20px;
-                  font-weight:bold;
-                }
-                .logo {
-                  width: 30mm;
-                  height: auto;
-                  margin-right: 5mm;
-                }
-                .header {
-                  text-align: left;
-                }
-                .divider {
-                  border-top: 2px solid #AAAAAA;
-                  margin: 3mm 0;
-                }
-                .header h2 {
-                  margin: 2mm 0;
-                  font-size: 12pt;
-                  font-weight: bold;
-                }
-                .header div {
-                  font-size: 14px;
-                }
-                .customer-info {
-                  display: grid;
-                  grid-template-columns: repeat(2, 1fr);
-                  gap: 2mm;
-                  margin-bottom: 5mm;
-                  font-size: 14px;
-                }
-                .customer-info div {
-                  display: flex;
-                }
-                .customer-info strong {
-                  min-width: 30mm;
-                  display: inline-block;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                  margin-bottom: 5mm;
-                  font-size: 14px;
-                  page-break-inside: avoid;
-                }
-                th, td {
-                  border: 1px solid #000;
-                  padding: 2mm;
-                  text-align: left;
-                }
-                th {
-                  background-color: #f0f0f0;
-                  font-weight: bold;
-                }
-                .footer {
-                  margin-top: 10mm;
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: flex-end;
-                  font-size: 14px;
-                }
-                .footer-left {
-                  text-align: left;
-                }
-                .footer-right {
-                  text-align: right;
-                }
-                .qr-code {
-                  width: 35mm;
-                  height: 35mm;
-                }
-                .text-right {
-                  text-align: right;
-                }
-                .text-left {
-                  text-align: left;
-                }
-                .text-center {
-                  text-align: center;
-                }
-                .note {
-                  font-style: italic;
-                  color: #666;
-                  margin-bottom: 5mm;
-                  text-align: center;
-                }
-                @media print {
-                  body {
-                    width: 190mm;
-                    height: 277mm;
-                  }
-                  .no-print {
-                    display: none;
-                  }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header-container">
-                  <img src="${tvsLogo}" class="logo" alt="TVS Logo">
-                  <div class="header-text"> GANDHI TVS</div>
-                </div>
-                <div class="header">
-                  <div>
-                    Authorised Main Dealer: TVS Motor Company Ltd.<br>
-                    Registered office: 'JOGPREET' Asher Estate, Near Ichhamani Lawns,<br>
-                    Upnagar, Nashik Road, Nashik - 422101<br>
-                    Phone: 7498903672
-                  </div>
-                </div>
-                <div class="divider"></div>
-                <div class="customer-info">
-                  <div><strong>Customer ID:</strong> ${ledgerData.customerDetails?.custId || ''}</div>
-                  <div><strong>Customer Name:</strong> ${ledgerData.customerDetails?.customerName || ''}</div>
-                  <div><strong>Ledger Date:</strong> ${new Date().toLocaleDateString('en-GB')}</div>
-                  <div><strong>Aadhar No:</strong> ${ledgerData.customerDetails?.customerAadhaar || ''}</div>
-                  <div><strong>Pan No:</strong> ${ledgerData.customerDetails?.customerPan || ''}</div>
-                  <div><strong>Current Balance:</strong> ₹${ledgerData.customerDetails?.currentBalance?.toLocaleString('en-IN') || '0'}</div>
-                </div>
-  
-                <table>
-                  <thead>
-                    <tr>
-                      <th width="15%">Date</th>
-                      <th width="25%">Description</th>
-                      <th width="20%">Booking No</th>
-                      <th width="10%" class="text-right">Credit (₹)</th>
-                      <th width="10%" class="text-right">Debit (₹)</th>
-                      <th width="20%" class="text-right">Balance (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${bookingSummaryRows}
-                    ${accessoryBillingRows}
-                    ${exchangeCreditRows}
-                    ${transactionRows}
-                    <tr>
-                      <td colspan="2" class="text-left"><strong>Total</strong></td>
-                      <td class="text-center"><strong>-</strong></td>
-                      <td class="text-right"><strong>${totalReceived.toLocaleString('en-IN')}</strong></td>
-                      <td class="text-right"><strong>${totalDebited.toLocaleString('en-IN')}</strong></td>
-                      <td class="text-right"><strong>${totalBalance.toLocaleString('en-IN')}</strong></td>
-                    </tr>
-                  </tbody>
-                </table>
-  
-                <div class="footer">
-                  <div class="footer-left">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ledgerUrl)}"
-                         class="qr-code"
-                         alt="QR Code" />
-                  </div>
-                  <div class="footer-right">
-                    <p>For, Gandhi TVS</p>
-                    <p>Authorised Signatory</p>
-                  </div>
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header-container">
+                <img src="${tvsLogo}" class="logo" alt="TVS Logo">
+                <div class="header-text"> GANDHI TVS</div>
+              </div>
+              <div class="header">
+                <div>
+                  Authorised Main Dealer: TVS Motor Company Ltd.<br>
+                  Registered office: 'JOGPREET' Asher Estate, Near Ichhamani Lawns,<br>
+                  Upnagar, Nashik Road, Nashik - 422101<br>
+                  Phone: 7498903672
                 </div>
               </div>
-  
-              <script>
-                window.onload = function() {
-                  setTimeout(() => {
-                    window.print();
-                  }, 300);
-                };
-              </script>
-            </body>
-          </html>
-        `);
-    } catch (err) {
-      console.error('Error fetching ledger:', err);
-      setError('Failed to load ledger. Please try again.');
-    }
-  };
+              <div class="divider"></div>
+              <div class="customer-info">
+                <div><strong>Customer ID:</strong> ${ledgerData.customerDetails?.custId || ''}</div>
+                <div><strong>Customer Name:</strong> ${ledgerData.customerDetails?.customerName || ''}</div>
+                <div><strong>Ledger Date:</strong> ${new Date().toLocaleDateString('en-GB')}</div>
+                <div><strong>Aadhar No:</strong> ${ledgerData.customerDetails?.customerAadhaar || ''}</div>
+                <div><strong>Pan No:</strong> ${ledgerData.customerDetails?.customerPan || ''}</div>
+                <div><strong>Current Balance:</strong> ₹${totalBalance.toLocaleString('en-IN')}</div>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th width="15%">Date</th>
+                    <th width="25%">Description</th>
+                    <th width="20%">Booking No</th>
+                    <th width="10%" class="text-right">Credit (₹)</th>
+                    <th width="10%" class="text-right">Debit (₹)</th>
+                    <th width="20%" class="text-right">Balance (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${bookingSummaryRows}
+                  ${accessoryBillingRows}
+                  ${exchangeCreditRows}
+                  ${transactionRows}
+                  <tr>
+                    <td colspan="2" class="text-left"><strong>Total</strong></td>
+                    <td class="text-center"><strong>-</strong></td>
+                    <td class="text-right"><strong>${totalReceived.toLocaleString('en-IN')}</strong></td>
+                    <td class="text-right"><strong>${totalDebited.toLocaleString('en-IN')}</strong></td>
+                    <td class="text-right"><strong>${totalBalance.toLocaleString('en-IN')}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="footer">
+                <div class="footer-left">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ledgerUrl)}"
+                       class="qr-code"
+                       alt="QR Code" />
+                </div>
+                <div class="footer-right">
+                  <p>For, Gandhi TVS</p>
+                  <p>Authorised Signatory</p>
+                </div>
+              </div>
+            </div>
+
+            <script>
+              window.onload = function() {
+                setTimeout(() => {
+                  window.print();
+                }, 300);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+  } catch (err) {
+    console.error('Error fetching ledger:', err);
+    setError('Failed to load ledger. Please try again.');
+  }
+};
 
   const handleSearch = (value) => {
     setSearchTerm(value);
@@ -916,6 +948,10 @@ const transactionRows = ledgerData.transactions
 };
 
 export default AllCustomers;
+
+
+
+
 
 
 
