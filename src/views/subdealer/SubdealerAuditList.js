@@ -61,7 +61,10 @@ const SubdealerAuditList = () => {
       const response = await axiosInstance.get('/subdealers');
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
-      console.log('Error fetching subdealers', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -72,9 +75,10 @@ const SubdealerAuditList = () => {
       setData(response.data.data.subdealerAudits || []);
       setFilteredData(response.data.data.subdealerAudits || []);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
-      showError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -118,8 +122,10 @@ const SubdealerAuditList = () => {
       showSuccess('Audit status updated successfully!');
       handleClose();
     } catch (error) {
-      console.error('Error toggling audit status:', error);
-      showError('Failed to update audit status');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -184,7 +190,7 @@ const SubdealerAuditList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading subdealer audits: {error}
+       {error}
       </div>
     );
   }

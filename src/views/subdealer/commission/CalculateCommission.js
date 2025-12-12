@@ -25,6 +25,7 @@ import {
 import axiosInstance from 'src/axiosInstance';
 import { format, parseISO } from 'date-fns';
 import tvsLogo from '../../../assets/images/logo.png';
+import { showError } from '../../../utils/sweetAlerts';
 const CalculateCommission = () => {
   const [subdealers, setSubdealers] = useState([]);
   const [selectedSubdealer, setSelectedSubdealer] = useState('');
@@ -54,8 +55,10 @@ const CalculateCommission = () => {
       const subdealerData = response.data.data.subdealers || response.data.data || [];
       setSubdealers(subdealerData);
     } catch (error) {
-      console.error('Error fetching subdealers:', error);
-      setError('Failed to load subdealers');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -376,7 +379,13 @@ const CalculateCommission = () => {
       </html>
     `);
   };
-
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <CContainer className="my-4">
       <CRow className="justify-content-center">
@@ -387,12 +396,6 @@ const CalculateCommission = () => {
               <p className="text-muted small mb-0">Select a subdealer and time period to generate a commission report</p>
             </CCardHeader>
             <CCardBody>
-              {error && (
-                <CAlert color="danger" dismissible onClose={() => setError(null)}>
-                  {error}
-                </CAlert>
-              )}
-
               <div className="mb-3">
                 <CFormLabel htmlFor="subdealerSelect" className="fw-semibold">
                   Subdealer <span className="text-danger">*</span>

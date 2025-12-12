@@ -7,7 +7,8 @@ import {
   MenuItem,
   useTableFilter,
   usePagination,
-  axiosInstance
+  axiosInstance,
+  showError
 } from '../../utils/tableImports';
 import tvsLogo from '../../assets/images/logo.png';
 import '../../css/invoice.css';
@@ -79,7 +80,10 @@ const ExchangeLedger = () => {
       const response = await axiosInstance.get('/branches');
       setBranches(response.data.data);
     } catch (error) {
-      console.log('Error fetching branches:', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -137,8 +141,10 @@ const ExchangeLedger = () => {
         setSelectedBranchName('');
       }
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError('Failed to fetch data');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -515,7 +521,7 @@ const ExchangeLedger = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading exchange ledger: {error}
+     {error}
       </div>
     );
   }

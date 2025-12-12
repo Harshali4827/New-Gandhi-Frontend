@@ -73,9 +73,10 @@ const UsersList = () => {
       setData(users);
       setFilteredData(users);
     } catch (error) {
-      console.error('Error fetching users:', error);
-      setError(error.message);
-      showError('Failed to load users. Please try again.');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }    
     } finally {
       setLoading(false);
     }
@@ -130,25 +131,6 @@ const UsersList = () => {
     }
   };
 
-  const handleToggleActive = async (userId, currentStatus) => {
-    try {
-      const newStatus = !currentStatus;
-      await axiosInstance.patch(`/users/${userId}/status`, {
-        isActive: newStatus
-      });
-
-      const updateStatus = (users) => users.map((user) => (user.id === userId ? { ...user, isActive: newStatus } : user));
-
-      setData((prev) => updateStatus(prev));
-      setFilteredData((prev) => updateStatus(prev));
-
-      showSuccess(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
-    } catch (error) {
-      console.error('Error toggling user status:', error);
-      showError('Failed to update user status');
-    }
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'Never logged in';
     const date = new Date(dateString);
@@ -181,7 +163,7 @@ const UsersList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading users: {error}
+      {error}
       </div>
     );
   }

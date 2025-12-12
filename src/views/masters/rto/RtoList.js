@@ -64,8 +64,10 @@ const RtoList = () => {
       setData(response.data?.data || []);
       setFilteredData(response.data?.data || []);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
       setData([]);
       setFilteredData([]);
     } finally {
@@ -94,8 +96,10 @@ const RtoList = () => {
       setSuccessMessage(`RTO ${newStatus ? 'activated' : 'deactivated'} successfully`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('Error updating RTO status:', error);
-      showError(error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -153,7 +157,7 @@ const RtoList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading RTO data: {error}
+   {error}
       </div>
     );
   }

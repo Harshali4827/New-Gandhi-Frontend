@@ -68,9 +68,10 @@ const VerticalMasterList = () => {
       setFilteredData(verticals);
       setError(null);
     } catch (error) {
-      console.error('Error fetching vertical masters', error);
-      setError(error.message);
-      showError(error.message);
+      const message = showError(error);
+      if (message) {
+          setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -198,6 +199,13 @@ const VerticalMasterList = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div>
       <div className='title'>Vertical Masters {getFilterText()}</div>

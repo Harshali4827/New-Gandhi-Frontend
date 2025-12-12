@@ -60,8 +60,10 @@ const AccessoriesList = () => {
       setData(response.data.data.accessories);
       setFilteredData(response.data.data.accessories);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,8 +89,10 @@ const AccessoriesList = () => {
       fetchData();
       showSuccess(`Part number status updated to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating part number status:', error);
-      showError('Failed to update part number status');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -123,7 +127,7 @@ const AccessoriesList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading accessories: {error}
+      {error}
       </div>
     );
   }

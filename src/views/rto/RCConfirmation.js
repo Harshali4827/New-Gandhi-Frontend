@@ -20,7 +20,7 @@ import {
   CSpinner,
   CFormLabel
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, useTableFilter } from '../../utils/tableImports';
+import { axiosInstance, getDefaultSearchFields, showError, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
 import UpdateRCConfirmation from './UpdateRCConfirmation';
@@ -64,8 +64,10 @@ function RCConfirmation() {
       setPendingData(response.data.data);
       setFilteredPendings(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -220,7 +222,7 @@ function RCConfirmation() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+     {error}
       </div>
     );
   }
@@ -230,27 +232,6 @@ function RCConfirmation() {
       <div className='title'>RC Confirmation Management</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
-        
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">
             <CNavItem>

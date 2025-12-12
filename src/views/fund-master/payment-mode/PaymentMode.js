@@ -28,7 +28,7 @@ function PaymentMode() {
   const [editingPayment, setEditingPayment] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-
+  const [error, setError] = useState(null);
   useEffect(() => {
     fetchPayments();
   }, []);
@@ -38,7 +38,10 @@ function PaymentMode() {
       const response = await axiosInstance.get('/banksubpaymentmodes');
       setPayments(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      const message = showError(error);
+        if (message) {
+          setError(message);
+        }
       setPayments([]);
     }
   };

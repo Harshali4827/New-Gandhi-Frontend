@@ -65,8 +65,10 @@ function RTOPaper() {
       setPendingData(response.data.data);
       setFilteredPendings(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,10 @@ function RTOPaper() {
       setApprovedData(response.data.data);
       setFilteredApproved(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -105,8 +110,10 @@ function RTOPaper() {
       setKycData(kycDataWithStatus);
       setShowKycModal(true);
     } catch (error) {
-      console.log('Error fetching KYC details', error);
-      showError(error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -256,7 +263,7 @@ function RTOPaper() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+       {error}
       </div>
     );
   }

@@ -62,8 +62,10 @@ const BranchList = () => {
       setData(response.data.data);
       setFilteredData(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -108,7 +110,10 @@ const BranchList = () => {
       showSuccess(`Branch ${newStatus ? 'activated' : 'deactivated'} successfully`);
       handleClose();
     } catch (error) {
-      showError(error.message || 'Failed to update branch status');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -132,7 +137,7 @@ const BranchList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading branches: {error}
+       {error}
       </div>
     );
   }

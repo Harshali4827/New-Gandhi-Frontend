@@ -4,7 +4,6 @@ import '../../../css/form.css';
 import {
   React,
   useEffect,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   axiosInstance,
@@ -29,10 +28,11 @@ import {
   CTableBody,
   CTableDataCell
 } from '@coreui/react';
+import { useState } from 'react';
 
 const OnAccountBalance = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-
+  const [error, setError] = useState(null);
   useEffect(() => {
     fetchData();
   }, []);
@@ -43,7 +43,10 @@ const OnAccountBalance = () => {
       setData(response.data.data.subdealers);
       setFilteredData(response.data.data.subdealers);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -342,6 +345,13 @@ const OnAccountBalance = () => {
     handleFilter(searchValue, getDefaultSearchFields('subdealer'));
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div>
       <div className='title'>OnAccount Balance</div>

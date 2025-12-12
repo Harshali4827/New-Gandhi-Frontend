@@ -62,8 +62,10 @@ const ExpenseList = () => {
       setData(response.data.data.expenseAccounts || []);
       setFilteredData(response.data.data.expenseAccounts || []);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
       setData([]);
       setFilteredData([]);
     } finally {
@@ -106,12 +108,6 @@ const ExpenseList = () => {
     setEditingExpense(null);
     setShowModal(true);
   };
-
-  const handleShowEditModal = (expense) => {
-    setEditingExpense(expense);
-    setShowModal(true);
-  };
-
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingExpense(null);
@@ -135,7 +131,7 @@ const ExpenseList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading expenses: {error}
+      {error}
       </div>
     );
   }

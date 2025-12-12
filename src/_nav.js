@@ -753,6 +753,12 @@ const _nav = [
     icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
   },
   {
+    component: CNavItem,
+    name: 'GM Deviation',
+    to: '/gm-deviation',
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
+  },
+  {
     component: CNavGroup,
     name: 'Account',
     icon: <CIcon icon={cilMoney} customClassName="nav-icon" />,

@@ -593,7 +593,7 @@ import { axiosInstance, getDefaultSearchFields, SearchOutlinedIcon, useTableFilt
 import tvsLogo from '../../../assets/images/logo.png';
 import config from 'src/config';
 import CIcon from '@coreui/icons-react';
-import { cilPrint, cilMagnifyingGlass } from '@coreui/icons';
+import { cilPrint} from '@coreui/icons';
 
 function SubdealerLedger() {
   const [activeTab, setActiveTab] = useState(0);
@@ -626,7 +626,10 @@ function SubdealerLedger() {
       setData(response.data.data.subdealers);
       setFilteredData(response.data.data.subdealers);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -635,8 +638,10 @@ function SubdealerLedger() {
       const response = await axiosInstance.get('/subdealers');
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
-      console.error('Error fetching subdealers:', error);
-      showError(error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -646,8 +651,10 @@ function SubdealerLedger() {
       setReceipts(response.data.docs || []);
       setError('');
     } catch (error) {
-      console.error('Error fetching subdealer receipts:', error);
-      setError('Failed to load receipt data');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
       setReceipts([]);
     }
   };
@@ -688,10 +695,8 @@ function SubdealerLedger() {
       let totalDebit = 0;
       let runningBalance = 0;
 
-      // Combine all transactions and sort by date
       const allTransactions = [];
 
-      // Add receipt transactions
       ledgerData.forEach((receipt) => {
         allTransactions.push({
           type: 'receipt',
@@ -699,7 +704,6 @@ function SubdealerLedger() {
           date: new Date(receipt.receivedDate)
         });
 
-        // Add allocation transactions
         if (receipt.allocations && receipt.allocations.length > 0) {
           receipt.allocations.forEach((allocation) => {
             allTransactions.push({
@@ -711,8 +715,6 @@ function SubdealerLedger() {
           });
         }
       });
-
-      // Add booking transactions
       subdealerBookings.forEach((booking) => {
         allTransactions.push({
           type: 'booking',
@@ -720,8 +722,6 @@ function SubdealerLedger() {
           date: new Date(booking.bookingDate)
         });
       });
-
-      // Add accessory billing transactions (separate from balance calculation)
       accessoryBillings.forEach((accessory) => {
         allTransactions.push({
           type: 'accessory',
@@ -729,8 +729,6 @@ function SubdealerLedger() {
           date: new Date(accessory.createdAt)
         });
       });
-
-      // Sort all transactions by date
       allTransactions.sort((a, b) => a.date - b.date);
 
       const win = window.open('', '_blank');
@@ -958,7 +956,6 @@ function SubdealerLedger() {
                       const accessoryAmount = accessory.amount;
                       
                       if (accessory.isDebit) {
-                        // Debit transaction - don't affect balance
                         totalDebit += accessoryAmount;
                         
                         row = `
@@ -975,7 +972,7 @@ function SubdealerLedger() {
                           </tr>
                         `;
                       } else {
-                        // Credit transaction - don't affect balance
+
                         totalCredit += accessoryAmount;
                         
                         row = `
@@ -1036,6 +1033,13 @@ function SubdealerLedger() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div>
       <div className='title'>Subdealer Ledger</div>

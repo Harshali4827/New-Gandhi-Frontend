@@ -6,7 +6,8 @@ import {
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
-  axiosInstance
+  axiosInstance,
+  showError
 } from '../../utils/tableImports';
 import CancelledBookingModel from './CancelledBookingModel';
 import { 
@@ -82,8 +83,10 @@ const CancelledBooking = () => {
         throw new Error('Failed to fetch cancelled bookings');
       }
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError('Failed to fetch cancelled bookings data');
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       if (activeTab === 0) {
         setLoading(prev => ({ ...prev, processRefund: false }));
@@ -106,7 +109,6 @@ const CancelledBooking = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchTerm('');
-    // Set the correct data based on tab
     if (tab === 0) {
       setData(processRefundData);
       setFilteredData(processRefundData);

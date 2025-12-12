@@ -6,7 +6,8 @@ import {
   useTableFilter,
   usePagination,
   axiosInstance,
-  getDefaultSearchFields
+  getDefaultSearchFields,
+  showError
 } from '../../utils/tableImports';
 import { 
   CButton, 
@@ -43,8 +44,10 @@ const CashReceipt = () => {
       setData(response.data.transactions);
       setFilteredData(response.data.transactions);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -98,7 +101,7 @@ const CashReceipt = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading cash receipts: {error}
+      {error}
       </div>
     );
   }

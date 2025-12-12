@@ -56,8 +56,10 @@ function Receipt() {
       const branchBookings = response.data.data.bookings.filter((booking) => booking.bookingType === 'BRANCH');
       setBookingsData(branchBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,10 @@ function Receipt() {
       const response = await axiosInstance.get(`/ledger/pending`);
       setPendingPaymentsData(response.data.data.ledgerEntries);
     } catch (error) {
-      console.log('Error fetching pending payments', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -77,7 +82,10 @@ function Receipt() {
       const response = await axiosInstance.get(`/payment/verified/bank/ledger`);
       setVerifiedPaymentsData(response.data.data.ledgerEntries);
     } catch (error) {
-      console.log('Error fetching verified payments', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -231,7 +239,6 @@ function Receipt() {
       
       printWindow.onload = function() {
         printWindow.focus();
-        // printWindow.print();
       };
       
     } catch (error) {
@@ -943,7 +950,7 @@ function Receipt() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+    {error}
       </div>
     );
   }

@@ -31,7 +31,6 @@ import {
   Menu,
   MenuItem,
   getDefaultSearchFields,
-  useTableFilter,
   confirmDelete,
   showError,
   showSuccess,
@@ -65,9 +64,11 @@ const AllRoles = () => {
       setData(filteredRoles);
       setFilteredData(filteredRoles);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
-      showError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
+  
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,6 @@ const AllRoles = () => {
     }
   };
 
-  // Group permissions by module for display
   const groupPermissionsByModule = (permissions) => {
     if (!permissions || !permissions.length) return {};
 
@@ -136,7 +136,7 @@ const AllRoles = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading roles: {error}
+       {error}
       </div>
     );
   }

@@ -70,8 +70,10 @@ const CashList = () => {
       setData(filtered);
       setFilteredData(filtered);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -157,7 +159,7 @@ const CashList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading cash locations: {error}
+       {error}
       </div>
     );
   }

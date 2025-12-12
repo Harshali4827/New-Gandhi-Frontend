@@ -1,4 +1,4 @@
-// components/templates/TemplateList.jsx
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -26,7 +26,6 @@ import {
 } from '@coreui/icons';
 import { cilMagnifyingGlass } from '@coreui/icons';
 
-// Import Material-UI components for the menu
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
@@ -42,8 +41,7 @@ const TemplateList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-  
-  // Menu state
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
 
@@ -59,8 +57,10 @@ const TemplateList = () => {
       setFilteredData(response.data.data.templates);
       setTemplates(response.data.data.templates);
     } catch (error) {
-      console.log('Error fetching templates', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,6 @@ const TemplateList = () => {
     }
   };
 
-  // Menu handlers
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
     setMenuId(id);
@@ -108,7 +107,7 @@ const TemplateList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading templates: {error}
+      {error}
       </div>
     );
   }

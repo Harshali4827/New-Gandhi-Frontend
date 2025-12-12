@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts';
 import axiosInstance from 'src/axiosInstance';
 import FormButtons from 'src/utils/FormButtons';
+import { showError } from '../../../utils/sweetAlerts';
 
 function SubdealerPayment() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ function SubdealerPayment() {
     transaction_reference: '',
     remarks: ''
   });
+  const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
   const [subdealers, setSubdealers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,8 +34,10 @@ function SubdealerPayment() {
       const response = await axiosInstance.get('/subdealers');
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
-      console.error('Error fetching subdealers:', error);
-      showError(error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -62,14 +66,10 @@ function SubdealerPayment() {
     }
 
     try {
-      // Extract just the month part from the YYYY-MM format and convert to number
-      // const monthNumber = parseInt(formData.month.split('-')[1], 10);
-
       const submissionData = {
         subdealer_id: formData.subdealer_id,
-        // month: monthNumber, // Send as number (e.g., 8)
         month: formData.month,
-        year: parseInt(formData.year, 10), // Ensure year is a number too
+        year: parseInt(formData.year, 10),
         transaction_reference: formData.transaction_reference,
         payment_method: formData.payment_method,
         remarks: formData.remarks || ''
@@ -90,7 +90,13 @@ function SubdealerPayment() {
   const handleCancel = () => {
     navigate('/subdealer-account/onaccount-balance');
   };
-
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div className="form-container">
       <div className='title'>Subdealer Commission Disbursement</div>

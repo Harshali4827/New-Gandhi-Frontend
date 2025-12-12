@@ -72,6 +72,7 @@ const AllBooking = () => {
   } = useTableFilter([]);
 
   const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [kycModalVisible, setKycModalVisible] = useState(false);
   const [kycBookingId, setKycBookingId] = useState(null);
@@ -111,7 +112,11 @@ const AllBooking = () => {
       setAllocatedData(allocatedBookings);
       setFilteredAllocated(allocatedBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
+      
     }
   };
 
@@ -412,6 +417,14 @@ const AllBooking = () => {
       </div>
     );
   };
+
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
 
   return (
     <div>

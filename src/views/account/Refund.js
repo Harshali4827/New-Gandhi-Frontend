@@ -6,7 +6,8 @@ import {
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
-  axiosInstance
+  axiosInstance,
+  showError
 } from '../../utils/tableImports';
 import { hasPermission } from '../../utils/permissionUtils';
 import RefundModel from './RefundModel';
@@ -49,8 +50,10 @@ const Refund = () => {
       setData(branchBookings);
       setFilteredData(branchBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError('Failed to fetch bookings data');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,12 @@ const Refund = () => {
   return (
     <div>
       <div className='title'>Customer Refund</div>
-    
+      {error && (
+            <CAlert color="danger" className="mb-3">
+              {error}
+            </CAlert>
+          )}
+          
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div></div>
@@ -93,12 +101,6 @@ const Refund = () => {
         </CCardHeader>
         
         <CCardBody>
-          {error && (
-            <CAlert color="danger" className="mb-3">
-              {error}
-            </CAlert>
-          )}
-          
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className='responsive-table'>
               <CTableHead>

@@ -60,8 +60,10 @@ const DeclarationList = () => {
       setData(response.data.data.declarations);
       setFilteredData(response.data.data.declarations);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -93,8 +95,10 @@ const DeclarationList = () => {
       showSuccess(`Declaration ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
       handleClose();
     } catch (error) {
-      console.error('Error toggling declaration status:', error);
-      showError('Failed to update declaration status');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -129,7 +133,7 @@ const DeclarationList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading declarations: {error}
+      {error}
       </div>
     );
   }

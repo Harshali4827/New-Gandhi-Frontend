@@ -70,8 +70,10 @@ const SelfInsurance = () => {
       setFilteredData(selfInsuranceBookings)
     } catch (error) {
       console.log('Error fetching data', error)
-      setError('Failed to fetch self insurance bookings')
-      showError('Failed to fetch self insurance bookings')
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false)
     }
@@ -92,8 +94,10 @@ const SelfInsurance = () => {
 
   const handleSubmitDecision = async () => {
     if (!selectedBooking || !note.trim()) {
-      setError('Please enter a note for the decision')
-      showError('Please enter a note for the decision')
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
       return
     }
 
@@ -119,10 +123,10 @@ const SelfInsurance = () => {
       showSuccess(`Self insurance request ${actionType.toLowerCase()}d successfully`)
       
     } catch (err) {
-      console.error('Error submitting decision:', err)
-      const errorMessage = `Failed to ${actionType.toLowerCase()} request: ${err.response?.data?.message || err.message}`
-      setError(errorMessage)
-      showError(errorMessage)
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setProcessing(false)
     }

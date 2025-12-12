@@ -20,13 +20,13 @@ import {
   CSpinner,
   CFormLabel
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, useTableFilter } from '../../../utils/tableImports';
+import { axiosInstance, getDefaultSearchFields, showError, useTableFilter } from '../../../utils/tableImports';
 import '../../../css/invoice.css';
 import '../../../css/table.css';
 import AddInsurance from './AddInsurance';
 import ViewInsuranceModal from './ViewInsurance';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilPlus, cilZoom, cilPencil } from '@coreui/icons';
+import { cilPlus, cilZoom, cilPencil } from '@coreui/icons';
 
 function InsuranceReport() {
   const [activeTab, setActiveTab] = useState(0);
@@ -68,8 +68,10 @@ function InsuranceReport() {
       setPendingData(response.data.data.docs);
       setFilteredPendings(response.data.data.docs);
     } catch (error) {
-      console.log('Error fetching pending data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,7 +83,10 @@ function InsuranceReport() {
       setApprovedData(response.data.data);
       setFilteredApproved(response.data.data);
     } catch (error) {
-      console.log('Error fetching approved data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -91,7 +96,10 @@ function InsuranceReport() {
       setLaterData(response.data.data);
       setFilteredLater(response.data.data);
     } catch (error) {
-      console.log('Error fetching approved data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -113,7 +121,10 @@ function InsuranceReport() {
       setSelectedInsurance(response.data.data);
       setShowViewModal(true);
     } catch (error) {
-      console.error('Error fetching insurance details:', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -124,7 +135,10 @@ function InsuranceReport() {
       setSelectedBooking(response.data.data.booking);
       setShowModal(true);
     } catch (error) {
-      console.error('Error fetching insurance details:', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -142,13 +156,6 @@ function InsuranceReport() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchTerm('');
-  };
-
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('booking'));
-    else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('insurance'));
-    else handleLaterFilter('', getDefaultSearchFields('insurance'));
   };
 
   const renderPendingTable = () => {
@@ -332,7 +339,7 @@ function InsuranceReport() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+      {error}
       </div>
     );
   }
@@ -342,26 +349,6 @@ function InsuranceReport() {
       <div className='title'>Insurance Report</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
         
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">

@@ -7,6 +7,7 @@ import {
   useTableFilter,
   usePagination,
   axiosInstance,
+  showError,
 } from '../../../utils/tableImports'
 import tvsLogo from '../../../assets/images/logo1.png'
 import { cilPrint } from '@coreui/icons'
@@ -67,8 +68,11 @@ const DeliveryChallan = () => {
       setData(branchBookings)
       setFilteredData(branchBookings)
     } catch (error) {
-      console.log('Error fetching data', error)
-      setError('Failed to fetch bookings data')
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
+      
     } finally {
       setLoading(false)
     }
@@ -85,7 +89,11 @@ const DeliveryChallan = () => {
           setDeclarations(sortedDeclarations)
         }
       } catch (error) {
-        console.error('Error fetching declarations:', error)
+        const message = showError(error);
+        if (message) {
+          setError(message);
+        }
+        
       }
     }
 
@@ -116,9 +124,11 @@ const DeliveryChallan = () => {
         setBookingData(null)
       }
     } catch (err) {
-      setError('Failed to fetch booking details')
-      console.error(err)
-      setBookingData(null)
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
+      
     } finally {
       setLoading(false)
     }
@@ -135,28 +145,32 @@ const DeliveryChallan = () => {
       setDocumentsModal(true)
       
     } catch (error) {
-      console.error('Error fetching selected documents:', error)
-      setError('Failed to fetch selected documents')
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
+      
     } finally {
       setLoadingDocuments(false)
     }
   }
 
-  // Preview document - opens in new tab with print design
   const handlePreviewDocument = async (selectionId, templateName) => {
     try {
       const response = await axiosInstance.get(`/booking-templates/preview/${selectionId}`)
       const previewData = response.data.data
-      
-      // Open in new tab with print design
+
       const printWindow = window.open('', '_blank')
       printWindow.document.write(generateTemplatePrintHTML(previewData))
       printWindow.document.close()
       printWindow.focus()
       
     } catch (error) {
-      console.error('Error fetching document preview:', error)
-      setError('Failed to fetch document preview')
+        const message = showError(error);
+  if (message) {
+    setError(message);
+  }
+  
     }
   }
 
@@ -740,6 +754,11 @@ tr.data-row td:nth-child(4) {
   return (
     <div>
       <div className="title">Delivery Challan/Documents</div>
+      {error && (
+    <CAlert color="danger" className="mb-3">
+      {error}
+    </CAlert>
+  )}
 
       <CCard className="table-container mt-4">
         <CCardHeader className="card-header d-flex justify-content-between align-items-center">
@@ -756,12 +775,6 @@ tr.data-row td:nth-child(4) {
         </CCardHeader>
 
         <CCardBody>
-          {error && (
-            <CAlert color="danger" className="mb-3">
-              {error}
-            </CAlert>
-          )}
-
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className="responsive-table">
               <CTableHead>

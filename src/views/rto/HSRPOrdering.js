@@ -62,8 +62,10 @@ function HSRPOrdering() {
       setPendingData(response.data.data);
       setFilteredPendings(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -102,13 +104,6 @@ function HSRPOrdering() {
     setActiveTab(tab);
     setSearchTerm('');
   };
-
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('rto'));
-    else handleApprovedFilter('', getDefaultSearchFields('rto'));
-  };
-
   const renderPendingTable = () => {
     return (
       <div className="responsive-table-wrapper">
@@ -221,7 +216,7 @@ function HSRPOrdering() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+      {error}
       </div>
     );
   }

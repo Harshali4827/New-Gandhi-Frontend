@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CFormCheck } from '@coreui/react';
+import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CFormCheck, CAlert } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import {
   cilBank,
@@ -27,6 +27,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts';
 import axiosInstance from 'src/axiosInstance';
+import { showError } from '../../../utils/sweetAlerts';
 
 function SubdealerNewBooking() {
   const [formData, setFormData] = useState({
@@ -65,7 +66,7 @@ function SubdealerNewBooking() {
     vehicle_number: '',
     chassis_number: ''
   });
-
+  const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
   const [models, setModels] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
@@ -348,7 +349,11 @@ function SubdealerNewBooking() {
       setModels(processedModels);
       setFilteredModels(processedModels);
     } catch (error) {
-      console.error('Failed to fetch models:', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
+  
     }
   };
 
@@ -358,8 +363,11 @@ function SubdealerNewBooking() {
         const response = await axiosInstance.get('/subdealers');
         setSubdealers(response.data.data.subdealers || []);
       } catch (error) {
-        console.error('Error fetching subdealers:', error);
-        showFormSubmitError(error.message);
+        const message = showError(error);
+  if (message) {
+    setError(message);
+  }
+  
       }
     };
     fetchSubdealers();
@@ -424,7 +432,11 @@ function SubdealerNewBooking() {
         setFinancers(response.data.data || []);
       } catch (error) {
         console.error('Error fetching financers:', error);
-        showFormSubmitError(error.message);
+        const message = showError(error);
+  if (message) {
+    setError(message);
+  }
+  
       }
     };
     fetchFinancer();
@@ -609,15 +621,17 @@ function SubdealerNewBooking() {
       }
     } catch (error) {
       console.error('Submission error:', error);
-      if (error.response) {
-        const errorMsg =
-          error.response.data.message ||
-          (error.response.data.errors && Object.values(error.response.data.errors).join(', ')) ||
-          'Error submitting booking';
-        showFormSubmitError(errorMsg);
-      } else {
-        showFormSubmitError(error.message || 'Network error');
-      }
+      // if (error.response) {
+      //   const errorMsg =
+      //     error.response.data.message ||
+      //     (error.response.data.errors && Object.values(error.response.data.errors).join(', ')) ||
+      //     'Error submitting booking';
+      //   showFormSubmitError(errorMsg);
+      // } else {
+      //   showFormSubmitError(error.message || 'Network error');
+      // }
+      const message = showError(error);
+      if (message) setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -626,6 +640,11 @@ function SubdealerNewBooking() {
   return (
     <div className="form-container">
       <div className='title'>{isEditMode ? 'Edit Booking' : 'Create New Booking'}</div>
+      {error && (
+          <CAlert color="danger" className="mb-3">
+            {error}
+          </CAlert>
+        )}
       <div className="form-card">
         <div className="form-body">
           <form onSubmit={handleSubmit} id="bookingForm">

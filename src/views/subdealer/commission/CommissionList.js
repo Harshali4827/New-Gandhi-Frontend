@@ -67,6 +67,7 @@ const CommissionList = () => {
   const [priceHeaders, setPriceHeaders] = useState([]);
   const [dateRangeSubdealer, setDateRangeSubdealer] = useState('');
   const [fromDate, setFromDate] = useState('');
+  const [error, setError] = useState(null);
   const [toDate, setToDate] = useState('');
   const [dateRangeData, setDateRangeData] = useState(null);
   const [loadingDateRange, setLoadingDateRange] = useState(false);
@@ -86,8 +87,10 @@ const CommissionList = () => {
       const response = await axiosInstance.get(`/subdealers`);
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
-      console.log('Error fetching subdealers', error);
-      showError('Failed to load subdealers');
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -313,7 +316,13 @@ const CommissionList = () => {
 
     setFilteredData(filtered);
   };
-
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div className="form-container">
       <div className="title">{isFilterApplied ? `Subdealer Commission - ${selectedSubdealerName}` : 'Subdealer Commission'}</div>

@@ -33,7 +33,6 @@ import {
   useEffect as useEffectHook,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   getDefaultSearchFields,
   useTableFilter,
   confirmDelete,
@@ -68,9 +67,10 @@ const SubdealerList = () => {
       setData(response.data.data.subdealers);
       setFilteredData(response.data.data.subdealers);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
-      showError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ const SubdealerList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading subdealers: {error}
+      {error}
       </div>
     );
   }

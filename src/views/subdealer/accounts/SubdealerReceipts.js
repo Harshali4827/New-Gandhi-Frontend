@@ -22,11 +22,12 @@ import {
   CTableDataCell,
   CBadge
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, SearchOutlinedIcon, useTableFilter } from 'src/utils/tableImports';
+import { axiosInstance, getDefaultSearchFields,useTableFilter } from 'src/utils/tableImports';
 import SubdealerReceiptModal from './SubdealerReceiptModel';
 import { hasPermission } from 'src/utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilMagnifyingGlass } from '@coreui/icons';
+import { cilPlus} from '@coreui/icons';
+import { showError } from '../../../utils/sweetAlerts';
 
 function SubdealerReceipts() {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,6 +36,7 @@ function SubdealerReceipts() {
   const [allBookings, setAllBookings] = useState([]);
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+  const [error, setError] = useState(null);
 
   const {
     data: pendingBookingsData,
@@ -80,7 +82,10 @@ function SubdealerReceipts() {
       setCompletedBookingsData(completedBookings);
       setFilteredCompletedBookings(completedBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -129,6 +134,14 @@ function SubdealerReceipts() {
     handleCompletedBookingsFilter('', getDefaultSearchFields('booking'));
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
+  
   return (
     <div>
       <div className='title'>Subdealer Receipts</div>

@@ -15,8 +15,6 @@ import {
   showError,
   showSuccess,
   axiosInstance,
-  // FaCheckCircle,
-  // FaTimesCircle
 } from '../../../utils/tableImports';
 import { 
   CButton, 
@@ -63,8 +61,10 @@ const ConditionList = () => {
       setData(response.data.data);
       setFilteredData(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ const ConditionList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading terms and conditions: {error}
+      {error}
       </div>
     );
   }

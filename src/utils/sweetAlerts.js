@@ -89,9 +89,60 @@ export const showFormSubmitToast = (message = 'Data Saved Successfully!', naviga
   });
 };
 
+// export const showAppError = (error, defaultMessage = 'Something went wrong') => {
+//   let message = defaultMessage;
+
+//   if (error?.response?.data?.error) {
+//     message = error.response.data.error;
+//   } else if (error?.response?.data?.message) {
+//     message = error.response.data.message;
+//   } else if (typeof error === 'string') {
+//     message = error;
+//   } else if (error?.message) {
+//     message = error.message;
+//   }
+
+//   const statusCode = error?.response?.status;
+
+//   if (statusCode === 401) {
+//     return Swal.fire({
+//       title: 'Unauthorized',
+//       text: 'Your session has expired or you are not logged in. Please log in again.',
+//       icon: 'error',
+//       confirmButtonColor: '#d33',
+//       confirmButtonText: 'Login'
+//     }).then(() => {
+//       // Clear all auth data
+//       localStorage.clear();
+//       // Redirect to login page
+//       window.location.href = '/#/login';
+//     });
+//   }
+
+//   if (statusCode === 403) {
+//     return Swal.fire({
+//       title: 'Access Denied',
+//       text: 'You do not have permission to perform this action.',
+//       icon: 'error',
+//       confirmButtonColor: '#d33',
+//       confirmButtonText: 'OK'
+//     });
+//   }
+  
+//   return Swal.fire({
+//     title: 'Error!',
+//     text: message,
+//     icon: 'error',
+//     confirmButtonText: 'OK',
+//     confirmButtonColor: '#d33'
+//   });
+// };
+
+
 export const showAppError = (error, defaultMessage = 'Something went wrong') => {
   let message = defaultMessage;
 
+  // Extract message
   if (error?.response?.data?.error) {
     message = error.response.data.error;
   } else if (error?.response?.data?.message) {
@@ -104,38 +155,40 @@ export const showAppError = (error, defaultMessage = 'Something went wrong') => 
 
   const statusCode = error?.response?.status;
 
-  if (statusCode === 401) {
-    return Swal.fire({
-      title: 'Unauthorized',
-      text: 'Your session has expired or you are not logged in. Please log in again.',
-      icon: 'error',
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'Login'
-    }).then(() => {
-      // Clear all auth data
-      localStorage.clear();
-      // Redirect to login page
-      window.location.href = '/#/login';
-    });
+  // ✅ 1. FIRST CHECK: FROZEN ACCOUNT (CoreUI alert, NOT SweetAlert)
+  if (error?.response?.data?.isFrozen) {
+    const freezeReason = error?.response?.data?.freezeReason;
+    if (freezeReason) {
+      message = `${message}`;
+    }
+    return message; 
   }
 
+  if (statusCode === 401) {
+    Swal.fire({
+      title: 'Unauthorized',
+      text: 'Your session has expired. Please login again.',
+      icon: 'error',
+      confirmButtonColor: '#d33'
+    }).then(() => {
+      window.location.href = '/tvs/auth/signin-1';
+    });
+    return null;
+  }
+
+  // ❗❗ 3. THEN CHECK: 403 ONLY
   if (statusCode === 403) {
-    return Swal.fire({
+    Swal.fire({
       title: 'Access Denied',
       text: 'You do not have permission to perform this action.',
       icon: 'error',
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'OK'
+      confirmButtonColor: '#d33'
     });
+    return null;
   }
-  
-  return Swal.fire({
-    title: 'Error!',
-    text: message,
-    icon: 'error',
-    confirmButtonText: 'OK',
-    confirmButtonColor: '#d33'
-  });
+
+  // 4. Other errors → CoreUI alert
+  return message;
 };
 export const showError = (error, defaultMessage) => showAppError(error, defaultMessage);
 export const showFormSubmitError = (error) => showAppError(error, 'Something went wrong. Please try again later.');

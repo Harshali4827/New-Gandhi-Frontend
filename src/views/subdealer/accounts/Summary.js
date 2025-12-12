@@ -27,6 +27,7 @@ import {
 import { axiosInstance, getDefaultSearchFields, SearchOutlinedIcon, useTableFilter } from 'src/utils/tableImports';
 import CIcon from '@coreui/icons-react';
 import { cilMagnifyingGlass } from '@coreui/icons';
+import { showError } from '../../../utils/sweetAlerts';
 
 function Summary() {
   const [activeTab, setActiveTab] = useState(0);
@@ -53,7 +54,7 @@ function Summary() {
 
   const [pendingPayments, setPendingPayments] = useState([]);
   const [filteredPendingPayments, setFilteredPendingPayments] = useState([]);
-
+  const [error, setError] = useState(null);
   useEffect(() => {
     fetchData();
   }, []);
@@ -74,7 +75,10 @@ function Summary() {
       setPendingPayments(pending);
       setFilteredPendingPayments(pending);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }    
     }
   };
 
@@ -88,14 +92,16 @@ function Summary() {
       setSubdealerData(response.data.data.subdealers);
       setFilteredSubdealer(response.data.data.subdealers);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchTerm('');
-    // Reset filters when changing tabs
     if (tab === 0) handleBookingsFilter('', getDefaultSearchFields('booking'));
     else if (tab === 1) handleSubdealerFilter('', getDefaultSearchFields('subdealer'));
     else if (tab === 2) handleCompleteSearch('');
@@ -154,10 +160,16 @@ function Summary() {
 
   const summary = getTotalSummary();
 
-  // Helper function to render tables based on active tab
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   const renderTable = () => {
     switch (activeTab) {
-      case 0: // Customer Tab
+      case 0:
         return (
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className='responsive-table'>
@@ -205,7 +217,7 @@ function Summary() {
           </div>
         );
 
-      case 1: // Sub Dealer Tab
+      case 1:
         return (
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className='responsive-table'>
@@ -251,7 +263,7 @@ function Summary() {
           </div>
         );
 
-      case 2: // Complete Payment Tab
+      case 2:
         return (
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className='responsive-table'>
@@ -297,7 +309,7 @@ function Summary() {
           </div>
         );
 
-      case 3: // Pending List Tab
+      case 3:
         return (
           <div className="responsive-table-wrapper">
             <CTable striped bordered hover className='responsive-table'>
@@ -351,8 +363,6 @@ function Summary() {
   return (
     <div>
       <div className='title'>Summary Dashboard</div>
-      
-      {/* Summary Cards */}
       <CRow className="mb-4">
         <CCol md={3}>
           <CCard className="text-center bg-primary text-white">
@@ -405,7 +415,6 @@ function Summary() {
         </CCardHeader>
         
         <CCardBody>
-          {/* Tabs Navigation */}
           <CNav variant="tabs" className="mb-3 border-bottom">
             <CNavItem>
               <CNavLink
@@ -487,12 +496,10 @@ function Summary() {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                // placeholder="Search..."
               />
             </div>
           </div>
 
-          {/* Tabs Content */}
           <CTabContent>
             <CTabPane visible={activeTab === 0} className="p-3">
               {renderTable()}

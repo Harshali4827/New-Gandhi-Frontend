@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts';
 import axiosInstance from 'src/axiosInstance';
 import FormButtons from 'src/utils/FormButtons';
+import { showError } from '../../../utils/sweetAlerts';
 
 function AddAmount() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ function AddAmount() {
   const [banks, setBanks] = useState([]);
   const [submodes, setSubModes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -34,22 +36,24 @@ function AddAmount() {
     fetchPaymentSubmodes();
   }, [id]);
 
-  const fetchInsuranceProvider = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/insurance-providers/${id}`);
-      setFormData(res.data.data);
-    } catch (error) {
-      console.error('Error fetching insurance providers:', error);
-    }
-  };
+  // const fetchInsuranceProvider = async (id) => {
+  //   try {
+  //     const res = await axiosInstance.get(`/insurance-providers/${id}`);
+  //     setFormData(res.data.data);
+  //   } catch (error) {
+  //     console.error('Error fetching insurance providers:', error);
+  //   }
+  // };
 
   const fetchSubdealers = async () => {
     try {
       const response = await axiosInstance.get('/subdealers');
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
-      console.error('Error fetching subdealers:', error);
-      showError(error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -58,8 +62,10 @@ function AddAmount() {
       const response = await axiosInstance.get('/banksubpaymentmodes');
       setSubModes(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching payment submodes:', error);
-      showError(error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -132,6 +138,13 @@ function AddAmount() {
     navigate('/subdealer-account/onaccount-balance');
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div className="form-container">
       <div className='title'>{id ? 'Edit' : 'Add'} On Account Balance</div>

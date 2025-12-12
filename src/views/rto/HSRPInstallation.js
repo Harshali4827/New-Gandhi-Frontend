@@ -20,7 +20,7 @@ import {
   CSpinner,
   CFormLabel
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, useTableFilter } from '../../utils/tableImports';
+import { axiosInstance, getDefaultSearchFields, showError, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
 import UpdateHSRPInstallation from './UpdateHSRPInstallation';
@@ -64,8 +64,10 @@ function HSRPInstallation() {
       setPendingData(response.data.data);
       setFilteredPendings(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,10 @@ function HSRPInstallation() {
       setApprovedData(response.data.data);
       setFilteredApproved(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -94,12 +99,6 @@ function HSRPInstallation() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchTerm('');
-  };
-
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('rto'));
-    else handleApprovedFilter('', getDefaultSearchFields('rto'));
   };
 
   const renderPendingTable = () => {
@@ -220,7 +219,7 @@ function HSRPInstallation() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+      {error}
       </div>
     );
   }

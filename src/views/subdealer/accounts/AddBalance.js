@@ -30,6 +30,7 @@ import {
 import axiosInstance from 'src/axiosInstance';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilSearch } from '@coreui/icons';
+import { showError } from '../../../utils/sweetAlerts';
 
 function SubdealerCustomerManagement() {
   const [subdealers, setSubdealers] = useState([]);
@@ -58,8 +59,10 @@ function SubdealerCustomerManagement() {
         const response = await axiosInstance.get('/subdealers');
         setSubdealers(response.data.data.subdealers || []);
       } catch (error) {
-        console.error('Error fetching subdealers:', error);
-        setError('Failed to load subdealers');
+        const message = showError(error);
+        if (message) {
+          setError(message);
+        }
       }
     };
 
@@ -81,7 +84,6 @@ function SubdealerCustomerManagement() {
   }, [selectedSubdealer]);
 
   useEffect(() => {
-    // Filter bookings based on search term and zero balance
     if (bookings.length > 0) {
       let filtered = bookings.filter((booking) => booking.balanceAmount != 0);
 
@@ -207,28 +209,11 @@ function SubdealerCustomerManagement() {
     return receipt.amount - receipt.allocatedTotal;
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      PENDING_APPROVAL: { color: 'warning', text: 'Pending' },
-      APPROVED: { color: 'success', text: 'Approved' },
-      ALLOCATED: { color: 'info', text: 'Allocated' }
-    };
-
-    const config = statusConfig[status] || { color: 'secondary', text: status };
-    return <CBadge color={config.color}>{config.text}</CBadge>;
-  };
 
   return (
     <div>
       <h4>Distribute OnAccount Balance</h4>
-      <CRow>
-        <CCol xs={12}>
-          <CCard className="mb-4">
-            <CCardHeader>
-              <h5>Subdealer Booking Management</h5>
-            </CCardHeader>
-            <CCardBody>
-              {error && (
+      {error && (
                 <CAlert color="danger" dismissible onClose={() => setError('')}>
                   {error}
                 </CAlert>
@@ -240,6 +225,14 @@ function SubdealerCustomerManagement() {
                 </CAlert>
               )}
 
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="mb-4">
+            
+            <CCardHeader>
+              <h5>Subdealer Booking Management</h5>
+            </CCardHeader>
+            <CCardBody>
               <CRow className="mb-3">
                 <CCol md={6}>
                   <CFormLabel htmlFor="subdealerSelect">Select Subdealer</CFormLabel>

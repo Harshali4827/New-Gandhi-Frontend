@@ -75,8 +75,10 @@ const RatesList = () => {
       setData(filtered);
       setFilteredData(filtered);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -146,7 +148,7 @@ const RatesList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading finance rates: {error}
+      {error}
       </div>
     );
   }

@@ -6,7 +6,8 @@ import {
   getDefaultSearchFields,
   useTableFilter,
   usePagination,
-  axiosInstance
+  axiosInstance,
+  showError
 } from '../../utils/tableImports';
 import { FaFilePdf, FaFileImage, FaFileAlt } from 'react-icons/fa';
 import config from '../../config';
@@ -34,6 +35,8 @@ const AllReceipt = () => {
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
+   
 
   useEffect(() => {
     fetchData();
@@ -47,7 +50,10 @@ const AllReceipt = () => {
       setData(response.data.transactions);
       setFilteredData(response.data.transactions);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,10 @@ const AllReceipt = () => {
       printWindow.document.close();
       printWindow.focus();
     } catch (err) {
-      console.error('Error fetching receipt', err);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -291,6 +300,14 @@ const AllReceipt = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
+  
   return (
     <div>
       <div className='title'>Cash Receipt</div>

@@ -61,8 +61,10 @@ const OffersList = () => {
       setData(response.data.data.offers);
       setFilteredData(response.data.data.offers);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -109,7 +111,7 @@ const OffersList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading offers: {error}
+        {error}
       </div>
     );
   }

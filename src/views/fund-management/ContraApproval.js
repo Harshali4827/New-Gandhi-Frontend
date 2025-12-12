@@ -24,7 +24,7 @@ import {
   CFormLabel,
   CSpinner
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, Menu, MenuItem, useTableFilter } from '../../utils/tableImports';
+import { axiosInstance, getDefaultSearchFields, Menu, MenuItem, showError, useTableFilter } from '../../utils/tableImports';
 import '../../css/invoice.css';
 import '../../css/table.css';
 import '../../css/form.css';
@@ -73,8 +73,10 @@ function ContraApproval() {
       setPendingData(response.data.data);
       setFilteredPendings(response.data.data);
     } catch (error) {
-      console.log('Error fetching pending data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -192,12 +194,6 @@ function ContraApproval() {
     setSearchTerm('');
   };
 
-  const handleResetSearch = () => {
-    setSearchTerm('');
-    if (activeTab === 0) handlePendingFilter('', getDefaultSearchFields('vouchers'));
-    else if (activeTab === 1) handleApprovedFilter('', getDefaultSearchFields('vouchers'));
-    else handleLaterFilter('', getDefaultSearchFields('vouchers'));
-  };
 
   const renderPendingTable = () => {
     return (
@@ -382,7 +378,7 @@ function ContraApproval() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+       {error}
       </div>
     );
   }

@@ -24,7 +24,8 @@ import {
   CTableHeaderCell, 
   CTableRow,
   CTableDataCell,
-  CSpinner
+  CSpinner,
+  CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilCloudUpload} from '@coreui/icons';
@@ -35,6 +36,7 @@ const UploadDealForm = () => {
   const [uploading, setUploading] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -48,8 +50,10 @@ const UploadDealForm = () => {
       setData(branchBookings);
       setFilteredData(branchBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
-      showError('Failed to fetch pending bookings');
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -86,24 +90,19 @@ const UploadDealForm = () => {
 
       showSuccess(`${fileType === 'dealForm' ? 'Deal form' : 'Delivery challan'} uploaded successfully!`);
 
-      // Refresh data to reflect changes
       fetchData();
     } catch (error) {
       console.error(`Error uploading ${fileType}:`, error);
       showError(`Failed to upload ${fileType === 'dealForm' ? 'deal form' : 'delivery challan'}`);
     } finally {
-      // Reset uploading state
-      setUploading((prev) => ({ ...prev, [`${bookingId}-${fileType}`]: false }));
 
-      // Reset the file input
+      setUploading((prev) => ({ ...prev, [`${bookingId}-${fileType}`]: false }));
       event.target.value = '';
     }
   };
 
-  // Function to handle viewing the uploaded document
   const handleViewDocument = (documentPath) => {
     if (documentPath) {
-      // Construct the full URL to the document
       const fullUrl = `${axiosInstance.defaults.baseURL}${documentPath}`;
       window.open(fullUrl, '_blank');
     }
@@ -125,7 +124,11 @@ const UploadDealForm = () => {
   return (
     <div>
       <div className='title'>Upload Deal Form & Delivery Challan</div>
-    
+      {error && (
+    <CAlert color="danger" className="mb-3">
+      {error}
+    </CAlert>
+  )}
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div></div>

@@ -14,7 +14,6 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CButton,
   CFormInput,
   CSpinner,
@@ -25,7 +24,7 @@ import '../../../css/invoice.css';
 import '../../../css/table.css';
 import { confirmVerify } from '../../../utils/sweetAlerts';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilCheckCircle } from '@coreui/icons';
+import {cilCheckCircle } from '@coreui/icons';
 
 function PaymentVerification() {
   const [activeTab, setActiveTab] = useState(0);
@@ -62,7 +61,10 @@ function PaymentVerification() {
     } catch (error) {
       console.log('Error fetching pending payments', error);
       setPendingPaymentsData([]);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -144,10 +146,6 @@ function PaymentVerification() {
     setSearchTerm('');
   };
 
-  const handleResetSearch = () => {
-    setSearchTerm('');
-  };
-
   const renderPendingTable = () => {
     return (
       <div className="responsive-table-wrapper">
@@ -211,7 +209,6 @@ function PaymentVerification() {
           </CTableBody>
         </CTable>
 
-        {/* Pagination Controls */}
         {pagination.total > 1 && (
           <div className="d-flex justify-content-between align-items-center mt-3">
             <div>
@@ -299,7 +296,7 @@ function PaymentVerification() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+     {error}
       </div>
     );
   }
@@ -309,27 +306,6 @@ function PaymentVerification() {
       <div className='title'>Payment Verification</div>
       
       <CCard className='table-container mt-4'>
-        {/* <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <CButton 
-              size="sm" 
-              className="action-btn me-1"
-            >
-              <CIcon icon={cilSearch} className='icon' /> Search
-            </CButton>
-            {searchTerm && (
-              <CButton 
-                size="sm" 
-                color="secondary" 
-                className="action-btn me-1"
-                onClick={handleResetSearch}
-              >
-                <CIcon icon={cilZoomOut} className='icon' /> Reset Search
-              </CButton>
-            )}
-          </div>
-        </CCardHeader> */}
-        
         <CCardBody>
           <CNav variant="tabs" className="mb-3 border-bottom">
             <CNavItem>

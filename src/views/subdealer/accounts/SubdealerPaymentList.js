@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CFormSelect, CSpinner, CBadge } from '@coreui/react';
 import './CommissionPayments.css';
 import axiosInstance from 'src/axiosInstance';
+import { showError } from '../../../utils/sweetAlerts';
 
 const CommissionPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -44,8 +45,11 @@ const CommissionPayments = () => {
         const response = await axiosInstance.get('/subdealers');
         setSubdealers(response.data.data.subdealers);
       } catch (err) {
-        console.error('Error fetching subdealers', err);
-        setError('Failed to load subdealers');
+        const message = showError(error);
+        if (message) {
+          setError(message);
+        }
+        
       }
     };
 
@@ -455,6 +459,13 @@ Upnagar, Nashik Road, Nashik - 422101</p>
     return <CBadge color={color}>{status}</CBadge>;
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div className="commission-payments-container">
       <div className="header-section">
@@ -472,12 +483,6 @@ Upnagar, Nashik Road, Nashik - 422101</p>
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
       {(selectedSubdealer || selectedMonth || selectedYear) && (
         <div className="active-filters">
           <h5>Active Filters:</h5>

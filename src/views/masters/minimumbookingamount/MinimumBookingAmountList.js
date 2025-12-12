@@ -53,8 +53,10 @@ const MinimumBookingAmountList = () => {
       setData(response.data?.data?.items || []);
       setFilteredData(response.data?.data?.items || []);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
       setData([]);
       setFilteredData([]);
     } finally {
@@ -129,7 +131,7 @@ const MinimumBookingAmountList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading minimum booking amounts: {error}
+      {error}
       </div>
     );
   }

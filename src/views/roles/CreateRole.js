@@ -30,6 +30,7 @@ import axiosInstance from 'src/axiosInstance';
 import FormButtons from 'src/utils/FormButtons';
 import '../../css/form.css';
 import '../../css/table.css';
+import { showError } from '../../utils/sweetAlerts';
 
 const CreateRoleWithHierarchy = () => {
   const navigate = useNavigate();
@@ -94,9 +95,11 @@ const CreateRoleWithHierarchy = () => {
       const res = await axiosInstance.get('/permissions');
       setPermissionsData(res.data.data);
       setLoading(false);
-    } catch (err) {
-      console.error('Error fetching permissions:', err);
-      setError('Failed to fetch permissions. Please try again.');
+    } catch (error) {
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }    
       setLoading(false);
     }
   };
@@ -221,7 +224,6 @@ const CreateRoleWithHierarchy = () => {
     return permissionsData.filter((p) => p.module === module);
   };
 
-  // Get available actions for a specific main module
   const getAvailableActionsForMainModule = (mainModule) => {
     const allActions = new Set();
 
@@ -293,9 +295,6 @@ const CreateRoleWithHierarchy = () => {
     return (
       <div className="container my-4">
         <CAlert color="danger">{error}</CAlert>
-        <CButton color="primary" onClick={fetchPermissions}>
-          Retry
-        </CButton>
       </div>
     );
   }

@@ -64,8 +64,10 @@ const BankList = () => {
       setData(response.data.data.banks);
       setFilteredData(response.data.data.banks);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -151,7 +153,7 @@ const BankList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading banks: {error}
+       {error}
       </div>
     );
   }

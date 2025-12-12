@@ -22,18 +22,18 @@ import {
   CTableBody,
   CTableDataCell
 } from '@coreui/react';
-import { axiosInstance, getDefaultSearchFields, SearchOutlinedIcon, showError, showSuccess, useTableFilter } from 'src/utils/tableImports';
+import { axiosInstance, getDefaultSearchFields, showError, showSuccess} from 'src/utils/tableImports';
 import { confirmVerify } from 'src/utils/sweetAlerts';
 import { hasPermission } from 'src/utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilCheckCircle, cilMagnifyingGlass } from '@coreui/icons';
+import { cilCheckCircle} from '@coreui/icons';
 
 function PaymentVerification() {
   const [activeTab, setActiveTab] = useState(0);
   const [pendingPaymentsData, setPendingPaymentsData] = useState([]);
   const [verifiedPaymentsData, setVerifiedPaymentsData] = useState([]);
   const [searchValue, setSearchValue] = useState('');
-
+  const [error, setError] = useState(null);
   useEffect(() => {
     fetchPendingPayments();
     fetchVerifiedPayments();
@@ -44,7 +44,10 @@ function PaymentVerification() {
       const response = await axiosInstance.get(`/subdealersonaccount/payments/pending`);
       setPendingPaymentsData(response.data.data.pendingPayments || []);
     } catch (error) {
-      console.log('Error fetching pending payments', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
       setPendingPaymentsData([]);
     }
   };
@@ -54,7 +57,10 @@ function PaymentVerification() {
       const response = await axiosInstance.get(`/subdealersonaccount/on-account/receipts/approved`);
       setVerifiedPaymentsData(response.data.data.approvedPayments || []);
     } catch (error) {
-      console.log('Error fetching verified payments', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
       setVerifiedPaymentsData([]);
     }
   };
@@ -122,6 +128,14 @@ function PaymentVerification() {
     setSearchValue('');
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
+  
   return (
     <div>
       <div className='title'>Payment Verification</div>

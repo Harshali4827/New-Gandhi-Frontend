@@ -60,8 +60,10 @@ const DocumentList = () => {
       setData(response.data.data);
       setFilteredData(response.data.data);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -108,7 +110,7 @@ const DocumentList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading documents: {error}
+     {error}
       </div>
     );
   }

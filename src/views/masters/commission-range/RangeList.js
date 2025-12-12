@@ -62,8 +62,10 @@ const RangeList = () => {
       setData(response.data.data || []);
       setFilteredData(response.data.data || []);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
       setData([]);
       setFilteredData([]);
     } finally {
@@ -107,11 +109,6 @@ const RangeList = () => {
     setShowModal(true);
   };
 
-  const handleShowEditModal = (range) => {
-    setEditingRange(range);
-    setShowModal(true);
-  };
-
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingRange(null);
@@ -135,7 +132,7 @@ const RangeList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading commission ranges: {error}
+     {error}
       </div>
     );
   }

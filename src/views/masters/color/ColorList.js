@@ -59,8 +59,10 @@ const ColorList = () => {
       setData(response.data.data.colors);
       setFilteredData(response.data.data.colors);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     } finally {
       setLoading(false);
     }
@@ -107,7 +109,7 @@ const ColorList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading colors: {error}
+     {error}
       </div>
     );
   }

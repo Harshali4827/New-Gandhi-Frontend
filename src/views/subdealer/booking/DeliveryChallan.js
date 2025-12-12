@@ -26,11 +26,12 @@ import {
   CTableBody,
   CTableDataCell
 } from '@coreui/react';
+import { showError } from '../../../utils/sweetAlerts';
 
 const DeliveryChallan = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(''); // Added search term state
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
     chassisNumber: ''
@@ -53,7 +54,10 @@ const DeliveryChallan = () => {
       setData(branchBookings);
       setFilteredData(branchBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+  if (message) {
+    setError(message);
+  }
     }
   };
 
@@ -599,6 +603,13 @@ tr.data-row td:nth-child(4) {
     handleFilter(searchValue, getDefaultSearchFields('booking'));
   };
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
   return (
     <div>
       <div className='title'>Delivery Challan/Helmet Declaration</div>
@@ -606,7 +617,6 @@ tr.data-row td:nth-child(4) {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
-            {/* You can add buttons here if needed */}
           </div>
         </CCardHeader>
         

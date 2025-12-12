@@ -48,10 +48,11 @@ const OpeningBalanceList = () => {
   const [editingBranch, setEditingBranch] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-
+  
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;
   const userRole = localStorage.getItem('userRole');
@@ -76,8 +77,10 @@ const OpeningBalanceList = () => {
       setData(branches);
       setFilteredData(branches);
     } catch (error) {
-      console.error('Error fetching data', error);
-      showError(error.response?.data?.message || 'Failed to fetch branches');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -167,6 +170,14 @@ const OpeningBalanceList = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
+  
   return (
     <div>
       <div className='title'>Opening Balance</div>

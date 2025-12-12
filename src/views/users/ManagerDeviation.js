@@ -58,8 +58,6 @@ const ManagerDeviation = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/users`);
-
-      // Map and filter for managers only
       const users = response.data.data
         .map((user) => ({
           ...user,
@@ -68,14 +66,18 @@ const ManagerDeviation = () => {
           branchName: user.branchDetails?.name || user.branch || 'N/A',
           subdealerName: user.subdealerDetails?.name || ''
         }))
-        .filter((user) => user.roles?.some((role) => role.name.toUpperCase() === 'MANAGER'));
+        .filter((user) => user.roles?.some((role) => 
+          role.name.toUpperCase() === 'MANAGER' || 
+          role.name.toUpperCase() === 'GENERAL_MANAGER'
+        ));
 
       setData(users);
       setFilteredData(users);
     } catch (error) {
-      console.error('Error fetching users:', error);
-      setError(error.message);
-      showError('Failed to load users. Please try again.');
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }    
     } finally {
       setLoading(false);
     }
@@ -148,28 +150,10 @@ const ManagerDeviation = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Never logged in';
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
   const getRoleNames = (roles) => {
     if (!roles || !roles.length) return 'No Role';
     return roles.map((role) => role.name).join(', ');
   };
-
-  const getStatusBadge = (status) => {
-    if (status === 'active') {
-      return <CBadge color="success">Active</CBadge>;
-    } else if (status === 'inactive') {
-      return <CBadge color="danger">Inactive</CBadge>;
-    } else {
-      return <CBadge color="secondary">{status}</CBadge>;
-    }
-  };
-
   const getDeviationUsageBadge = (usage, limit) => {
     const usagePercent = limit > 0 ? (usage / limit) * 100 : 0;
     
@@ -193,7 +177,7 @@ const ManagerDeviation = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading managers: {error}
+       {error}
       </div>
     );
   }
@@ -203,11 +187,6 @@ const ManagerDeviation = () => {
       <div className='title'>Manager Deviation</div>
     
       <CCard className='table-container mt-4'>
-        <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
-          <div>
-            <h6 className="mb-0">Manager Deviation Limits</h6>
-          </div>
-        </CCardHeader>
         
         <CCardBody>
           <div className="d-flex justify-content-between mb-3">

@@ -28,6 +28,7 @@ import {
   CTableDataCell,
   CAlert
 } from '@coreui/react';
+import { showError } from '../../../utils/sweetAlerts';
 
 const CustomerLedger = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
@@ -42,14 +43,13 @@ const CustomerLedger = () => {
     try {
       const response = await axiosInstance.get(`/bookings`);
       const subdealerBookings = response.data.data.bookings.filter((booking) => booking.bookingType === 'SUBDEALER');
-
-      // const subdealerBookings = response.data.data.bookings.filter(
-      //   (booking) => booking.bookingType === 'SUBDEALER' && booking.payment.type === 'FINANCE'
-      // );
       setData(subdealerBookings);
       setFilteredData(subdealerBookings);
     } catch (error) {
-      console.log('Error fetching data', error);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -274,6 +274,13 @@ const CustomerLedger = () => {
   const handleSearch = (searchValue) => {
     handleFilter(searchValue, getDefaultSearchFields('booking'));
   };
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+      {error}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -282,7 +289,6 @@ const CustomerLedger = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
-            {/* You can add buttons here if needed */}
           </div>
         </CCardHeader>
         

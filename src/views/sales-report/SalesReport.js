@@ -6,7 +6,8 @@ import {
   useEffect, 
   useTableFilter, 
   usePagination, 
-  axiosInstance 
+  axiosInstance, 
+  showError
 } from '../../utils/tableImports';
 import { 
   CCard, 
@@ -45,8 +46,10 @@ const SalesReport = () => {
       setData(response.data.data.salesExecutiveStats);
       setFilteredData(response.data.data.salesExecutiveStats);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +71,7 @@ const SalesReport = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading sales report: {error}
+       {error}
       </div>
     );
   }

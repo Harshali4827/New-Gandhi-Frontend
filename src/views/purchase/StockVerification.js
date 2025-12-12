@@ -74,8 +74,10 @@ function StockVerification() {
       setPendingData(vehicles);
       setFilteredPendings(vehicles);
     } catch (err) {
-      console.error('Error fetching pending', err);
-      setError(err.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -92,8 +94,11 @@ function StockVerification() {
 
       setApprovedData(vehicles);
       setFilteredApproved(vehicles);
-    } catch (err) {
-      console.error('Error fetching verified', err);
+    } catch (error) {
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -102,14 +107,6 @@ function StockVerification() {
       setSelectedVehicles([...selectedVehicles, vehicleId]);
     } else {
       setSelectedVehicles(selectedVehicles.filter((id) => id !== vehicleId));
-    }
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedVehicles(filteredPendings.map((vehicle) => vehicle._id));
-    } else {
-      setSelectedVehicles([]);
     }
   };
 
@@ -305,7 +302,7 @@ function StockVerification() {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading data: {error}
+      {error}
       </div>
     );
   }

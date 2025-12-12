@@ -15,8 +15,6 @@ import {
   showError,
   showSuccess,
   axiosInstance,
-  // FaCheckCircle,
-  // FaTimesCircle
 } from '../../../utils/tableImports';
 import { 
   CButton, 
@@ -63,8 +61,10 @@ const AttachmentsList = () => {
       setData(response.data.data.attachments);
       setFilteredData(response.data.data.attachments);
     } catch (error) {
-      console.log('Error fetching data', error);
-      setError(error.message);
+      const message = showError(error);
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -201,7 +201,7 @@ const AttachmentsList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading attachments: {error}
+      {error}
       </div>
     );
   }
