@@ -13,23 +13,28 @@ import {
   CCardHeader,
   CButton,
   CFormInput,
-  CSpinner
+  CSpinner,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CBadge,
+  CCol,
+  CRow
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { 
   cilPlus, 
   cilSettings, 
   cilPencil, 
-  cilTrash
+  cilTrash,
+  cilFolder,
+  cilLockLocked
 } from '@coreui/icons';
 import { Link } from 'react-router-dom';
 import { CFormLabel } from '@coreui/react';
 import {
-  React as ReactHook,
-  useState as useStateHook,
-  useEffect as useEffectHook,
-  Menu,
-  MenuItem,
   getDefaultSearchFields,
   confirmDelete,
   showError,
@@ -46,6 +51,8 @@ const AllRoles = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
   
   const hasEditPermission = hasPermission('ROLE', 'UPDATE');
   const hasDeletePermission = hasPermission('ROLE', 'DELETE');
@@ -65,10 +72,9 @@ const AllRoles = () => {
       setFilteredData(filteredRoles);
     } catch (error) {
       const message = showError(error);
-  if (message) {
-    setError(message);
-  }
-  
+      if (message) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -104,6 +110,7 @@ const AllRoles = () => {
         setData(data.filter((role) => role.id !== id));
         setFilteredData(filteredData.filter((role) => role.id !== id));
         showSuccess('Role deleted successfully!');
+        fetchData();
         handleClose();
       } catch (error) {
         console.log(error);
@@ -125,6 +132,11 @@ const AllRoles = () => {
     }, {});
   };
 
+  const showRoleDetails = (role) => {
+    setSelectedRole(role);
+    setModalVisible(true);
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
@@ -136,7 +148,7 @@ const AllRoles = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-       {error}
+        {error}
       </div>
     );
   }
@@ -168,7 +180,6 @@ const AllRoles = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                // placeholder="Search roles..."
               />
             </div>
           </div>
@@ -181,7 +192,7 @@ const AllRoles = () => {
                   <CTableHeaderCell>Role Name</CTableHeaderCell>
                   <CTableHeaderCell>Description</CTableHeaderCell>
                   <CTableHeaderCell>Modules</CTableHeaderCell>
-                  <CTableHeaderCell>Actions</CTableHeaderCell>
+                  <CTableHeaderCell>Permissions</CTableHeaderCell>
                   {showActionColumn && <CTableHeaderCell>Action</CTableHeaderCell>}
                 </CTableRow>
               </CTableHead>
@@ -190,67 +201,84 @@ const AllRoles = () => {
                   filteredData.map((role, index) => {
                     const groupedPermissions = groupPermissionsByModule(role.permissions);
                     const modules = Object.keys(groupedPermissions);
+                    const moduleCount = modules.length;
+                    const permissionCount = role.permissions?.length || 0;
 
                     return (
-                      <CTableRow key={role._id || role.id}>
+                      <CTableRow key={role._id || role.id} className="table-row">
                         <CTableDataCell>{index + 1}</CTableDataCell>
                         <CTableDataCell>{role.name}</CTableDataCell>
-                        <CTableDataCell>{role.description || '-'}</CTableDataCell>
                         <CTableDataCell>
-                          {modules.length > 0 ? (
-                            <div className="permission-modules">
-                              {modules.map((module, idx) => (
-                                <div key={idx} className="module-item">
-                                  {module}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            'No modules'
-                          )}
+                          <div className="description-truncate">
+                            {role.description || '-'}
+                          </div>
                         </CTableDataCell>
+                        
+                        {/* Modules Cell - Clickable */}
                         <CTableDataCell>
-                          {modules.length > 0 ? (
-                            <div className="permission-actions">
-                              {modules.map((module, idx) => (
-                                <div key={idx} className="action-item">
-                                  {groupedPermissions[module].join(', ')}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            'No actions'
-                          )}
+                          <div 
+                            className="modules-cell clickable-cell"
+                            onClick={() => showRoleDetails(role)}
+                          >
+                            {moduleCount > 0 ? (
+                              <div className="d-flex align-items-center gap-2">
+                                <CBadge color="primary" className="module-badge">
+                                  <CIcon icon={cilFolder} className="me-1" />
+                                  {moduleCount}
+                                </CBadge>
+                                <span className="modules-text">
+                                  {moduleCount === 1 ? 'Module' : 'Modules'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted">No modules</span>
+                            )}
+                          </div>
                         </CTableDataCell>
+                        
+                        {/* Permissions Cell - Clickable */}
+                        <CTableDataCell>
+                          <div 
+                            className="permissions-cell clickable-cell"
+                            onClick={() => showRoleDetails(role)}
+                          >
+                            {permissionCount > 0 ? (
+                              <div className="d-flex align-items-center gap-2">
+                                <CBadge color="info" className="permission-badge">
+                                  <CIcon icon={cilLockLocked} className="me-1" />
+                                  {permissionCount}
+                                </CBadge>
+                                <span className="permissions-text">
+                                  {permissionCount === 1 ? 'Permission' : 'Permissions'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted">No permissions</span>
+                            )}
+                          </div>
+                        </CTableDataCell>
+                        
                         {showActionColumn && (
                           <CTableDataCell>
-                            <CButton
-                              size="sm"
-                              className='option-button btn-sm'
-                              onClick={(event) => handleClick(event, role._id || role.id)}
-                            >
-                              <CIcon icon={cilSettings} />
-                              Options
-                            </CButton>
-                            <Menu 
-                              id={`action-menu-${role._id || role.id}`} 
-                              anchorEl={anchorEl} 
-                              open={menuId === (role._id || role.id)} 
-                              onClose={handleClose}
-                            >
+                            <div className="d-flex gap-1">
                               {hasEditPermission && (
-                                <Link className="Link" to={`/roles/update-role/${role._id || role.id}`}>
-                                  <MenuItem style={{ color: 'black' }}>
-                                    <CIcon icon={cilPencil} className="me-2" />Edit
-                                  </MenuItem>
+                                <Link to={`/roles/update-role/${role._id || role.id}`}>
+                                  <CButton size="sm" color="primary" variant="outline">
+                                    <CIcon icon={cilPencil} />
+                                  </CButton>
                                 </Link>
                               )}
                               {hasDeletePermission && (
-                                <MenuItem onClick={() => handleDelete(role._id || role.id)}>
-                                  <CIcon icon={cilTrash} className="me-2" />Delete
-                                </MenuItem>
+                                <CButton 
+                                  size="sm" 
+                                  color="danger" 
+                                  variant="outline"
+                                  onClick={() => handleDelete(role._id || role.id)}
+                                >
+                                  <CIcon icon={cilTrash} />
+                                </CButton>
                               )}
-                            </Menu>
+                            </div>
                           </CTableDataCell>
                         )}
                       </CTableRow>
@@ -269,16 +297,143 @@ const AllRoles = () => {
         </CCardBody>
       </CCard>
 
+      {/* Role Details Modal */}
+      <CModal 
+        visible={modalVisible} 
+        onClose={() => setModalVisible(false)}
+        size="lg"
+      >
+        <CModalHeader onClose={() => setModalVisible(false)}>
+          <CModalTitle>
+            <CIcon icon={cilFolder} className="me-2" />
+            Role Details: {selectedRole?.name}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedRole && (
+            <div>
+              <div className="mb-4">
+                <h6>Description</h6>
+                <p className="p-2 bg-light rounded">{selectedRole.description || 'No description provided'}</p>
+              </div>
+              
+              <div className="mb-4">
+                <h6 className="mb-3">Modules & Permissions Summary</h6>
+                <CRow>
+                  <CCol md={6}>
+                    <div className="p-3 bg-primary bg-opacity-10 rounded text-center">
+                      <h2 className="text-primary">{Object.keys(groupPermissionsByModule(selectedRole.permissions)).length}</h2>
+                      <p className="mb-0">Total Modules</p>
+                    </div>
+                  </CCol>
+                  <CCol md={6}>
+                    <div className="p-3 bg-info bg-opacity-10 rounded text-center">
+                      <h2 className="text-info">{selectedRole.permissions?.length || 0}</h2>
+                      <p className="mb-0">Total Permissions</p>
+                    </div>
+                  </CCol>
+                </CRow>
+              </div>
+              
+              <div className="mb-3">
+                <h6>Detailed Permissions</h6>
+                {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
+                  <div className="permissions-details">
+                    {Object.entries(groupPermissionsByModule(selectedRole.permissions)).map(([module, actions], idx) => (
+                      <div key={idx} className="permission-module mb-3 p-3 border rounded">
+                        <div className="d-flex align-items-center mb-2">
+                          <CBadge color="primary" className="me-2 px-3 py-2">
+                            <CIcon icon={cilFolder} className="me-2" />
+                            {module}
+                          </CBadge>
+                          <span className="text-muted small">
+                            ({actions.length} {actions.length === 1 ? 'permission' : 'permissions'})
+                          </span>
+                        </div>
+                        <div className="d-flex flex-wrap gap-2">
+                          {actions.map((action, actionIdx) => (
+                            <CBadge key={actionIdx} color="success" className="px-3 py-2">
+                              <CIcon icon={cilLockLocked} className="me-1" />
+                              {action}
+                            </CBadge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="alert alert-light text-center">
+                    No permissions assigned to this role
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setModalVisible(false)}>
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
       <style jsx>{`
-        .permission-modules,
-        .permission-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
+        .description-truncate {
+          max-width: 200px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .module-item,
-        .action-item {
-          padding: 2px 0;
+        
+        .module-badge, .permission-badge {
+          font-size: 0.8rem;
+          padding: 0.4rem 0.7rem;
+          display: flex;
+          align-items: center;
+          min-width: 40px;
+          justify-content: center;
+        }
+        
+        .clickable-cell {
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .clickable-cell:hover {
+          background-color: rgba(0, 123, 255, 0.05);
+          transform: translateY(-1px);
+        }
+        
+        .modules-cell, .permissions-cell {
+          height: 100%;
+          display: flex;
+          align-items: center;
+        }
+        
+        .table-row td {
+          vertical-align: middle;
+          height: 60px;
+        }
+        
+        .modules-text, .permissions-text {
+          font-size: 0.9rem;
+          color: #495057;
+        }
+        
+        .permissions-details {
+          max-height: 400px;
+          overflow-y: auto;
+          margin-top: 10px;
+        }
+        
+        .permission-module {
+          background-color: #f8f9fa;
+          transition: all 0.3s ease;
+        }
+        
+        .permission-module:hover {
+          background-color: #e9ecef;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
       `}</style>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CFormCheck, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react';
+import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CFormCheck, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell, CAlert } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 
 import { cilSearch } from '@coreui/icons';
@@ -109,6 +109,8 @@ function BookingForm() {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
+  const [modelType, setModelType] = useState('');
+  const [selectedModelName, setSelectedModelName] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
@@ -281,95 +283,101 @@ function BookingForm() {
   }, [id]);
 
   const fetchBookingDetails = async (bookingId) => {
-  try {
-    const response = await axiosInstance.get(`/bookings/${bookingId}`);
-    const bookingData = response.data.data;
+    try {
+      const response = await axiosInstance.get(`/bookings/${bookingId}`);
+      const bookingData = response.data.data;
 
-    const priceComponents = bookingData.priceComponents || [];
-    setBookingPriceComponents(priceComponents);
+      const priceComponents = bookingData.priceComponents || [];
+      setBookingPriceComponents(priceComponents);
 
-    const initialDiscounts = {};
-    if (priceComponents.length > 0) {
-      priceComponents.forEach(priceComponent => {
-        if (priceComponent.header && priceComponent.header._id) {
-          const discountAmount = priceComponent.discountAmount || 0;
-          initialDiscounts[priceComponent.header._id] = discountAmount;
-        }
-      });
-    }
-    
-    console.log('Initial discounts from booking API:', initialDiscounts);
-    setHeaderDiscounts(initialDiscounts);
-
-    await fetchModels(bookingData.customerType, bookingData.branch?._id);
-
-    const optionalComponents = priceComponents.filter((pc) => pc.header && pc.header._id)?.map((pc) => pc.header._id) || [];
-
-    const bookingVerticle = bookingData.verticles && bookingData.verticles.length > 0 
-      ? bookingData.verticles[0]._id || bookingData.verticles[0] 
-      : '';
-
-    setFormData({
-      verticle_id: bookingVerticle,
-      model_id: bookingData.model?.id || '',
-      model_color: bookingData.color?.id || '',
-      customer_type: bookingData.customerType || 'B2C',
-      rto_type: bookingData.rto || 'MH',
-      branch: bookingData.branch?._id || '',
-      optionalComponents: optionalComponents,
-      sales_executive: bookingData.salesExecutive?._id || '',
-      gstin: bookingData.gstin || '',
-      rto_amount: bookingData.rtoAmount || '',
-      salutation: bookingData.customerDetails?.salutation || '',
-      name: bookingData.customerDetails?.name || '',
-      pan_no: bookingData.customerDetails?.panNo || '',
-      dob: bookingData.customerDetails?.dob?.split('T')[0] || '',
-      occupation: bookingData.customerDetails?.occupation || '',
-      address: bookingData.customerDetails?.address || '',
-      taluka: bookingData.customerDetails?.taluka || '',
-      district: bookingData.customerDetails?.district || '',
-      pincode: bookingData.customerDetails?.pincode || '',
-      mobile1: bookingData.customerDetails?.mobile1 || '',
-      mobile2: bookingData.customerDetails?.mobile2 || '',
-      aadhar_number: bookingData.customerDetails?.aadharNumber || '',
-      nomineeName: bookingData.customerDetails?.nomineeName || '',
-      nomineeRelation: bookingData.customerDetails?.nomineeRelation || '',
-      nomineeAge: bookingData.customerDetails?.nomineeAge || '',
-      type: bookingData.payment?.type?.toLowerCase() || 'cash',
-      financer_id: bookingData.payment?.financer?._id || '',
-      scheme: bookingData.payment?.scheme || '',
-      emi_plan: bookingData.payment?.emiPlan || '',
-      gc_applicable: bookingData.payment?.gcApplicable || false,
-      gc_amount: bookingData.payment?.gcAmount || 0,
-      discountType: bookingData.discounts?.[0]?.type?.toLowerCase() || 'fixed',
-      selected_accessories: bookingData.accessories?.map((a) => a.accessory?._id).filter(Boolean) || [],
-      hpa: bookingData.hpa || false,
-      selfInsurance: bookingData.selfInsurance || false,
-      is_exchange: bookingData.exchange ? 'true' : 'false',
-      broker_id: bookingData.exchangeDetails?.broker?._id || '',
-      exchange_price: bookingData.exchangeDetails?.price || '',
-      vehicle_number: bookingData.exchangeDetails?.vehicleNumber || '',
-      chassis_number: bookingData.exchangeDetails?.chassisNumber || '',
-      note: bookingData.note || ''
-    });
-
-    setSelectedBranchName(bookingData.branch?.name || '');
-    setModelDetails(bookingData.model || null);
-    setAccessoriesTotal(bookingData.accessoriesTotal || 0);
-
-    if (bookingData.model?.id) {
-      setTimeout(() => {
-        fetchModelHeadersForEdit(bookingData.model.id, initialDiscounts);
-      }, 1000);
+      const initialDiscounts = {};
+      if (priceComponents.length > 0) {
+        priceComponents.forEach(priceComponent => {
+          if (priceComponent.header && priceComponent.header._id) {
+            const discountAmount = priceComponent.discountAmount || 0;
+            initialDiscounts[priceComponent.header._id] = discountAmount;
+          }
+        });
+      }
       
-      fetchAccessories(bookingData.model.id);
-      fetchModelColors(bookingData.model.id);
+      console.log('Initial discounts from booking API:', initialDiscounts);
+      setHeaderDiscounts(initialDiscounts);
+
+      await fetchModels(bookingData.customerType, bookingData.branch?._id);
+
+      const optionalComponents = priceComponents.filter((pc) => pc.header && pc.header._id)?.map((pc) => pc.header._id) || [];
+
+      const bookingVerticle = bookingData.verticles && bookingData.verticles.length > 0 
+        ? bookingData.verticles[0]._id || bookingData.verticles[0] 
+        : '';
+
+      setFormData({
+        verticle_id: bookingVerticle,
+        model_id: bookingData.model?.id || '',
+        model_color: bookingData.color?.id || '',
+        customer_type: bookingData.customerType || 'B2C',
+        rto_type: bookingData.rto || 'MH',
+        branch: bookingData.branch?._id || '',
+        optionalComponents: optionalComponents,
+        sales_executive: bookingData.salesExecutive?._id || '',
+        gstin: bookingData.gstin || '',
+        rto_amount: bookingData.rtoAmount || '',
+        salutation: bookingData.customerDetails?.salutation || '',
+        name: bookingData.customerDetails?.name || '',
+        pan_no: bookingData.customerDetails?.panNo || '',
+        dob: bookingData.customerDetails?.dob?.split('T')[0] || '',
+        occupation: bookingData.customerDetails?.occupation || '',
+        address: bookingData.customerDetails?.address || '',
+        taluka: bookingData.customerDetails?.taluka || '',
+        district: bookingData.customerDetails?.district || '',
+        pincode: bookingData.customerDetails?.pincode || '',
+        mobile1: bookingData.customerDetails?.mobile1 || '',
+        mobile2: bookingData.customerDetails?.mobile2 || '',
+        aadhar_number: bookingData.customerDetails?.aadharNumber || '',
+        nomineeName: bookingData.customerDetails?.nomineeName || '',
+        nomineeRelation: bookingData.customerDetails?.nomineeRelation || '',
+        nomineeAge: bookingData.customerDetails?.nomineeAge || '',
+        type: bookingData.payment?.type?.toLowerCase() || 'cash',
+        financer_id: bookingData.payment?.financer?._id || '',
+        scheme: bookingData.payment?.scheme || '',
+        emi_plan: bookingData.payment?.emiPlan || '',
+        gc_applicable: bookingData.payment?.gcApplicable || false,
+        gc_amount: bookingData.payment?.gcAmount || 0,
+        discountType: bookingData.discounts?.[0]?.type?.toLowerCase() || 'fixed',
+        selected_accessories: bookingData.accessories?.map((a) => a.accessory?._id).filter(Boolean) || [],
+        hpa: bookingData.hpa || false,
+        selfInsurance: bookingData.selfInsurance || false,
+        is_exchange: bookingData.exchange ? 'true' : 'false',
+        broker_id: bookingData.exchangeDetails?.broker?._id || '',
+        exchange_price: bookingData.exchangeDetails?.price || '',
+        vehicle_number: bookingData.exchangeDetails?.vehicleNumber || '',
+        chassis_number: bookingData.exchangeDetails?.chassisNumber || '',
+        note: bookingData.note || ''
+      });
+
+      setSelectedBranchName(bookingData.branch?.name || '');
+      setModelDetails(bookingData.model || null);
+      setAccessoriesTotal(bookingData.accessoriesTotal || 0);
+
+      // Store model type and name
+      if (bookingData.model) {
+        setModelType(bookingData.model.type);
+        setSelectedModelName(bookingData.model.model_name);
+      }
+
+      if (bookingData.model?.id) {
+        setTimeout(() => {
+          fetchModelHeadersForEdit(bookingData.model.id, initialDiscounts);
+        }, 1000);
+        
+        fetchAccessories(bookingData.model.id);
+        fetchModelColors(bookingData.model.id);
+      }
+    } catch (error) {
+      const message = showError(error); 
+      if (message) setError(message);
     }
-  } catch (error) {
-    const message = showError(error); 
-    if (message) setError(message);
-  }
-};
+  };
 
   const fetchModelHeadersForEdit = async (modelId, existingDiscounts = {}) => {
     try {
@@ -675,9 +683,9 @@ function BookingForm() {
       setFilteredModels(processedModels);
     } catch (error) {
       const message = showError(error);
-  if (message) {
-    setError(message);
-  }
+      if (message) {
+        setError(message);
+      }
     }
   };
   
@@ -689,9 +697,9 @@ function BookingForm() {
       } catch (error) {
         console.error('Error fetching branches:', error);
         const message = showError(error);
-  if (message) {
-    setError(message);
-  }
+        if (message) {
+          setError(message);
+        }
       }
     };
     fetchBranches();
@@ -786,8 +794,44 @@ function BookingForm() {
 
   const fetchAccessories = async (modelId) => {
     try {
-      const response = await axiosInstance.get(`/accessories/model/${modelId}`);
-      setAccessories(response.data.data.accessories || []);
+      // First get the model details to know the type and name
+      const modelResponse = await axiosInstance.get(`/models/${modelId}`);
+      const modelData = modelResponse.data.data.model;
+      const modelType = modelData.type; // This will be "ICE" or "EV" etc.
+      const modelName = modelData.model_name;
+      
+      // Store the model type and name
+      setModelType(modelType);
+      setSelectedModelName(modelName);
+      
+      // Now fetch all accessories
+      const accessoriesResponse = await axiosInstance.get('/accessories');
+      const allAccessories = accessoriesResponse.data.data.accessories || [];
+      
+      // Filter accessories based on:
+      // 1. Accessory's category type matches model type AND
+      // 2. Accessory is applicable to this specific model (if applicable_models is defined)
+      // OR accessory has no specific model restrictions
+      const filteredAccessories = allAccessories.filter(accessory => {
+        // First check: accessory category type must match model type
+        const typeMatches = accessory.categoryDetails?.type === modelType;
+        
+        if (!typeMatches) {
+          return false; // Skip if type doesn't match
+        }
+        
+        // Second check: if accessory has specific applicable models
+        if (accessory.applicable_models && accessory.applicable_models.length > 0) {
+          // Check if this model is in the applicable models list
+          return accessory.applicable_models.includes(modelId);
+        }
+        
+        // If no specific model restrictions, include it (type already matched)
+        return true;
+      });
+      
+      console.log('Filtered accessories for model', modelName, 'type', modelType, ':', filteredAccessories);
+      setAccessories(filteredAccessories);
     } catch (error) {
       console.error('Failed to fetch accessories:', error);
       setAccessories([]);
@@ -824,9 +868,9 @@ function BookingForm() {
       } catch (error) {
         console.error('Error fetching brokers:', error);
         const message = showError(error);
-  if (message) {
-    setError(message);
-  }
+        if (message) {
+          setError(message);
+        }
         setBrokers([]);
       }
     };
@@ -916,6 +960,11 @@ function BookingForm() {
           model_name: selectedModel.model_name,
           model_id: value
         }));
+        
+        // Store model type and name
+        setModelType(selectedModel.type);
+        setSelectedModelName(selectedModel.model_name);
+        
         fetchAccessories(value);
         fetchModelColors(value);
         if (isEditMode) {
@@ -982,128 +1031,128 @@ function BookingForm() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  const requiredFields = ['verticle_id', 'model_id', 'model_color', 'branch', 'customer_type', 'name', 'address', 'mobile1', 'aadhar_number', 'pan_no'];
-  let formErrors = {};
+    const requiredFields = ['verticle_id', 'model_id', 'model_color', 'branch', 'customer_type', 'name', 'address', 'mobile1', 'aadhar_number', 'pan_no'];
+    let formErrors = {};
 
-  requiredFields.forEach((field) => {
-    if (!formData[field]) {
-      formErrors[field] = 'This field is required';
-    }
-  });
-
-  if (!formData.verticle_id) {
-    formErrors.verticle_id = 'Verticle selection is required';
-  }
-
-  if (Object.keys(formErrors).length > 0) {
-    setErrors(formErrors);
-    setIsSubmitting(false);
-    const firstErrorField = Object.keys(formErrors)[0];
-    document.querySelector(`[name="${firstErrorField}"]`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        formErrors[field] = 'This field is required';
+      }
     });
-    return;
-  }
 
-  const headerDiscountsArray = Object.entries(headerDiscounts)
-    .filter(([headerId, value]) => value !== '' && value !== null && value !== undefined && !isNaN(parseFloat(value)))
-    .map(([headerId, value]) => ({
-      headerId,
-      discountAmount: parseFloat(value) || 0
-    }));
+    if (!formData.verticle_id) {
+      formErrors.verticle_id = 'Verticle selection is required';
+    }
 
-  const requestBody = {
-    model_id: formData.model_id,
-    model_color: formData.model_color,
-    customer_type: formData.customer_type,
-    rto_type: formData.rto_type,
-    branch: formData.branch,
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      setIsSubmitting(false);
+      const firstErrorField = Object.keys(formErrors)[0];
+      document.querySelector(`[name="${firstErrorField}"]`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      return;
+    }
 
-    verticles: formData.verticle_id ? [formData.verticle_id] : [],
-    optionalComponents: formData.optionalComponents,
-    sales_executive: formData.sales_executive,
-    customer_details: {
-      salutation: formData.salutation,
-      name: formData.name,
-      pan_no: formData.pan_no,
-      dob: formData.dob,
-      occupation: formData.occupation,
-      address: formData.address,
-      taluka: formData.taluka,
-      district: formData.district,
-      pincode: formData.pincode,
-      mobile1: formData.mobile1,
-      mobile2: formData.mobile2,
-      aadhar_number: formData.aadhar_number,
-      nomineeName: formData.nomineeName,
-      nomineeRelation: formData.nomineeRelation,
-      nomineeAge: formData.nomineeAge ? parseInt(formData.nomineeAge) : undefined
-    },
-    payment: {
-      type: formData.type.toUpperCase(),
-      ...(formData.type.toLowerCase() === 'finance' && {
-        financer_id: formData.financer_id,
-        scheme: formData.scheme,
-        emi_plan: formData.emi_plan,
-        gc_applicable: formData.gc_applicable,
-        gc_amount: formData.gc_applicable ? parseFloat(formData.gc_amount) || 0 : 0
-      })
-    },
-    headerDiscounts: headerDiscountsArray,
-    accessories: {
-      selected: formData.selected_accessories.map((id) => ({ id }))
-    },
-    hpa: formData.hpa === true,
-    selfInsurance: formData.selfInsurance === true,
-    exchange: {
-      is_exchange: formData.is_exchange === 'true',
-      ...(formData.is_exchange === 'true' && {
-        broker_id: formData.broker_id,
-        exchange_price: formData.exchange_price ? parseFloat(formData.exchange_price) : 0,
-        vehicle_number: formData.vehicle_number || '',
-        chassis_number: formData.chassis_number || '',
-        ...(selectedBroker?.otp_required && otpVerified && { otp })
-      })
-    },
-    note: formData.note
+    const headerDiscountsArray = Object.entries(headerDiscounts)
+      .filter(([headerId, value]) => value !== '' && value !== null && value !== undefined && !isNaN(parseFloat(value)))
+      .map(([headerId, value]) => ({
+        headerId,
+        discountAmount: parseFloat(value) || 0
+      }));
+
+    const requestBody = {
+      model_id: formData.model_id,
+      model_color: formData.model_color,
+      customer_type: formData.customer_type,
+      rto_type: formData.rto_type,
+      branch: formData.branch,
+
+      verticles: formData.verticle_id ? [formData.verticle_id] : [],
+      optionalComponents: formData.optionalComponents,
+      sales_executive: formData.sales_executive,
+      customer_details: {
+        salutation: formData.salutation,
+        name: formData.name,
+        pan_no: formData.pan_no,
+        dob: formData.dob,
+        occupation: formData.occupation,
+        address: formData.address,
+        taluka: formData.taluka,
+        district: formData.district,
+        pincode: formData.pincode,
+        mobile1: formData.mobile1,
+        mobile2: formData.mobile2,
+        aadhar_number: formData.aadhar_number,
+        nomineeName: formData.nomineeName,
+        nomineeRelation: formData.nomineeRelation,
+        nomineeAge: formData.nomineeAge ? parseInt(formData.nomineeAge) : undefined
+      },
+      payment: {
+        type: formData.type.toUpperCase(),
+        ...(formData.type.toLowerCase() === 'finance' && {
+          financer_id: formData.financer_id,
+          scheme: formData.scheme,
+          emi_plan: formData.emi_plan,
+          gc_applicable: formData.gc_applicable,
+          gc_amount: formData.gc_applicable ? parseFloat(formData.gc_amount) || 0 : 0
+        })
+      },
+      headerDiscounts: headerDiscountsArray,
+      accessories: {
+        selected: formData.selected_accessories.map((id) => ({ id }))
+      },
+      hpa: formData.hpa === true,
+      selfInsurance: formData.selfInsurance === true,
+      exchange: {
+        is_exchange: formData.is_exchange === 'true',
+        ...(formData.is_exchange === 'true' && {
+          broker_id: formData.broker_id,
+          exchange_price: formData.exchange_price ? parseFloat(formData.exchange_price) : 0,
+          vehicle_number: formData.vehicle_number || '',
+          chassis_number: formData.chassis_number || '',
+          ...(selectedBroker?.otp_required && otpVerified && { otp })
+        })
+      },
+      note: formData.note
+    };
+
+    if (formData.customer_type === 'B2B') {
+      requestBody.gstin = formData.gstin;
+    }
+    if (formData.rto_type === 'BH' || formData.rto_type === 'CRTM') {
+      requestBody.rto_amount = formData.rto_amount;
+    }
+
+    console.log('Submitting request body:', requestBody);
+
+    try {
+      let response;
+      if (isEditMode) {
+        response = await axiosInstance.put(`/bookings/${id}`, requestBody);
+      } else {
+        response = await axiosInstance.post('/bookings', requestBody);
+      }
+
+      if (response.data.success) {
+        const successMessage = isEditMode ? 'Booking updated successfully!' : 'Booking created successfully!';
+        await showFormSubmitToast(successMessage, () => navigate('/booking-list'));
+        navigate('/booking-list');
+      } else {
+        showFormSubmitError(response.data.message || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      const message = showError(error); 
+      if (message) setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  if (formData.customer_type === 'B2B') {
-    requestBody.gstin = formData.gstin;
-  }
-  if (formData.rto_type === 'BH' || formData.rto_type === 'CRTM') {
-    requestBody.rto_amount = formData.rto_amount;
-  }
-
-  console.log('Submitting request body:', requestBody);
-
-  try {
-    let response;
-    if (isEditMode) {
-      response = await axiosInstance.put(`/bookings/${id}`, requestBody);
-    } else {
-      response = await axiosInstance.post('/bookings', requestBody);
-    }
-
-    if (response.data.success) {
-      const successMessage = isEditMode ? 'Booking updated successfully!' : 'Booking created successfully!';
-      await showFormSubmitToast(successMessage, () => navigate('/booking-list'));
-      navigate('/booking-list');
-    } else {
-      showFormSubmitError(response.data.message || 'Submission failed');
-    }
-  } catch (error) {
-    console.error('Submission error:', error);
-    const message = showError(error); 
-    if (message) setError(message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
   const getSelectedModelHeaders = () => {
     if (!formData.model_id) return [];
@@ -2018,24 +2067,33 @@ function BookingForm() {
             {activeTab === 5 && (
               <>
                 <div>
-                  <h5>Accessories</h5>
+                  <h5>Accessories for {selectedModelName} ({modelType})</h5>
                   {accessories.length > 0 ? (
                     <>
+                      <p className="text-muted mb-3">
+                        Showing accessories compatible with {selectedModelName} ({modelType} type)
+                      </p>
                       <div className="accessories-list">
                         {accessories.map((accessory) => (
                           <div key={accessory._id} className="accessory-item">
                             <CFormCheck
                               id={`accessory-${accessory._id}`}
-                              label={`${accessory.name} - ₹${accessory.price}`}
+                              label={`${accessory.name} - ₹${accessory.price} ${accessory.applicableModelsDetails?.length > 0 ? '(Model Specific)' : '(General)'}`}
                               checked={formData.selected_accessories.includes(accessory._id)}
                               onChange={(e) => handleAccessorySelection(accessory._id, e.target.checked)}
                             />
+                            {accessory.description && (
+                              <small className="text-muted d-block">{accessory.description}</small>
+                            )}
                           </div>
                         ))}
                       </div>
                     </>
                   ) : (
-                    <p>No accessories available for this model</p>
+                    <div className="alert alert-info">
+                      <p>No accessories available for {selectedModelName} ({modelType})</p>
+                      <small>Accessories must match both the model type ({modelType}) and be applicable to this specific model</small>
+                    </div>
                   )}
                 </div>
                 <div className="form-footer">

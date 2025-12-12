@@ -293,6 +293,7 @@ function AddAccessories() {
   const [errors, setErrors] = useState({});
   const [models, setModels] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [filteredModels, setFilteredModels] = useState([]);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -320,33 +321,18 @@ function AddAccessories() {
       try {
         const response = await axiosInstance.get('/headers');
         
-        // Get all categories from response
         const allCategories = response.data.data.headers || [];
         
-        // Define the exact 6 category names from header_key field
-        const requiredCategoryNames = [
-          'ESSENTIAL FITTMENTS',
-          'IInd Yr 2S AMC',
-          'MANDATORY ACCESSORIES KIT', 
-          'ADDITIONAL ACCESSORIES',
-          'POLISH COATING',
-          'TVS HELMET'
-        ];
-        
-        // Filter categories to include only the required 6
-        const filteredCategories = allCategories.filter(category => 
-          requiredCategoryNames.includes(category.header_key)
+        // Filter categories where category_key is "Accesories" (note the spelling from your data)
+        const accessoriesCategories = allCategories.filter(category => 
+          category.category_key && 
+          category.category_key.toLowerCase() === "accesories"
         );
         
-        // Sort categories to match the order in requiredCategoryNames
-        const sortedCategories = filteredCategories.sort((a, b) => {
-          return requiredCategoryNames.indexOf(a.header_key) - requiredCategoryNames.indexOf(b.header_key);
-        });
-        
-        setCategories(sortedCategories);
+        setCategories(accessoriesCategories);
         
         // Log for debugging (optional)
-        console.log('Filtered categories for accessories:', sortedCategories);
+        console.log('Filtered accessories categories:', accessoriesCategories);
         
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -356,6 +342,43 @@ function AddAccessories() {
 
     fetchCategories();
   }, []);
+
+  // Filter models based on selected category type
+  useEffect(() => {
+    if (formData.category && categories.length > 0) {
+      // Find the selected category to get its type
+      const selectedCategory = categories.find(cat => cat._id === formData.category);
+      
+      if (selectedCategory && selectedCategory.type) {
+        // Filter models that match the selected category's type
+        const matchingModels = models.filter(model => 
+          model.type && model.type === selectedCategory.type
+        );
+        setFilteredModels(matchingModels);
+        
+        // Also filter the applicable_models to remove any that are not in matchingModels
+        if (formData.applicable_models.length > 0) {
+          const validModelIds = matchingModels.map(model => model._id || model.id);
+          const filteredApplicableModels = formData.applicable_models.filter(modelId => 
+            validModelIds.includes(modelId)
+          );
+          
+          if (filteredApplicableModels.length !== formData.applicable_models.length) {
+            setFormData(prev => ({
+              ...prev,
+              applicable_models: filteredApplicableModels
+            }));
+          }
+        }
+      } else {
+        // If no type found, show all models
+        setFilteredModels(models);
+      }
+    } else {
+      // If no category selected, show all models
+      setFilteredModels(models);
+    }
+  }, [formData.category, categories, models, formData.applicable_models]);
 
   const fetchAccessory = async (id) => {
     try {
@@ -373,6 +396,11 @@ function AddAccessories() {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    
+    // If category is changed, reset applicable_models
+    if (name === 'category') {
+      setFormData(prevData => ({ ...prevData, applicable_models: [] }));
+    }
   };
 
   const handleModelSelect = (modelId) => {
@@ -435,6 +463,15 @@ function AddAccessories() {
     navigate('/accessories/accessories-list');
   };
 
+  // Get selected category type for display
+  const getSelectedCategoryType = () => {
+    if (formData.category) {
+      const selectedCategory = categories.find(cat => cat._id === formData.category);
+      return selectedCategory ? selectedCategory.type : null;
+    }
+    return null;
+  };
+
   return (
     <div className="form-container">
       <h4>{id ? 'Edit' : 'Add'} Accessories</h4>
@@ -492,7 +529,7 @@ function AddAccessories() {
                     <option value="">-Select-</option>
                     {categories.map((category) => (
                       <option key={category._id} value={category._id}>
-                        {category.header_key}
+                        {category.header_key} ({category.type})
                       </option>
                     ))}
                   </CFormSelect>
@@ -530,21 +567,39 @@ function AddAccessories() {
             <div className="offer-container">
               <form className="permissions-form">
                 <h4>
-                  Compatible Models <span className="required">*</span>
+                  Compatible Models <span className="required">* </span>
+                  {getSelectedCategoryType() && (
+                    <span className="category-type-info">
+                      (Showing {getSelectedCategoryType()} type models)
+                    </span>
+                  )}
                 </h4>
                 <div className="permissions-grid">
-                  {models.map((model) => {
-                    const modelId = model._id || model.id;
-                    const isSelected = formData.applicable_models.includes(modelId);
-                    return (
-                      <div key={modelId} className="permission-item">
-                        <label>
-                          <input type="checkbox" checked={isSelected} onChange={() => handleModelSelect(modelId)} />
-                          {model.model_name}
-                        </label>
-                      </div>
-                    );
-                  })}
+                  {filteredModels.length === 0 ? (
+                    <div className="no-models-message">
+                      {formData.category 
+                        ? `No ${getSelectedCategoryType()} models found. Please select a different category.`
+                        : 'Please select a category first to see compatible models.'}
+                    </div>
+                  ) : (
+                    filteredModels.map((model) => {
+                      const modelId = model._id || model.id;
+                      const isSelected = formData.applicable_models.includes(modelId);
+                      return (
+                        <div key={modelId} className="permission-item">
+                          <label>
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected} 
+                              onChange={() => handleModelSelect(modelId)} 
+                            />
+                            {model.model_name}
+                            <span className="model-type"> ({model.type})</span>
+                          </label>
+                        </div>
+                      );
+                    })
+                  )}
 
                   {errors.applicable_models && <p className="error">{errors.applicable_models}</p>}
                 </div>
