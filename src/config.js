@@ -4,9 +4,9 @@ axios.defaults.withCredentials = true;
 const config = {
   //baseURL: import.meta.env.VITE_API_BASE_URL
 
-    //  baseURL: 'http://localhost:3002/api/v1'
+      baseURL: 'http://localhost:3002/api/v1'
 
-     baseURL:'https://gandhitvs.in/dealership/api/v1'
+    //  baseURL:'https://gandhitvs.in/dealership/api/v1'
 
   //  baseURL: 'http://192.168.1.8:3002/api/v1'
 };
