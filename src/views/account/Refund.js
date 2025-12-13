@@ -134,7 +134,12 @@ const Refund = () => {
                         {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ''}
                       </CTableDataCell>
                       <CTableDataCell>{booking.customerDetails?.name || ''}</CTableDataCell>
-                      <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
+                      <CTableDataCell>
+                        {booking.chassisAllocationStatus === 'ALLOCATED' && booking.status === 'ALLOCATED' 
+                    ? (booking.chassisNumber || '')
+                    : ''
+                  }
+                      </CTableDataCell>
                       <CTableDataCell>₹{booking.discountedAmount?.toLocaleString('en-IN') || '0'}</CTableDataCell>
                       <CTableDataCell>₹{booking.receivedAmount?.toLocaleString('en-IN') || '0'}</CTableDataCell>
                       <CTableDataCell>₹{booking.balanceAmount?.toLocaleString('en-IN') || '0'}</CTableDataCell>

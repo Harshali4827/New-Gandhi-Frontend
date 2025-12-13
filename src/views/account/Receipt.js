@@ -654,96 +654,101 @@ function Receipt() {
   };
 
   const renderCustomerTable = () => {
-    return (
-      <div className="responsive-table-wrapper">
-        <CTable striped bordered hover className='responsive-table'>
-          <CTableHead>
+  return (
+    <div className="responsive-table-wrapper">
+      <CTable striped bordered hover className='responsive-table'>
+        <CTableHead>
+          <CTableRow>
+            <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Total</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Received</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+            {hasPermission('LEDGER', 'CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+          </CTableRow>
+        </CTableHead>
+        <CTableBody>
+          {filteredBookings.length === 0 ? (
             <CTableRow>
-              <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Total</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Received</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
-              {hasPermission('LEDGER', 'CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+              <CTableDataCell colSpan={hasPermission('LEDGER', 'CREATE') ? "11" : "10"} style={{ color: 'red', textAlign: 'center' }}>
+                {searchTerm ? 'No matching bookings found' : 'No booking available'}
+              </CTableDataCell>
             </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {filteredBookings.length === 0 ? (
-              <CTableRow>
-                <CTableDataCell colSpan={hasPermission('LEDGER', 'CREATE') ? "11" : "10"} style={{ color: 'red', textAlign: 'center' }}>
-                  {searchTerm ? 'No matching bookings found' : 'No booking available'}
+          ) : (
+            filteredBookings.map((booking, index) => (
+              <CTableRow key={index}>
+                <CTableDataCell>{index + 1}</CTableDataCell>
+                <CTableDataCell>{booking.bookingNumber}</CTableDataCell>
+                <CTableDataCell>{booking.model.model_name}</CTableDataCell>
+                <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
+                <CTableDataCell>
+                  {booking.chassisAllocationStatus === 'ALLOCATED' && booking.status === 'ALLOCATED' 
+                    ? (booking.chassisNumber || '')
+                    : ''
+                  }
                 </CTableDataCell>
+                <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
+
+                {hasPermission('LEDGER', 'CREATE') && (
+                  <CTableDataCell>
+                    <CButton
+                      size="sm"
+                      className='option-button btn-sm'
+                      onClick={(event) => handleMenuClick(event, booking._id)}
+                    >
+                      <CIcon icon={cilSettings} />
+                      Options
+                    </CButton>
+
+                    <Menu
+                      id={`action-menu-${booking._id}`}
+                      anchorEl={anchorEl}
+                      open={menuBookingId === booking._id}
+                      onClose={handleMenuClose}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                      }}
+                    >
+                      <MenuItem onClick={() => {
+                        handleAddClick(booking);
+                        handleMenuClose();
+                      }}>
+                        <CIcon icon={cilPlus} className="me-2" />
+                        Add Payment
+                      </MenuItem>
+
+                      <MenuItem onClick={() => {
+                        printInvoice(booking._id);
+                        handleMenuClose();
+                      }}>
+                        <CIcon icon={cilPrint} className="me-2" />
+                        Print Invoice
+                      </MenuItem>
+                    </Menu>
+                  </CTableDataCell>
+                )}
               </CTableRow>
-            ) : (
-              filteredBookings.map((booking, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell>{index + 1}</CTableDataCell>
-                  <CTableDataCell>{booking.bookingNumber}</CTableDataCell>
-                  <CTableDataCell>{booking.model.model_name}</CTableDataCell>
-                  <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
-                  <CTableDataCell>{booking.chassisNumber}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
-
-                  {hasPermission('LEDGER', 'CREATE') && (
-                    <CTableDataCell>
-                      <CButton
-                        size="sm"
-                        className='option-button btn-sm'
-                        onClick={(event) => handleMenuClick(event, booking._id)}
-                      >
-                        <CIcon icon={cilSettings} />
-                        Options
-                      </CButton>
-
-                      <Menu
-                        id={`action-menu-${booking._id}`}
-                        anchorEl={anchorEl}
-                        open={menuBookingId === booking._id}
-                        onClose={handleMenuClose}
-                        anchorOrigin={{
-                          vertical: 'bottom',
-                          horizontal: 'right',
-                        }}
-                        transformOrigin={{
-                          vertical: 'top',
-                          horizontal: 'right',
-                        }}
-                      >
-                        <MenuItem onClick={() => {
-                          handleAddClick(booking);
-                          handleMenuClose();
-                        }}>
-                          <CIcon icon={cilPlus} className="me-2" />
-                          Add Payment
-                        </MenuItem>
-
-                        <MenuItem onClick={() => {
-                          printInvoice(booking._id);
-                          handleMenuClose();
-                        }}>
-                          <CIcon icon={cilPrint} className="me-2" />
-                          Print Invoice
-                        </MenuItem>
-                      </Menu>
-                    </CTableDataCell>
-                  )}
-                </CTableRow>
-              ))
-            )}
-          </CTableBody>
-        </CTable>
-      </div>
-    );
-  };
+            ))
+          )}
+        </CTableBody>
+      </CTable>
+    </div>
+  );
+};
 
   const renderPaymentVerificationTable = () => {
     return (
@@ -802,99 +807,109 @@ function Receipt() {
     );
   };
 
-  const renderCompletePaymentTable = () => {
-    return (
-      <div className="responsive-table-wrapper">
-        <CTable striped bordered hover className='responsive-table'>
-          <CTableHead>
+ const renderCompletePaymentTable = () => {
+  return (
+    <div className="responsive-table-wrapper">
+      <CTable striped bordered hover className='responsive-table'>
+        <CTableHead>
+          <CTableRow>
+            <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Total</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Received</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+        <CTableBody>
+          {completePayments.length === 0 ? (
             <CTableRow>
-              <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Total</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Received</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+              <CTableDataCell colSpan="10" style={{ color: 'red', textAlign: 'center' }}>
+                {searchTerm ? 'No matching complete payments found' : 'No complete payments available'}
+              </CTableDataCell>
             </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {completePayments.length === 0 ? (
-              <CTableRow>
-                <CTableDataCell colSpan="10" style={{ color: 'red', textAlign: 'center' }}>
-                  {searchTerm ? 'No matching complete payments found' : 'No complete payments available'}
+          ) : (
+            completePayments.map((booking, index) => (
+              <CTableRow key={index}>
+                <CTableDataCell>{index + 1}</CTableDataCell>
+                <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
+                <CTableDataCell>{booking.model.model_name}</CTableDataCell>
+                <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
+                <CTableDataCell>
+                  {booking.chassisAllocationStatus === 'ALLOCATED' && booking.status === 'ALLOCATED' 
+                    ? (booking.chassisNumber || '')
+                    : ''
+                  }
                 </CTableDataCell>
+                <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell style={{ color: 'green' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
               </CTableRow>
-            ) : (
-              completePayments.map((booking, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell>{index + 1}</CTableDataCell>
-                  <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{booking.model.model_name}</CTableDataCell>
-                  <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
-                  <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'green' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
-                </CTableRow>
-              ))
-            )}
-          </CTableBody>
-        </CTable>
-      </div>
-    );
-  };
+            ))
+          )}
+        </CTableBody>
+      </CTable>
+    </div>
+  );
+};
 
-  const renderPendingListTable = () => {
-    return (
-      <div className="responsive-table-wrapper">
-        <CTable striped bordered hover className='responsive-table'>
-          <CTableHead>
+const renderPendingListTable = () => {
+  return (
+    <div className="responsive-table-wrapper">
+      <CTable striped bordered hover className='responsive-table'>
+        <CTableHead>
+          <CTableRow>
+            <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Total</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Received</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+        <CTableBody>
+          {pendingPayments.length === 0 ? (
             <CTableRow>
-              <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking ID</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Model Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Booking Date</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Mobile Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Total</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Received</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
+              <CTableDataCell colSpan="10" style={{ color: 'red', textAlign: 'center' }}>
+                {searchTerm ? 'No matching pending payments found' : 'No pending payments available'}
+              </CTableDataCell>
             </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {pendingPayments.length === 0 ? (
-              <CTableRow>
-                <CTableDataCell colSpan="10" style={{ color: 'red', textAlign: 'center' }}>
-                  {searchTerm ? 'No matching pending payments found' : 'No pending payments available'}
+          ) : (
+            pendingPayments.map((booking, index) => (
+              <CTableRow key={index}>
+                <CTableDataCell>{index + 1}</CTableDataCell>
+                <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
+                <CTableDataCell>{booking.model.model_name}</CTableDataCell>
+                <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
+                <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
+                <CTableDataCell>
+                  {booking.chassisAllocationStatus === 'ALLOCATED' && booking.status === 'ALLOCATED' 
+                    ? (booking.chassisNumber || '')
+                    : ''
+                  }
                 </CTableDataCell>
+                <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
+                <CTableDataCell style={{ color: 'red' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
               </CTableRow>
-            ) : (
-              pendingPayments.map((booking, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell>{index + 1}</CTableDataCell>
-                  <CTableDataCell>{booking.bookingNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{booking.model.model_name}</CTableDataCell>
-                  <CTableDataCell>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-GB') : ' '}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.name}</CTableDataCell>
-                  <CTableDataCell>{booking.customerDetails.mobile1}</CTableDataCell>
-                  <CTableDataCell>{booking.chassisNumber || ''}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.discountedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
-                  <CTableDataCell style={{ color: 'red' }}>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
-                </CTableRow>
-              ))
-            )}
-          </CTableBody>
-        </CTable>
-      </div>
-    );
-  };
+            ))
+          )}
+        </CTableBody>
+      </CTable>
+    </div>
+  );
+};
 
   const renderVerifiedListTable = () => {
     return (
