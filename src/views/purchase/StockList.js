@@ -42,10 +42,11 @@ import {
   CFormTextarea
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSearch, cilSettings, cilPencil, cilTrash, cilCloudDownload, cilZoomOut, cilLockUnlocked, cilShare } from '@coreui/icons';
+import { cilPlus, cilSearch, cilSettings, cilPencil, cilTrash, cilCloudDownload, cilZoomOut, cilLockUnlocked, cilShare, cilPrint } from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
 import config from '../../config';
 import { useAuth } from '../../context/AuthContext';
+import AllocateVehicleModal from './AllocateVehicleModal';
 
 const StockList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -69,8 +70,11 @@ const StockList = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [unblockReason, setUnblockReason] = useState('');
   const [unblockLoading, setUnblockLoading] = useState(false);
-  const { permissions} = useAuth();
+  const [allocateModalOpen, setAllocateModalOpen] = useState(false);
+  const [selectedVehicleForAllocation, setSelectedVehicleForAllocation] = useState(null);
+  const [vehicleAllocationDetails, setVehicleAllocationDetails] = useState(null);
 
+  const { permissions} = useAuth();
   const hasEditPermission = hasPermission(permissions, 'VEHICLE_INWARD_UPDATE');
   const hasDeletePermission = hasPermission(permissions, 'VEHICLE_INWARD_DELETE');
   const hasCreatePermission = hasPermission(permissions, 'VEHICLE_INWARD_CREATE');
@@ -121,6 +125,71 @@ const StockList = () => {
     }
   };
 
+  const handlePrintQR = (vehicle) => {
+    const qrUrl = vehicle.qrCode
+      ? `${config.baseURL || ''}${vehicle.qrCode}`
+      : '';
+  
+    const printWindow = window.open('', '_blank', 'width=400,height=500');
+  
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print QR</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 20px;
+            }
+            .qr-container {
+              border: 1px solid #000;
+              padding: 15px;
+              width: 400px;
+              margin: auto;
+            }
+            img {
+              width: 250px;
+              height: 250px;
+              margin-bottom: 10px;
+            }
+            .label {
+              font-weight: bold;
+              margin-top: 8px;
+            }
+            .value {
+              margin-bottom: 6px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="qr-container">
+            ${qrUrl ? `<img src="${qrUrl}" />` : '<p>No QR Available</p>'}
+  
+            <div class="label">Chassis Number</div>
+            <div class="value">${vehicle.chassisNumber || '-'}</div>
+  
+            <div class="label">Model Name</div>
+            <div class="value">${vehicle.modelName || '-'}</div>
+  
+            <div class="label">Key Number</div>
+            <div class="value">${vehicle.keyNumber || '-'}</div>
+          </div>
+  
+          <script>
+            window.onload = function () {
+              window.print();
+              window.onafterprint = window.close;
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  
+    printWindow.document.close();
+  };
+  
+
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
     setMenuId(id);
@@ -131,14 +200,12 @@ const StockList = () => {
     setMenuId(null);
   };
 
-  // Function to handle unblock action
   const handleUnblockClick = (vehicleId) => {
     setSelectedVehicleId(vehicleId);
     setUnblockModalOpen(true);
-    handleClose(); // Close the menu
+    handleClose();
   };
 
-  // Function to submit unblock request
   const handleUnblockSubmit = async () => {
     if (!unblockReason.trim()) {
       showError('Please enter a reason for unblocking');
@@ -262,7 +329,6 @@ const StockList = () => {
     setFilterModalOpen(false);
   };
 
-  // Function to reset unblock modal
   const resetUnblockModal = () => {
     setUnblockReason('');
     setSelectedVehicleId(null);
@@ -284,6 +350,33 @@ const StockList = () => {
     );
   }
 
+const handleAllocateClick = (vehicle) => {
+  const extractId = (item) => {
+    if (!item) return '';
+    if (typeof item === 'object') {
+      return item._id || item.id || '';
+    }
+    return item;
+  };
+
+  const vehicleDetails = {
+    vehicleId: vehicle._id || vehicle.id,
+    modelName: vehicle.modelName || '',
+    colorName: vehicle.color?.name || vehicle.color?.id || vehicle.color || '',
+    chassisNumber: vehicle.chassisNumber || '',
+    locationName: vehicle.unloadLocation?.name || vehicle.subdealerLocation?.name || '',
+    modelId: extractId(vehicle.model),
+    colorId: extractId(vehicle.color),
+    locationId: extractId(vehicle.unloadLocation || vehicle.subdealerLocation)
+  };
+  
+  console.log('Vehicle details for allocation:', vehicleDetails);
+  
+  setVehicleAllocationDetails(vehicleDetails);
+  setSelectedVehicleForAllocation(vehicle._id || vehicle.id);
+  setAllocateModalOpen(true);
+  handleClose();
+};
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
@@ -452,16 +545,21 @@ const StockList = () => {
                               </MenuItem>
                             )}
                              {isVehicleFriz(vehicle.status) && hasEditPermission && (
-                              <MenuItem >
-                                <CIcon icon={cilShare} className="me-2" />Allocate
-                              </MenuItem>
-                            )}
+                               <MenuItem onClick={() => handleAllocateClick(vehicle)}>
+                                 <CIcon icon={cilShare} className="me-2" />Allocate
+                                </MenuItem>
+                             )}
                             
                             {hasDeletePermission && (
                               <MenuItem onClick={() => handleDelete(vehicle.id)}>
                                 <CIcon icon={cilTrash} className="me-2" />Delete
                               </MenuItem>
                             )}
+                            <MenuItem onClick={() => handlePrintQR(vehicle)}>
+  <CIcon icon={cilPrint} className="me-2" />
+  Print QR
+</MenuItem>
+
                           </Menu>
                         </CTableDataCell>
                       )}
@@ -597,6 +695,19 @@ const StockList = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+      <AllocateVehicleModal
+  vehicleId={selectedVehicleForAllocation}
+  visible={allocateModalOpen}
+  onClose={() => {
+    setAllocateModalOpen(false);
+    setVehicleAllocationDetails(null);
+  }}
+  onSuccess={() => {
+    fetchData(); 
+    setAllocateModalOpen(false);
+  }}
+  vehicleDetails={vehicleAllocationDetails}
+/>
     </div>
   );
 };

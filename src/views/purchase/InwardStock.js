@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import FormButtons from '../../utils/FormButtons';
 import axiosInstance from '../../axiosInstance';
-
+import Select from "react-select";
 function InwardStock() {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -339,7 +339,7 @@ function InwardStock() {
                 {errors.type && <p className="error">{errors.type}</p>}
               </div>
 
-              <div className="input-box">
+              {/* <div className="input-box">
                 <div className="details-container">
                   <span className="details">Model Name</span>
                   <span className="required">*</span>
@@ -355,8 +355,49 @@ function InwardStock() {
                   </CFormSelect>
                 </CInputGroup>
                 {errors.model && <p className="error">{errors.model}</p>}
-              </div>
+              </div> */}
 
+
+
+<div className="input-box">
+  <div className="details-container">
+    <span className="details">Model Name</span>
+    <span className="required">*</span>
+  </div>
+
+  <Select
+    classNamePrefix="react-select"
+    placeholder="- Select a Model -"
+    isDisabled={!formData.type}
+    options={filteredModels.map((model) => ({
+      value: model._id,
+      label: model.model_name,
+    }))}
+    value={
+      formData.model
+        ? {
+            value: formData.model._id,
+            label: formData.model.model_name,
+          }
+        : null
+    }
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        model: selectedOption
+          ? {
+              _id: selectedOption.value,
+              model_name: selectedOption.label,
+            }
+          : null,
+      }));
+
+      setErrors((prev) => ({ ...prev, model: "" }));
+    }}
+  />
+
+  {errors.model && <p className="error">{errors.model}</p>}
+</div>
               <div className="input-box">
                 <div className="details-container">
                   <span className="details">Color</span>

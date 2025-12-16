@@ -788,3 +788,53 @@
 .form-select {
   border-radius: 0 !important;
 }
+
+
+
+/****************** React Select Style  ***************/
+
+
+/* React Select main control */
+.react-select__control {
+  min-height: 35px !important;
+  height: 35px !important;
+  border-radius: 0 !important;
+  border: 1px solid #ccc !important;
+  box-shadow: none !important;
+  font-size: 14px;
+}
+
+.react-select__control--is-focused {
+  border-color: #243c7c !important;
+  box-shadow: 0 0 5px rgba(63, 85, 206, 0.5) !important;
+}
+
+.react-select__value-container {
+  padding: 0 8px !important;
+  height: 35px;
+  display: flex;
+  align-items: center;
+}
+
+.react-select__single-value {
+  font-size: 14px;
+  line-height: 35px;
+}
+
+.react-select__placeholder {
+  font-size: 14px;
+  color: #999;
+}
+
+.react-select__indicator {
+  padding: 4px !important;
+}
+
+.react-select__indicators {
+  height: 35px;
+}
+
+.react-select__menu {
+  z-index: 9999;
+  font-size: 14px;
+}

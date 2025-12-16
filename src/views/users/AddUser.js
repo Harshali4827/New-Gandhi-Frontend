@@ -739,7 +739,7 @@ function AddUser() {
                 ) : (
                   <div className="permissions-table-container">
                     <div className="permission-table-wrapper">
-                      <CTable bordered responsive hover small className="permission-table">
+                      <CTable bordered  hover small className="permission-table">
                         <CTableHead color="light" className="permission-table-header">
                           <CTableRow>
                             <CTableHeaderCell scope="col" className="sticky-module-header">Module</CTableHeaderCell>

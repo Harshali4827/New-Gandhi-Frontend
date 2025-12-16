@@ -34,6 +34,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { showError, showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
 import axiosInstance from '../../../axiosInstance';
+import Select from "react-select";
 
 function BookingForm() {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -1265,7 +1266,7 @@ function BookingForm() {
                     )}
                   </div>
                   
-                  <div className="input-box">
+                  {/* <div className="input-box">
                     <div className="details-container">
                       <span className="details">Model Name</span>
                       <span className="required">*</span>
@@ -1299,7 +1300,70 @@ function BookingForm() {
                       </CFormSelect>
                     </CInputGroup>
                     {errors.model_id && <p className="error">{errors.model_id}</p>}
-                  </div>
+                  </div> */}
+
+<div className="input-box">
+  <div className="details-container">
+    <span className="details">Model Name</span>
+    <span className="required">*</span>
+  </div>
+
+  <CInputGroup>
+    <CInputGroupText className="input-icon">
+      <CIcon icon={cilBike} />
+    </CInputGroupText>
+
+    <div style={{ flex: 1 }}>
+      <Select
+        name="model_id"
+        isDisabled={!formData.branch || !formData.verticle_id}
+        placeholder={
+          !formData.verticle_id
+            ? "Select verticle first"
+            : "Search Model"
+        }
+        value={
+          filteredModels.find((m) => m._id === formData.model_id)
+            ? {
+                label: filteredModels.find(
+                  (m) => m._id === formData.model_id
+                ).model_name,
+                value: formData.model_id,
+              }
+            : null
+        }
+        onChange={(selected) =>
+          handleChange({
+            target: {
+              name: "model_id",
+              value: selected ? selected.value : "",
+            },
+          })
+        }
+        options={
+          filteredModels.length > 0
+            ? filteredModels.map((model) => ({
+                label: model.model_name,
+                value: model._id,
+              }))
+            : []
+        }
+        noOptionsMessage={() =>
+          formData.verticle_id
+            ? "No models available for this verticle"
+            : "Please select a verticle first"
+        }
+        classNamePrefix="react-select"
+        className={`react-select-container ${
+          errors.model_id ? "error-input" : formData.model_id ? "valid-input" : ""
+        }`}
+      />
+    </div>
+  </CInputGroup>
+
+  {errors.model_id && <p className="error">{errors.model_id}</p>}
+</div>
+
 
                   {formData.customer_type === 'B2B' && (
                     <div className="input-box">
