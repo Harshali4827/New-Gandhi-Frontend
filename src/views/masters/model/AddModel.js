@@ -32,44 +32,15 @@ function AddModel() {
     }
   }, [id]);
 
-  // const fetchUserProfile = async () => {
-  //   try {
-  //     const response = await axiosInstance.get('/auth/me');
-  //     const userVerticleIds = response.data.data?.verticles || [];
-
-  //     await fetchAllVerticles(userVerticleIds);
-  //   } catch (error) {
-  //     console.error('Error fetching user profile:', error);
-  //   }
-  // };
-
-  // const fetchAllVerticles = async (userVerticleIds) => {
-  //   try {
-  //     const response = await axiosInstance.get('/verticle-masters');
-  //     const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
-  //     setAllVerticles(verticlesData);
-      
-  //     const filteredVerticles = verticlesData.filter(verticle => 
-  //       userVerticleIds.includes(verticle._id)
-  //     );
-  //     setUserVerticles(filteredVerticles);
-  //   } catch (error) {
-  //     console.error('Error fetching verticles:', error);
-  //   }
-  // };
-
   const fetchUserProfile = async () => {
     try {
       const response = await axiosInstance.get('/auth/me');
       const userData = response.data.data;
-      
-      // Get user role (check if SUPERADMIN)
+
       const role = userData.roles?.[0]?.name || '';
       setUserRole(role);
       
       const userVerticleIds = userData.verticles || [];
-
-      // Fetch all verticles
       await fetchAllVerticles(userVerticleIds, role);
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -205,20 +176,6 @@ function AddModel() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilTag} />
                   </CInputGroupText>
-                  {/* <CFormSelect 
-                    name="verticle_id"
-                    value={formData.verticle_id} 
-                    onChange={handleChange}
-                  >
-                    <option value="">-Select Verticle-</option>
-                    {userVerticles
-                      .filter(vertical => vertical.status === 'active')
-                      .map((vertical) => (
-                        <option key={vertical._id} value={vertical._id}>
-                          {vertical.name}
-                        </option>
-                      ))}
-                  </CFormSelect> */}
                    <CFormSelect 
             name="verticle_id"
             value={formData.verticle_id}

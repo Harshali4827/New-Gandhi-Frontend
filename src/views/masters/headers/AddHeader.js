@@ -33,8 +33,6 @@ function AddHeader() {
   const fetchHeader = async (id) => {
     try {
       const res = await axiosInstance.get(`/headers/id/${id}`);
-      // setFormData(res.data.data.header);
-
       const header = res.data.data.header;
 
       setFormData({

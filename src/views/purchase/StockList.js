@@ -42,7 +42,7 @@ import {
   CFormTextarea
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSearch, cilSettings, cilPencil, cilTrash, cilCloudDownload, cilZoomOut, cilLockUnlocked } from '@coreui/icons';
+import { cilPlus, cilSearch, cilSettings, cilPencil, cilTrash, cilCloudDownload, cilZoomOut, cilLockUnlocked, cilShare } from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
 import config from '../../config';
 import { useAuth } from '../../context/AuthContext';
@@ -269,9 +269,11 @@ const StockList = () => {
     setUnblockModalOpen(false);
   };
 
-  // Helper function to check if vehicle status is blocked
   const isVehicleBlocked = (status) => {
     return status.toLowerCase() === 'blocked';
+  };
+  const isVehicleFriz = (status) => {
+    return status.toUpperCase() === 'FREEZZED';
   };
 
   if (loading) {
@@ -444,10 +446,14 @@ const StockList = () => {
                               </Link>
                             )}
                             
-                            {/* Unblock option - only show if vehicle status is blocked */}
                             {isVehicleBlocked(vehicle.status) && hasEditPermission && (
                               <MenuItem onClick={() => handleUnblockClick(vehicle.id)}>
                                 <CIcon icon={cilLockUnlocked} className="me-2" />Unblock
+                              </MenuItem>
+                            )}
+                             {isVehicleFriz(vehicle.status) && hasEditPermission && (
+                              <MenuItem >
+                                <CIcon icon={cilShare} className="me-2" />Allocate
                               </MenuItem>
                             )}
                             

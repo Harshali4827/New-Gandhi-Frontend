@@ -54,16 +54,12 @@ function AddAccessories() {
         const response = await axiosInstance.get('/headers');
         
         const allCategories = response.data.data.headers || [];
-        
-        // Filter categories where category_key is "Accesories" (note the spelling from your data)
         const accessoriesCategories = allCategories.filter(category => 
           category.category_key && 
           category.category_key.toLowerCase() === "accesories"
         );
         
         setCategories(accessoriesCategories);
-        
-        // Log for debugging (optional)
         console.log('Filtered accessories categories:', accessoriesCategories);
         
       } catch (error) {
@@ -75,20 +71,15 @@ function AddAccessories() {
     fetchCategories();
   }, []);
 
-  // Filter models based on selected category type
   useEffect(() => {
     if (formData.category && categories.length > 0) {
-      // Find the selected category to get its type
       const selectedCategory = categories.find(cat => cat._id === formData.category);
       
       if (selectedCategory && selectedCategory.type) {
-        // Filter models that match the selected category's type
         const matchingModels = models.filter(model => 
           model.type && model.type === selectedCategory.type
         );
         setFilteredModels(matchingModels);
-        
-        // Also filter the applicable_models to remove any that are not in matchingModels
         if (formData.applicable_models.length > 0) {
           const validModelIds = matchingModels.map(model => model._id || model.id);
           const filteredApplicableModels = formData.applicable_models.filter(modelId => 
@@ -103,24 +94,22 @@ function AddAccessories() {
           }
         }
       } else {
-        // If no type found, show all models
         setFilteredModels(models);
       }
     } else {
-      // If no category selected, show all models
       setFilteredModels(models);
     }
   }, [formData.category, categories, models, formData.applicable_models]);
 
   const fetchAccessory = async (id) => {
     try {
-      const res = await axiosInstance.get(`/accessories/${id}`);
+      const accessory = await fetchAccessoryByIdService(id);
       setFormData({
-        ...res.data.data.accessory,
-        applicable_models: res.data.data.accessory.applicable_models || []
+        ...accessory,
+        applicable_models: accessory.applicable_models || [],
       });
     } catch (error) {
-      console.error('Error fetching accessory:', error);
+      showFormSubmitError(error);
     }
   };
 
@@ -128,8 +117,6 @@ function AddAccessories() {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
-    
-    // If category is changed, reset applicable_models
     if (name === 'category') {
       setFormData(prevData => ({ ...prevData, applicable_models: [] }));
     }
@@ -162,31 +149,28 @@ function AddAccessories() {
       setErrors(formErrors);
       return;
     }
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      gst_rate: formData.gst_rate,
+      category: formData.category,
+      part_number: formData.part_number,
+      applicable_models: formData.applicable_models,
+      part_number_status: 'active',
+      status: 'active'
+    };
 
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        price: formData.price,
-        gst_rate: formData.gst_rate,
-        category: formData.category,
-        part_number: formData.part_number,
-        applicable_models: formData.applicable_models,
-        part_number_status: 'active',
-        status: 'active'
-      };
-
       if (id) {
-        await axiosInstance.put(`/accessories/${id}`, payload);
-        await showFormSubmitToast('Accessory updated successfully!');
-        navigate('/accessories/accessories-list');
+        await updateAccessoryService(id, payload);
+        showFormSubmitToast('Accessory updated successfully!');
       } else {
-        await axiosInstance.post('/accessories', payload);
-        await showFormSubmitToast('Accessory added successfully!');
-        navigate('/accessories/accessories-list');
+        await createAccessoryService(payload);
+        showFormSubmitToast('Accessory added successfully!');
       }
+      navigate('/accessories/accessories-list');
     } catch (error) {
-      console.error('Error details:', error);
       showFormSubmitError(error);
     }
   };
@@ -195,7 +179,6 @@ function AddAccessories() {
     navigate('/accessories/accessories-list');
   };
 
-  // Get selected category type for display
   const getSelectedCategoryType = () => {
     if (formData.category) {
       const selectedCategory = categories.find(cat => cat._id === formData.category);
