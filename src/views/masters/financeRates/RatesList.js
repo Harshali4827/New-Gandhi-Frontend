@@ -33,6 +33,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddRates from './AddRates';
+import { useAuth } from '../../../context/AuthContext';
 
 
 const RatesList = () => {
@@ -47,15 +48,16 @@ const RatesList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-  const hasEditPermission = hasPermission('FINANCE_PROVIDER', 'UPDATE');
-  const hasDeletePermission = hasPermission('FINANCE_PROVIDER', 'DELETE');
-  const hasCreatePermission = hasPermission('FINANCE_PROVIDER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'FINANCE_PROVIDER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'FINANCE_PROVIDER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'FINANCE_PROVIDER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;
   const userRole = localStorage.getItem('userRole');
-
+  
   useEffect(() => {
     fetchData();
   }, []);

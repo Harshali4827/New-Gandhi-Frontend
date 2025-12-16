@@ -28,6 +28,7 @@ import { hasPermission } from 'src/utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
 import { cilPlus} from '@coreui/icons';
 import { showError } from '../../../utils/sweetAlerts';
+import { useAuth } from '../../../context/AuthContext';
 
 function SubdealerReceipts() {
   const [activeTab, setActiveTab] = useState(0);
@@ -37,7 +38,7 @@ function SubdealerReceipts() {
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [completedSearchTerm, setCompletedSearchTerm] = useState('');
   const [error, setError] = useState(null);
-
+  const { permissions} = useAuth();
   const {
     data: pendingBookingsData,
     setData: setPendingBookingsData,
@@ -227,13 +228,13 @@ function SubdealerReceipts() {
                       <CTableHeaderCell scope="col">Total</CTableHeaderCell>
                       <CTableHeaderCell scope="col">Received</CTableHeaderCell>
                       <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
-                      {hasPermission('FINANCE_DISBURSEMENT', 'CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+                      {hasPermission(permissions,'FINANCE_DISBURSEMENT_CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
                     {filteredPendingBookings.length === 0 ? (
                       <CTableRow>
-                        <CTableDataCell colSpan={hasPermission('FINANCE_DISBURSEMENT', 'CREATE') ? "10" : "9"} style={{ color: 'red', textAlign: 'center' }}>
+                        <CTableDataCell colSpan={hasPermission(permissions,'FINANCE_DISBURSEMENT_CREATE') ? "10" : "9"} style={{ color: 'red', textAlign: 'center' }}>
                           {pendingSearchTerm ? 'No matching pending bookings found' : 'No pending bookings available'}
                         </CTableDataCell>
                       </CTableRow>
@@ -251,7 +252,7 @@ function SubdealerReceipts() {
                           <CTableDataCell>
                             <CBadge color="warning">₹{booking.balanceAmount || '0'}</CBadge>
                           </CTableDataCell>
-                          {hasPermission('FINANCE_DISBURSEMENT', 'CREATE') && (
+                          {hasPermission(permissions,'FINANCE_DISBURSEMENT_CREATE') && (
                             <CTableDataCell>
                               <CButton 
                                 size="sm" 

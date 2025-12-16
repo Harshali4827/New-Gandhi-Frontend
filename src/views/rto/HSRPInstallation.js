@@ -14,7 +14,6 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CButton,
   CFormInput,
   CSpinner,
@@ -26,7 +25,8 @@ import '../../css/table.css';
 import UpdateHSRPInstallation from './UpdateHSRPInstallation';
 import { hasPermission } from '../../utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilPencil } from '@coreui/icons';
+import { cilPencil } from '@coreui/icons';
+import { useAuth } from '../../context/AuthContext';
 
 function HSRPInstallation() {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,6 +35,7 @@ function HSRPInstallation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { permissions} = useAuth();
 
   const {
     data: pendingData,
@@ -114,13 +115,13 @@ function HSRPInstallation() {
               <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
               <CTableHeaderCell scope="col">Contact Number</CTableHeaderCell>
               <CTableHeaderCell scope="col">RTO HSRP Installation</CTableHeaderCell>
-              {hasPermission('RTO_PROCESS', 'UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+              {hasPermission(permissions,'RTO_PROCESS_UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
             </CTableRow>
           </CTableHead>
           <CTableBody>
             {filteredPendings.length === 0 ? (
               <CTableRow>
-                <CTableDataCell colSpan={hasPermission('RTO_PROCESS', 'UPDATE') ? "8" : "7"} style={{ color: 'red', textAlign: 'center' }}>
+                <CTableDataCell colSpan={hasPermission(permissions,'RTO_PROCESS_UPDATE') ? "8" : "7"} style={{ color: 'red', textAlign: 'center' }}>
                   No data available
                 </CTableDataCell>
               </CTableRow>
@@ -138,7 +139,7 @@ function HSRPInstallation() {
                       {item.hsrbInstallation === false ? 'PENDING' : 'INSTALLED'}
                     </CBadge>
                   </CTableDataCell>
-                  {hasPermission('RTO_PROCESS', 'UPDATE') && (
+                  {hasPermission(permissions,'RTO_PROCESS_UPDATE') && (
                     <CTableDataCell>
                       <CButton 
                         size="sm" 

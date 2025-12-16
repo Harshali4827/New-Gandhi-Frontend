@@ -34,6 +34,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash} from '@coreui/icons';
 import AddRto from './AddRto';
+import { useAuth } from '../../../context/AuthContext';
 
 
 const RtoList = () => {
@@ -47,10 +48,10 @@ const RtoList = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-
-  const hasEditPermission = hasPermission('RTO', 'UPDATE');
-  const hasDeletePermission = hasPermission('RTO', 'DELETE');
-  const hasCreatePermission = hasPermission('RTO', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'RTO_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'RTO_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'RTO_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

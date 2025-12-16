@@ -33,6 +33,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddExpense from './AddExpense';
+import { useAuth } from '../../context/AuthContext';
 
 const ExpenseList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -45,10 +46,10 @@ const ExpenseList = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-
-  const hasEditPermission = hasPermission('EXPENSE_ACCOUNT', 'UPDATE');
-  const hasDeletePermission = hasPermission('EXPENSE_ACCOUNT', 'DELETE');
-  const hasCreatePermission = hasPermission('EXPENSE_ACCOUNT', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'EXPENSE_ACCOUNT_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'EXPENSE_ACCOUNT_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'EXPENSE_ACCOUNT_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

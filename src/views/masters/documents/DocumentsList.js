@@ -33,6 +33,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const DocumentList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +44,10 @@ const DocumentList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(Array.isArray(filteredData) ? filteredData : []);
-
-  const hasEditPermission = hasPermission('DOCUMENTS', 'UPDATE');
-  const hasDeletePermission = hasPermission('DOCUMENTS', 'DELETE');
-  const hasCreatePermission = hasPermission('DOCUMENTS', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'DOCUMENTS_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'DOCUMENTS_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'DOCUMENTS_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

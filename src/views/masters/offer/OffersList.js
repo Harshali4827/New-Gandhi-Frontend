@@ -34,6 +34,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const OffersList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,10 +45,10 @@ const OffersList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(Array.isArray(filteredData) ? filteredData : []);
-
-  const hasEditPermission = hasPermission('OFFER', 'UPDATE');
-  const hasDeletePermission = hasPermission('OFFER', 'DELETE');
-  const hasCreatePermission = hasPermission('OFFER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'OFFER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'OFFER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'OFFER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

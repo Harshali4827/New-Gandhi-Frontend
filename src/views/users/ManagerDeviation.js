@@ -36,6 +36,7 @@ import {
   axiosInstance
 } from 'src/utils/tableImports.js';
 import { hasPermission } from 'src/utils/permissionUtils.js';
+import { useAuth } from '../../context/AuthContext';
 
 const ManagerDeviation = () => {
   const [data, setData] = useState([]);
@@ -45,9 +46,9 @@ const ManagerDeviation = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState({});
   const dropdownRefs = useRef({});
-
-  const hasEditPermission = hasPermission('MANAGER_DEVIATION', 'UPDATE');
-  const hasDeletePermission = hasPermission('MANAGER_DEVIATION', 'DELETE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'MANAGER_DEVIATION_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'MANAGER_DEVIATION_DELETE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

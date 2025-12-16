@@ -24,9 +24,9 @@ import {
   CAlert
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilUser, cilSearch, cilPrint } from '@coreui/icons';
+import { cilUser, cilSearch} from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
-import { showError, showFormSubmitError, showSuccess } from '../../utils/sweetAlerts';
+import { showError,showSuccess } from '../../utils/sweetAlerts';
 import axiosInstance from '../../axiosInstance';
 import TransferChallan from './StockChallan';
 

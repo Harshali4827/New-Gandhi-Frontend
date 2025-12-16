@@ -38,6 +38,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings,cilSearch, cilZoomOut } from '@coreui/icons';
 import { hasPermission } from '../../utils/permissionUtils';
+import { useAuth } from '../../context/AuthContext';
 
 const ExchangeLedger = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -57,9 +58,9 @@ const ExchangeLedger = () => {
 
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
-  const hasAddPermission = hasPermission('BROKER_LEDGER', 'CREATE');
-  const hasViewPermission = hasPermission('BROKER_LEDGER', 'READ');
+  const { permissions} = useAuth();
+  const hasAddPermission = hasPermission(permissions,'BROKER_LEDGER_CREATE');
+  const hasViewPermission = hasPermission(permissions,'BROKER_LEDGER_READ');
   const showActionColumn = hasAddPermission || hasViewPermission;
 
   useEffect(() => {
@@ -636,13 +637,13 @@ const ExchangeLedger = () => {
                               open={menuId === brokerData.broker._id}
                               onClose={handleClose}
                             >
-                              {hasPermission('BROKER_LEDGER', 'CREATE') && (
+                              {hasPermission(permissions,'BROKER_LEDGER_CREATE') && (
                                 <MenuItem onClick={() => handleAddClick(brokerData, isFiltered ? brokerData.branches[0]?.branchId : null)}>
                                   <CIcon icon={cilPlus} className="me-2" />
                                   Add Payment
                                 </MenuItem>
                               )}
-                              {hasPermission('BROKER_LEDGER', 'CREATE') && (
+                              {hasPermission(permissions,'BROKER_LEDGER_CREATE') && (
                                 <MenuItem
                                   onClick={() => handleViewLedger(brokerData, isFiltered ? brokerData.branches[0]?.branchId : null)}
                                 >

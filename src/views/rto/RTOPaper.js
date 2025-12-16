@@ -27,6 +27,7 @@ import '../../css/invoice.css';
 import '../../css/table.css';
 import KYCDocuments from './KYCDocuments';
 import { hasPermission } from '../../utils/permissionUtils';
+import { useAuth } from '../../context/AuthContext';
 
 function RTOPaper() {
   const [activeTab, setActiveTab] = useState(0);
@@ -36,6 +37,7 @@ function RTOPaper() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { permissions} = useAuth();
 
   const {
     data: pendingData,
@@ -141,13 +143,13 @@ function RTOPaper() {
               <CTableHeaderCell scope="col">Contact Number1</CTableHeaderCell>
               <CTableHeaderCell scope="col">RTO Paper</CTableHeaderCell>
               <CTableHeaderCell scope="col">Upload KYC</CTableHeaderCell>
-              {hasPermission('RTO_PROCESS', 'UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+              {hasPermission(permissions,'RTO_PROCESS_UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
             </CTableRow>
           </CTableHead>
           <CTableBody>
             {filteredPendings.length === 0 ? (
               <CTableRow>
-                <CTableDataCell colSpan={hasPermission('RTO_PROCESS', 'UPDATE') ? "9" : "8"} style={{ color: 'red', textAlign: 'center' }}>
+                <CTableDataCell colSpan={hasPermission(permissions,'RTO_PROCESS_UPDATE') ? "9" : "8"} style={{ color: 'red', textAlign: 'center' }}>
                   No data available
                 </CTableDataCell>
               </CTableRow>
@@ -186,7 +188,7 @@ function RTOPaper() {
                       </span>
                     )}
                   </CTableDataCell>
-                  {hasPermission('RTO_PROCESS', 'UPDATE') && (
+                  {hasPermission(permissions,'RTO_PROCESS_UPDATE') && (
                     <CTableDataCell>
                       <CButton 
                         size="sm" 

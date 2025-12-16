@@ -29,7 +29,7 @@ import {
   CSpinner,
   CAlert
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
+import { useAuth } from '../../context/AuthContext';
 
 const AllCustomers = () => {
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,7 @@ const AllCustomers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
+  const { permissions} = useAuth();
   useEffect(() => {
     fetchData();
   }, []);
@@ -447,13 +447,13 @@ const AllCustomers = () => {
                   <CTableHeaderCell>Date</CTableHeaderCell>
                   <CTableHeaderCell>Aadhar Number</CTableHeaderCell>
                   <CTableHeaderCell>PAN Number</CTableHeaderCell>
-                  {hasPermission('LEDGER', 'READ') && <CTableHeaderCell>Action</CTableHeaderCell>}
+                  {hasPermission(permissions,'LEDGER_READ') && <CTableHeaderCell>Action</CTableHeaderCell>}
                 </CTableRow>
               </CTableHead>
               <CTableBody>
                 {currentRecords.length === 0 ? (
                   <CTableRow>
-                    <CTableDataCell colSpan={hasPermission('LEDGER', 'READ') ? "10" : "9"} className="text-center">
+                    <CTableDataCell colSpan={hasPermission(permissions,'LEDGER_READ') ? "10" : "9"} className="text-center">
                       No ledger details available
                     </CTableDataCell>
                   </CTableRow>
@@ -471,7 +471,7 @@ const AllCustomers = () => {
                       </CTableDataCell>
                       <CTableDataCell>{customer.aadhaar || ''}</CTableDataCell>
                       <CTableDataCell>{customer.pan || ''}</CTableDataCell>
-                      {hasPermission('LEDGER', 'READ') && (
+                      {hasPermission(permissions,'LEDGER_READ') && (
                         <CTableDataCell>
                           <CButton
                             size="sm"

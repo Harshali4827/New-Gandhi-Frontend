@@ -34,6 +34,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const AccessoriesList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +44,10 @@ const AccessoriesList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
-  const hasEditPermission = hasPermission('ACCESSORIES', 'UPDATE');
-  const hasDeletePermission = hasPermission('ACCESSORIES', 'DELETE');
-  const hasCreatePermission = hasPermission('ACCESSORIES', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'ACCESSORIES_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'ACCESSORIES_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'ACCESSORIES_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

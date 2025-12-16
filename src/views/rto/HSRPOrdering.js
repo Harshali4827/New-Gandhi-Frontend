@@ -14,7 +14,6 @@ import {
   CTableDataCell,
   CCard,
   CCardBody,
-  CCardHeader,
   CButton,
   CFormInput,
   CSpinner,
@@ -26,14 +25,15 @@ import '../../css/table.css';
 import { confirmVerify, showError, showSuccess } from '../../utils/sweetAlerts';
 import { hasPermission } from '../../utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
-import { cilSearch, cilZoomOut, cilCheckCircle } from '@coreui/icons';
+import {cilCheckCircle } from '@coreui/icons';
+import { useAuth } from '../../context/AuthContext';
 
 function HSRPOrdering() {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { permissions} = useAuth();
   const {
     data: pendingData,
     setData: setPendingData,
@@ -118,13 +118,13 @@ function HSRPOrdering() {
               <CTableHeaderCell scope="col">Chassis Number</CTableHeaderCell>
               <CTableHeaderCell scope="col">Customer Name</CTableHeaderCell>
               <CTableHeaderCell scope="col">Contact Number</CTableHeaderCell>
-              {hasPermission('RTO_PROCESS', 'UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+              {hasPermission(permissions,'RTO_PROCESS_UPDATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
             </CTableRow>
           </CTableHead>
           <CTableBody>
             {filteredPendings.length === 0 ? (
               <CTableRow>
-                <CTableDataCell colSpan={hasPermission('RTO_PROCESS', 'UPDATE') ? "9" : "8"} style={{ color: 'red', textAlign: 'center' }}>
+                <CTableDataCell colSpan={hasPermission(permissions,'RTO_PROCESS_UPDATE') ? "9" : "8"} style={{ color: 'red', textAlign: 'center' }}>
                   No data available
                 </CTableDataCell>
               </CTableRow>
@@ -139,7 +139,7 @@ function HSRPOrdering() {
                   <CTableDataCell>{item.bookingId?.chassisNumber || 'N/A'}</CTableDataCell>
                   <CTableDataCell>{item.bookingId?.customerName || 'N/A'}</CTableDataCell>
                   <CTableDataCell>{item.bookingId?.customerMobile || 'N/A'}</CTableDataCell>
-                  {hasPermission('RTO_PROCESS', 'UPDATE') && (
+                  {hasPermission(permissions,'RTO_PROCESS_UPDATE') && (
                     <CTableDataCell>
                       <CButton 
                         size="sm" 

@@ -135,31 +135,38 @@ function BookingForm() {
   }, []);
 
   const fetchUserProfile = async () => {
-    try {
-      const response = await axiosInstance.get('/auth/me');
-      const verticleIds = response.data.data?.verticles || [];
-      setUserVerticleIds(verticleIds);
-      await fetchAllVerticles(verticleIds);
-    } catch (error) {
-      const message = showError(error); 
-     if (message) setError(message);
-    }
-  };
-
-  const fetchAllVerticles = async (userVerticleIds) => {
-    try {
-      const response = await axiosInstance.get('/verticle-masters');
-      const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
-      setAllVerticles(verticlesData);
-      const filteredVerticles = verticlesData.filter(verticle => 
-        userVerticleIds.includes(verticle._id)
-      );
-      setUserVerticles(filteredVerticles);
-    } catch (error) {
-      const message = showError(error); 
-      if (message) setError(message);
-    }
-  };
+  try {
+    const response = await axiosInstance.get('/auth/me');
+    const verticlesData = response.data.data?.verticles || [];
+    
+    // Extract verticle IDs from the objects
+    const verticleIds = verticlesData.map(verticle => verticle._id);
+    setUserVerticleIds(verticleIds);
+    
+    // Pass the full verticles data to fetchAllVerticles
+    await fetchAllVerticles(verticlesData);
+  } catch (error) {
+    const message = showError(error); 
+    if (message) setError(message);
+  }
+};
+  const fetchAllVerticles = async (userVerticlesData) => {
+  try {
+    const response = await axiosInstance.get('/verticle-masters');
+    const verticlesData = response.data.data?.verticleMasters || response.data.data || [];
+    setAllVerticles(verticlesData);
+    
+    // Since we already have the user's verticles data, we can use it directly
+    // Filter to only include active verticles
+    const filteredVerticles = userVerticlesData.filter(verticle => 
+      verticle.status === 'active'
+    );
+    setUserVerticles(filteredVerticles);
+  } catch (error) {
+    const message = showError(error); 
+    if (message) setError(message);
+  }
+};
 
   const handleCustomerSearch = async () => {
     if (!searchQuery.trim()) {

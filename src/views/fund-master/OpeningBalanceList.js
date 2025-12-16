@@ -52,14 +52,11 @@ const OpeningBalanceList = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-  
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const branchId = storedUser.branch?._id;
-  const userRole = localStorage.getItem('userRole');
-
-  const hasEditPermission = hasPermission('VEHICLE_INWARD', 'UPDATE');
-  const hasDeletePermission = hasPermission('VEHICLE_INWARD', 'DELETE');
-  const hasCreatePermission = hasPermission('VEHICLE_INWARD', 'CREATE');
+  const { permissions} = useAuth();
+ 
+  const hasEditPermission = hasPermission(permissions,'VEHICLE_INWARD_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'VEHICLE_INWARD_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'VEHICLE_INWARD_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

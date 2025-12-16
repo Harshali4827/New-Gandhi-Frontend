@@ -34,6 +34,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const AttachmentsList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,10 +45,10 @@ const AttachmentsList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(Array.isArray(filteredData) ? filteredData : []);
-
-  const hasEditPermission = hasPermission('ATTACHMENTS', 'UPDATE');
-  const hasDeletePermission = hasPermission('ATTACHMENTS', 'DELETE');
-  const hasCreatePermission = hasPermission('ATTACHMENTS', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'ATTACHMENTS_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'ATTACHMENTS_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'ATTACHMENTS_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

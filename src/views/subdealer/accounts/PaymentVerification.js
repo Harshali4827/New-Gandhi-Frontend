@@ -24,7 +24,6 @@ import {
 } from '@coreui/react';
 import { axiosInstance, getDefaultSearchFields, showError, showSuccess} from 'src/utils/tableImports';
 import { confirmVerify } from 'src/utils/sweetAlerts';
-import { hasPermission } from 'src/utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
 import { cilCheckCircle} from '@coreui/icons';
 

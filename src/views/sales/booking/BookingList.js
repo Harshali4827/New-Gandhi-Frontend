@@ -69,6 +69,7 @@ import PrintModal from './PrintFinance';
 import PendingUpdateDetailsModal from './ViewPendingUpdates';
 import { hasPermission } from '../../../utils/permissionUtils';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const BookingList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -194,13 +195,14 @@ const BookingList = () => {
   const [printModalVisible, setPrintModalVisible] = useState(false);
   const [selectedBookingForPrint, setSelectedBookingForPrint] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
+  const { permissions} = useAuth();
   const userRole = localStorage.getItem('userRole');
-  const hasEditPermission = hasPermission('BOOKING', 'UPDATE');
-  const hasViewPermission = hasPermission('BOOKING', 'READ');
-  const hasDeletePermission = hasPermission('BOOKING', 'DELETE');
-  const hasChassisAllocation = hasPermission('BOOKING', 'CHASSIS_ALLOCATION');
-  const hasActionPermission = hasPermission('BOOKING', 'BOOKING_ACTIONS');
-  const hasFinancePermission = hasPermission('FINANCE_LETTER', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
+  const hasEditPermission = hasPermission(permissions,'BOOKING_UPDATE');
+  const hasViewPermission = hasPermission(permissions,'BOOKING_READ');
+  const hasDeletePermission = hasPermission(permissions,'BOOKING_DELETE');
+  const hasChassisAllocation = hasPermission(permissions,'BOOKING_CHASSIS_ALLOCATION');
+  const hasActionPermission = hasPermission(permissions,'BOOKING_BOOKING_ACTIONS');
+  const hasFinancePermission = hasPermission(permissions,'FINANCE_LETTER', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
   const hasKYCPermission = hasPermission('KYC', 'READ', 'CREATE', 'VERIFY', 'DOWNLOAD');
   const hasChassisApprovalPermission = hasPermission('BOOKING', 'CHASSIS_APPROVAL');
 

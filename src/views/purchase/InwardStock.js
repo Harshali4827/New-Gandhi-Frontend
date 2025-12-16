@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../css/form.css';
 import { CInputGroup, CFormInput, CFormSelect, CAlert } from '@coreui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { showError, showFormSubmitError, showFormSubmitToast } from '../../utils/sweetAlerts';
+import { showError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import FormButtons from '../../utils/FormButtons';
 import axiosInstance from '../../axiosInstance';
 

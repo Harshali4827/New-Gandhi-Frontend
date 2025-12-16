@@ -7,7 +7,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import { cilAccountLogout, cilBuilding } from '@coreui/icons'
+import { cilAccountLogout} from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
 import './appHeader.css';

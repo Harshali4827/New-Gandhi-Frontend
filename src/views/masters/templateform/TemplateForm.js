@@ -45,10 +45,12 @@ import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import axiosInstance from '../../../axiosInstance';
 import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
-import '../../../css/TemplateForm.css';
 
 // Import TinyMCE
 import { Editor } from '@tinymce/tinymce-react';
+
+// Import CSS Module
+import styles from './TemplateForm.module.css';
 
 // Fixed template variables
 const FIXED_TEMPLATE_VARIABLES = [
@@ -104,8 +106,7 @@ const TemplateForm = () => {
   });
 
   // TinyMCE API Key
-  // const TINYMCE_API_KEY = 'vuj23uxel40osrwcszrejqoyg35ykdf7kyrr81hm6t952kgy';
-   const TINYMCE_API_KEY = 'nteatj08qpc0uc5h1bt2kzidhousrmqp32cheq7x73spev3l';
+  const TINYMCE_API_KEY = 'nteatj08qpc0uc5h1bt2kzidhousrmqp32cheq7x73spev3l';
 
   const isInitialLoad = useRef(false);
   const animatedComponents = makeAnimated();
@@ -363,15 +364,15 @@ const TemplateForm = () => {
   }
 
   return (
-    <div className="form-container">
-      <div className="title">{isEditMode ? 'Edit Template' : 'Create New Template'}</div>
+    <div className={styles.formContainer}>
+      <div className={styles.title}>{isEditMode ? 'Edit Template' : 'Create New Template'}</div>
       
-      <div className="form-note mb-3">
-        <span className="required">*</span> Field is mandatory
+      <div className={styles.formNote}>
+        <span className={styles.required}>*</span> Field is mandatory
       </div>
 
-      <div className="form-card">
-        <div className="form-body">
+      <div className={styles.formCard}>
+        <div className={styles.formBody}>
           <form onSubmit={handleSubmit} id="templateForm">
             
             {/* Basic Information */}
@@ -382,13 +383,13 @@ const TemplateForm = () => {
               <CCardBody>
                 <CRow>
                   <CCol md={6}>
-                    <div className="input-box mb-3">
-                      <div className="details-container">
-                        <span className="details">Template Name</span>
-                        <span className="required">*</span>
+                    <div className={styles.inputBox}>
+                      <div className={styles.detailsContainer}>
+                        <span className={styles.details}>Template Name</span>
+                        <span className={styles.required}>*</span>
                       </div>
                       <CInputGroup>
-                        <CInputGroupText className="input-icon">
+                        <CInputGroupText className={styles.inputIcon}>
                           <CIcon icon={cilFont} />
                         </CInputGroupText>
                         <CFormInput
@@ -400,14 +401,14 @@ const TemplateForm = () => {
                           className={errors.template_name ? 'is-invalid' : ''}
                         />
                       </CInputGroup>
-                      {errors.template_name && <p className="error">{errors.template_name}</p>}
+                      {errors.template_name && <p className={styles.error}>{errors.template_name}</p>}
                     </div>
                   </CCol>
 
                   <CCol md={6}>
-                    <div className="input-box">
-                      <div className="details-container">
-                        <span className="details">Status Settings</span>
+                    <div className={styles.inputBox}>
+                      <div className={styles.detailsContainer}>
+                        <span className={styles.details}>Status Settings</span>
                       </div>
                       <div className="d-flex gap-4 mt-2">
                         <CFormCheck
@@ -447,7 +448,7 @@ const TemplateForm = () => {
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <div className="w-50">
                     <CInputGroup>
-                      <CInputGroupText className="input-icon">
+                      <CInputGroupText className={styles.inputIcon}>
                         <CIcon icon={cilFont} />
                       </CInputGroupText>
                       <CFormInput
@@ -480,7 +481,7 @@ const TemplateForm = () => {
                 <div className="row mb-3">
                   {filteredHeaders.map((header) => (
                     <div key={header._id} className="col-md-4 mb-3">
-                      <div className={`header-item p-3 border rounded ${selectedHeaders.includes(header._id) ? 'selected' : ''}`}>
+                      <div className={`${styles.headerItem} ${selectedHeaders.includes(header._id) ? styles.selected : ''}`}>
                         <div className="d-flex align-items-center justify-content-between mb-2">
                           <div className="d-flex align-items-center">
                             <CFormCheck
@@ -544,7 +545,7 @@ const TemplateForm = () => {
                   <div className="row mb-3">
                     {FIXED_TEMPLATE_VARIABLES.map((variable) => (
                       <div key={variable.name} className="col-md-4 mb-3">
-                        <div className="variable-item p-3 border rounded">
+                        <div className={styles.variableItem}>
                           <div className="d-flex align-items-center justify-content-between mb-2">
                             <div>
                               <strong className="d-block">{variable.display_name}</strong>
@@ -598,13 +599,13 @@ const TemplateForm = () => {
                     <CCardBody>
                       <CRow>
                         <CCol md={3}>
-                          <div className="input-box mb-3">
-                            <div className="details-container">
-                              <span className="details">Variable Name</span>
-                              <span className="required">*</span>
+                          <div className={styles.inputBox}>
+                            <div className={styles.detailsContainer}>
+                              <span className={styles.details}>Variable Name</span>
+                              <span className={styles.required}>*</span>
                             </div>
                             <CInputGroup>
-                              <CInputGroupText className="input-icon">
+                              <CInputGroupText className={styles.inputIcon}>
                                 <CIcon icon={cilTag} />
                               </CInputGroupText>
                               <CFormInput
@@ -621,13 +622,13 @@ const TemplateForm = () => {
                         </CCol>
 
                         <CCol md={3}>
-                          <div className="input-box mb-3">
-                            <div className="details-container">
-                              <span className="details">Display Name</span>
-                              <span className="required">*</span>
+                          <div className={styles.inputBox}>
+                            <div className={styles.detailsContainer}>
+                              <span className={styles.details}>Display Name</span>
+                              <span className={styles.required}>*</span>
                             </div>
                             <CInputGroup>
-                              <CInputGroupText className="input-icon">
+                              <CInputGroupText className={styles.inputIcon}>
                                 <CIcon icon={cilFont} />
                               </CInputGroupText>
                               <CFormInput
@@ -642,12 +643,12 @@ const TemplateForm = () => {
                         </CCol>
 
                         <CCol md={3}>
-                          <div className="input-box mb-3">
-                            <div className="details-container">
-                              <span className="details">Source</span>
+                          <div className={styles.inputBox}>
+                            <div className={styles.detailsContainer}>
+                              <span className={styles.details}>Source</span>
                             </div>
                             <CInputGroup>
-                              <CInputGroupText className="input-icon">
+                              <CInputGroupText className={styles.inputIcon}>
                                 <CIcon icon={cilList} />
                               </CInputGroupText>
                               <CFormSelect
@@ -664,9 +665,9 @@ const TemplateForm = () => {
                         </CCol>
 
                         <CCol md={2}>
-                          <div className="input-box mb-3">
-                            <div className="details-container">
-                              <span className="details">Required</span>
+                          <div className={styles.inputBox}>
+                            <div className={styles.detailsContainer}>
+                              <span className={styles.details}>Required</span>
                             </div>
                             <div className="mt-2">
                               <CFormCheck
@@ -696,57 +697,55 @@ const TemplateForm = () => {
 
                   {/* Custom variables list */}
                   {customVariables.length > 0 && (
-                    <>
-                      <div className="row mb-3">
-                        {customVariables.map((variable, index) => (
-                          <div key={index} className="col-md-4 mb-3">
-                            <div className="variable-item p-3 border rounded">
-                              <div className="d-flex align-items-center justify-content-between mb-2">
-                                <div>
-                                  <strong className="d-block">{variable.display_name}</strong>
-                                  <small className="text-muted">
-                                    <code>{`{{${variable.name}}}`}</code>
-                                  </small>
-                                </div>
-                                <CBadge color={variable.is_required ? 'danger' : 'secondary'}>
-                                  {variable.is_required ? 'Required' : 'Optional'}
-                                </CBadge>
+                    <div className="row mb-3">
+                      {customVariables.map((variable, index) => (
+                        <div key={index} className="col-md-4 mb-3">
+                          <div className={styles.variableItem}>
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                              <div>
+                                <strong className="d-block">{variable.display_name}</strong>
+                                <small className="text-muted">
+                                  <code>{`{{${variable.name}}}`}</code>
+                                </small>
                               </div>
-                              <CFormText className="d-block mb-2">
-                                <small>Source: <CBadge color="info">{variable.source}</CBadge></small>
-                              </CFormText>
-                              <div className="d-flex gap-1">
-                                <CButton
-                                  size="sm"
-                                  color="outline-primary"
-                                  onClick={() => insertVariable(variable.name, 'subject')}
-                                  className="flex-fill d-flex align-items-center justify-content-center gap-1"
-                                >
-                                  <CIcon icon={cilItalic} /> Subject
-                                </CButton>
-                                <CButton
-                                  size="sm"
-                                  color="primary"
-                                  onClick={() => insertVariable(variable.name, 'content')}
-                                  className="flex-fill d-flex align-items-center justify-content-center gap-1"
-                                >
-                                  <CIcon icon={cilBold} /> Content
-                                </CButton>
-                                <CButton
-                                  size="sm"
-                                  color="danger"
-                                  onClick={() => handleRemoveCustomVariable(index)}
-                                  className="px-3"
-                                  title="Remove"
-                                >
-                                  <CIcon icon={cilTrash} />
-                                </CButton>
-                              </div>
+                              <CBadge color={variable.is_required ? 'danger' : 'secondary'}>
+                                {variable.is_required ? 'Required' : 'Optional'}
+                              </CBadge>
+                            </div>
+                            <CFormText className="d-block mb-2">
+                              <small>Source: <CBadge color="info">{variable.source}</CBadge></small>
+                            </CFormText>
+                            <div className="d-flex gap-1">
+                              <CButton
+                                size="sm"
+                                color="outline-primary"
+                                onClick={() => insertVariable(variable.name, 'subject')}
+                                className="flex-fill d-flex align-items-center justify-content-center gap-1"
+                              >
+                                <CIcon icon={cilItalic} /> Subject
+                              </CButton>
+                              <CButton
+                                size="sm"
+                                color="primary"
+                                onClick={() => insertVariable(variable.name, 'content')}
+                                className="flex-fill d-flex align-items-center justify-content-center gap-1"
+                              >
+                                <CIcon icon={cilBold} /> Content
+                              </CButton>
+                              <CButton
+                                size="sm"
+                                color="danger"
+                                onClick={() => handleRemoveCustomVariable(index)}
+                                className="px-3"
+                                title="Remove"
+                              >
+                                <CIcon icon={cilTrash} />
+                              </CButton>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </CCardBody>
@@ -758,12 +757,12 @@ const TemplateForm = () => {
                 <h5 className="mb-0">Email Subject</h5>
               </CCardHeader>
               <CCardBody>
-                <div className="input-box mb-3">
-                  <div className="details-container">
-                    <span className="details">Subject Line</span>
-                    <span className="required">*</span>
+                <div className={styles.inputBox}>
+                  <div className={styles.detailsContainer}>
+                    <span className={styles.details}>Subject Line</span>
+                    <span className={styles.required}>*</span>
                   </div>
-                  <div className="tiny-editor-wrapper">
+                  <div className={`${styles.tinyEditorWrapper} ${styles.customTinyMCE}`}>
                     <Editor
                       apiKey={TINYMCE_API_KEY}
                       value={formData.subject}
@@ -790,7 +789,7 @@ const TemplateForm = () => {
                       }}
                     />
                   </div>
-                  {errors.subject && <p className="error">{errors.subject}</p>}
+                  {errors.subject && <p className={styles.error}>{errors.subject}</p>}
                   <small className="text-muted">Use &#123;&#123;variable_name&#125;&#125; format for variables</small>
                 </div>
               </CCardBody>
@@ -802,12 +801,12 @@ const TemplateForm = () => {
                 <h5 className="mb-0">Template Content</h5>
               </CCardHeader>
               <CCardBody>
-                <div className="input-box mb-3">
-                  <div className="details-container">
-                    <span className="details">Content</span>
-                    <span className="required">*</span>
+                <div className={styles.inputBox}>
+                  <div className={styles.detailsContainer}>
+                    <span className={styles.details}>Content</span>
+                    <span className={styles.required}>*</span>
                   </div>
-                  <div className="tiny-editor-wrapper">
+                  <div className={`${styles.tinyEditorWrapper} ${styles.customTinyMCE}`}>
                     <Editor
                       apiKey={TINYMCE_API_KEY}
                       value={formData.content}
@@ -861,24 +860,24 @@ const TemplateForm = () => {
                       }}
                     />
                   </div>
-                  {errors.content && <p className="error">{errors.content}</p>}
+                  {errors.content && <p className={styles.error}>{errors.content}</p>}
                   <small className="text-muted">Use &#123;&#123;variable_name&#125;&#125; format for variables</small>
                 </div>
               </CCardBody>
             </CCard>
 
             {/* Form Actions */}
-            <div className="form-footer d-flex gap-3">
+            <div className={styles.formFooter}>
               <button 
                 type="button" 
-                className="cancel-button" 
+                className={styles.cancelButton} 
                 onClick={() => navigate('/templateform/template-list')}
               >
                 <CIcon icon={cilArrowLeft} /> Cancel
               </button>
               <button 
                 type="submit" 
-                className="submit-button" 
+                className={styles.submitButton} 
                 disabled={loading}
               >
                 {loading ? (

@@ -32,6 +32,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilXCircle, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddBank from './AddBank';
+import { useAuth } from '../../context/AuthContext';
 
 const BankList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -43,14 +44,11 @@ const BankList = () => {
   const [editingBank, setEditingBank] = useState(null);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const branchId = storedUser.branch?._id;
-  const userRole = localStorage.getItem('userRole');
-
-  const hasEditPermission = hasPermission('BANK', 'UPDATE');
-  const hasDeletePermission = hasPermission('BANK', 'DELETE');
-  const hasCreatePermission = hasPermission('BANK', 'CREATE');
+  
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'BANK_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'BANK_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'BANK_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

@@ -38,6 +38,7 @@ import {
   IconButton
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useAuth } from '../../context/AuthContext';
 
 const StockAuditList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -48,8 +49,8 @@ const StockAuditList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [verifyingId, setVerifyingId] = useState(null);
-
-  const hasVerifyPermission = hasPermission('STOCK_AUDIT', 'UPDATE');
+  const { permissions} = useAuth();
+  const hasVerifyPermission = hasPermission(permissions,'STOCK_AUDIT_UPDATE');
 
   useEffect(() => {
     fetchData();

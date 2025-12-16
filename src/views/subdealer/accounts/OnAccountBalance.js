@@ -29,10 +29,12 @@ import {
   CTableDataCell
 } from '@coreui/react';
 import { useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 
 const OnAccountBalance = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const [error, setError] = useState(null);
+  const { permissions} = useAuth();
   useEffect(() => {
     fetchData();
   }, []);
@@ -359,7 +361,7 @@ const OnAccountBalance = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
   <div>
-    {hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') && (
+    {hasPermission(permissions,'SUBDEALER_ON_ACCOUNT_CREATE') && (
       <Link to="/subdealer-account/add-amount">
         <CButton size="sm" className="action-btn me-1">
           <CIcon icon={cilPlus} className='icon'/> New Balance
@@ -394,13 +396,13 @@ const OnAccountBalance = () => {
                   <CTableHeaderCell>Total Received</CTableHeaderCell>
                   <CTableHeaderCell>Total Balance</CTableHeaderCell>
                   <CTableHeaderCell>OnAccount Balance</CTableHeaderCell>
-                  {hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') && <CTableHeaderCell>Action</CTableHeaderCell>}
+                  {hasPermission(permissions,'SUBDEALER_ON_ACCOUNT_CREATE') && <CTableHeaderCell>Action</CTableHeaderCell>}
                 </CTableRow>
               </CTableHead>
               <CTableBody>
                 {filteredData.length === 0 ? (
                   <CTableRow>
-                    <CTableDataCell colSpan={hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') ? "8" : "7"} className="text-center">
+                    <CTableDataCell colSpan={hasPermission(permissions,'SUBDEALER_ON_ACCOUNT_CREATE') ? "8" : "7"} className="text-center">
                       No subdealers available
                     </CTableDataCell>
                   </CTableRow>
@@ -414,7 +416,7 @@ const OnAccountBalance = () => {
                       <CTableDataCell>{subdealer.financials.bookingSummary.totalReceivedAmount}</CTableDataCell>
                       <CTableDataCell>{subdealer.financials.bookingSummary.totalBalanceAmount}</CTableDataCell>
                       <CTableDataCell>{subdealer.financials.onAccountSummary.totalBalance}</CTableDataCell>
-                      {hasPermission('SUBDEALER_ON_ACCOUNT', 'CREATE') && (
+                      {hasPermission(permissions,'SUBDEALER_ON_ACCOUNT_CREATE') && (
                         <CTableDataCell>
                           <CButton 
                             size="sm" 

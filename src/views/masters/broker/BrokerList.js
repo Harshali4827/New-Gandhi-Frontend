@@ -35,6 +35,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash, cilCheckCircle, cilXCircle } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const BrokerList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -45,9 +46,10 @@ const BrokerList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-  const hasEditPermission = hasPermission('BROKER', 'UPDATE');
-  const hasDeletePermission = hasPermission('BROKER', 'DELETE');
-  const hasCreatePermission = hasPermission('BROKER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'BROKER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'BROKER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'BROKER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');

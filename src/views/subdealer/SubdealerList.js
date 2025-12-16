@@ -41,6 +41,7 @@ import {
   axiosInstance
 } from 'src/utils/tableImports.js';
 import { hasPermission } from 'src/utils/permissionUtils.js';
+import { useAuth } from '../../context/AuthContext';
 
 const SubdealerList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -50,10 +51,10 @@ const SubdealerList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const hasEditPermission = hasPermission('SUBDEALER', 'UPDATE');
-  const hasDeletePermission = hasPermission('SUBDEALER', 'DELETE');
-  const hasCreatePermission = hasPermission('SUBDEALER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'SUBDEALER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'SUBDEALER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'SUBDEALER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

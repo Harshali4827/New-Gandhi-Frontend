@@ -16,8 +16,6 @@ function HelmetInvoice() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [typingTimeout, setTypingTimeout] = useState(null);
-
-  // Static values for helmet invoice
   const helmetStaticData = {
     particulars: 'TVS HELMET',
     hsnCode: '000000',

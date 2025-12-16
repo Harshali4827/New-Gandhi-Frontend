@@ -42,6 +42,7 @@ import {
   axiosInstance
 } from 'src/utils/tableImports.js';
 import { hasPermission } from 'src/utils/permissionUtils.js';
+import { useAuth } from '../../context/AuthContext';
 
 const AllRoles = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -53,10 +54,10 @@ const AllRoles = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  
-  const hasEditPermission = hasPermission('ROLE', 'UPDATE');
-  const hasDeletePermission = hasPermission('ROLE', 'DELETE');
-  const hasCreatePermission = hasPermission('ROLE', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'ROLE_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'ROLE_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'ROLE_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

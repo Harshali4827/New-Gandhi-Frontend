@@ -35,6 +35,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilXCircle, cilSettings, cilPencil, cilDelete, cilTrash } from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const BranchList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,10 +45,10 @@ const BranchList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
-  const hasEditPermission = hasPermission('BRANCH', 'UPDATE');
-  const hasDeletePermission = hasPermission('BRANCH', 'DELETE');
-  const hasCreatePermission = hasPermission('BRANCH', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'BRANCH_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'BRANCH_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'BRANCH_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
   const navigate = useNavigate();
 

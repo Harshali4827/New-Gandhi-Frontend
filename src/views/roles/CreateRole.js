@@ -31,6 +31,7 @@ import FormButtons from 'src/utils/FormButtons';
 import '../../css/form.css';
 import '../../css/table.css';
 import { showError } from '../../utils/sweetAlerts';
+import { refreshUserPermissions} from '../../utils/permissionRefresh';
 
 const CreateRoleWithHierarchy = () => {
   const navigate = useNavigate();
@@ -68,10 +69,13 @@ const CreateRoleWithHierarchy = () => {
       'OFFER',
       'RTO',
       'SUBDEALERMODEL',
-      'TERMS_CONDITION'
+      'TERMS_CONDITION',
+      'VERTICLE_MASTER',
+      'MINIMUMAMOUNT'
     ],
+    Template:['TEMPLATE'],
     Purchase: ['VEHICLE_INWARD', 'STOCK_TRANSFER'],
-    Sales: ['BOOKING', 'FINANCE_LETTER', 'KYC'],
+    Sales: ['BOOKING', 'FINANCE_LETTER', 'KYC','FINANCE_DOCUMENT'],
     Fund_Management: ['CASH_VOUCHER', 'CONTRA_VOUCHER', 'EXPENSE_ACCOUNT', 'WORKSHOP_RECEIPT'],
     Fund_Master: ['BANK', 'BANK_SUB_PAYMENT_MODE', 'CASH_LOCATION', 'EXPENSE_ACCOUNT'],
     Accessory_Billing: ['ACCESSORY_BILLING'],
@@ -270,6 +274,8 @@ const CreateRoleWithHierarchy = () => {
     try {
       if (id) {
         await axiosInstance.put(`/roles/${id}`, payload);
+        await refreshUserPermissions();
+        // triggerPermissionRefresh();
         await showFormSubmitToast('Role updated successfully!', () => navigate('/roles/all-role'));
       } else {
         await axiosInstance.post('/roles', payload);

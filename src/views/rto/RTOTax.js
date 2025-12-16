@@ -24,6 +24,7 @@ import '../../css/invoice.css';
 import '../../css/table.css';
 import { showError, showFormSubmitToast } from '../../utils/sweetAlerts';
 import { hasPermission } from '../../utils/permissionUtils';
+import { useAuth } from '../../context/AuthContext';
 
 function RTOTax() {
   const [activeTab, setActiveTab] = useState(0);
@@ -33,7 +34,7 @@ function RTOTax() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { permissions} = useAuth();
   const {
     data: pendingData,
     setData: setPendingData,
@@ -348,7 +349,7 @@ function RTOTax() {
                   style={{ width: '200px' }}
                   size="sm"
                 />
-                {hasPermission('RTO_PROCESS', 'UPDATE') && (
+                {hasPermission(permissions,'RTO_PROCESS_UPDATE') && (
                   <CButton 
                     size="sm" 
                     className="action-btn"

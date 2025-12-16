@@ -1,4 +1,4 @@
-import { exportToUserCsv, exportToUserPdf } from 'src/utils/tableExports';
+
 import '../../css/table.css';
 import '../../css/form.css';
 import React, { useState, useEffect } from 'react';
@@ -33,13 +33,13 @@ import {
   Menu,
   MenuItem,
   getDefaultSearchFields,
-  useTableFilter,
   confirmDelete,
   showError,
   showSuccess,
   axiosInstance
 } from 'src/utils/tableImports.js';
 import { hasPermission } from 'src/utils/permissionUtils.js';
+import { useAuth } from '../../context/AuthContext';
 
 const UsersList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -49,10 +49,10 @@ const UsersList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const hasEditPermission = hasPermission('USER', 'UPDATE');
-  const hasDeletePermission = hasPermission('USER', 'DELETE');
-  const hasCreatePermission = hasPermission('USER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'USER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'USER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'USER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

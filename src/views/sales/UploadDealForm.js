@@ -171,7 +171,8 @@ const UploadDealForm = () => {
                       <CTableDataCell>{booking.bookingNumber}</CTableDataCell>
                       <CTableDataCell>{booking.customerDetails?.name}</CTableDataCell>
                       <CTableDataCell>{booking.model?.model_name}</CTableDataCell>
-                      <CTableDataCell>{booking.chassisNumber}</CTableDataCell>
+                      {/* <CTableDataCell>{booking.chassisNumber}</CTableDataCell> */}
+                      <CTableDataCell>{booking.status === "ALLOCATED" && booking.chassisAllocationStatus === "ALLOCATED" ? (booking.chassisNumber || ''):''}</CTableDataCell>
                       <CTableDataCell>
                         {booking.documentStatus?.dealForm?.status === 'COMPLETED' && booking.dealForm ? (
                           <CButton

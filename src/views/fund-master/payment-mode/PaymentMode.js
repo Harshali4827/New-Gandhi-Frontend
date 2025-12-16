@@ -16,7 +16,6 @@ import {
   CCol
 } from '@coreui/react';
 import { showError, axiosInstance } from '../../../utils/tableImports';
-import { hasPermission } from '../../../utils/permissionUtils';
 import PaymentModeList from './PaymentModeList';
 import '../../../css/form.css';
 

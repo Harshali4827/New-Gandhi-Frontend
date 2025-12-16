@@ -32,6 +32,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilCheckCircle, cilXCircle, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddCash from './AddCash';
+import { useAuth } from '../../context/AuthContext';
 
 const CashList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +44,10 @@ const CashList = () => {
   const [editingCash, setEditingCash] = useState(null);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-
-  const hasEditPermission = hasPermission('CASH_LOCATION', 'UPDATE');
-  const hasDeletePermission = hasPermission('CASH_LOCATION', 'DELETE');
-  const hasCreatePermission = hasPermission('CASH_LOCATION', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'CASH_LOCATION_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'CASH_LOCATION_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'CASH_LOCATION_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;

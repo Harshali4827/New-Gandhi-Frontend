@@ -29,6 +29,7 @@ import CIcon from '@coreui/icons-react';
 import { cilCheckCircle, cilPrint, cilSettings, cilPlus } from '@coreui/icons';
 import { numberToWords } from '../../utils/numberToWords';
 import { Menu, MenuItem } from '@mui/material';
+import { useAuth } from '../../context/AuthContext';
 
 function Receipt() {
   const [activeTab, setActiveTab] = useState(0);
@@ -42,7 +43,7 @@ function Receipt() {
   const [error, setError] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuBookingId, setMenuBookingId] = useState(null);
-
+  const { permissions} = useAuth();
   useEffect(() => {
     fetchData();
     fetchPendingPayments();
@@ -669,13 +670,13 @@ function Receipt() {
             <CTableHeaderCell scope="col">Total</CTableHeaderCell>
             <CTableHeaderCell scope="col">Received</CTableHeaderCell>
             <CTableHeaderCell scope="col">Balance</CTableHeaderCell>
-            {hasPermission('LEDGER', 'CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
+            {hasPermission(permissions,'LEDGER_CREATE') && <CTableHeaderCell scope="col">Action</CTableHeaderCell>}
           </CTableRow>
         </CTableHead>
         <CTableBody>
           {filteredBookings.length === 0 ? (
             <CTableRow>
-              <CTableDataCell colSpan={hasPermission('LEDGER', 'CREATE') ? "11" : "10"} style={{ color: 'red', textAlign: 'center' }}>
+              <CTableDataCell colSpan={hasPermission(permissions,'LEDGER_CREATE') ? "11" : "10"} style={{ color: 'red', textAlign: 'center' }}>
                 {searchTerm ? 'No matching bookings found' : 'No booking available'}
               </CTableDataCell>
             </CTableRow>
@@ -698,7 +699,7 @@ function Receipt() {
                 <CTableDataCell>{Math.round(booking.receivedAmount) || '0'}</CTableDataCell>
                 <CTableDataCell>{Math.round(booking.balanceAmount) || '0'}</CTableDataCell>
 
-                {hasPermission('LEDGER', 'CREATE') && (
+                {hasPermission(permissions,'LEDGER_CREATE') && (
                   <CTableDataCell>
                     <CButton
                       size="sm"
@@ -991,7 +992,7 @@ const renderPendingListTable = () => {
                 Customer
               </CNavLink>
             </CNavItem>
-            {hasPermission('LEDGER', 'VERIFY') && (
+            {hasPermission(permissions,'LEDGER_VERIFY') && (
               <CNavItem>
                 <CNavLink
                   active={activeTab === 1}
@@ -1091,3 +1092,4 @@ const renderPendingListTable = () => {
 }
 
 export default Receipt;
+

@@ -30,7 +30,6 @@ import {
   Link,
   Menu,
   MenuItem,
-  SearchOutlinedIcon,
   useTableFilter,
   confirmDelete,
   showError,
@@ -38,15 +37,13 @@ import {
   axiosInstance
 } from 'src/utils/tableImports';
 
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ClearIcon from '@mui/icons-material/Clear';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
-import AddIcon from '@mui/icons-material/Add';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import { hasPermission } from 'src/utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSearch, cilZoomOut } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const CommissionList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -72,10 +69,10 @@ const CommissionList = () => {
   const [dateRangeData, setDateRangeData] = useState(null);
   const [loadingDateRange, setLoadingDateRange] = useState(false);
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-
-  const hasEditPermission = hasPermission('SUBDEALER_COMMISSION', 'UPDATE');
-  const hasAddPermission = hasPermission('SUBDEALER_COMMISSION', 'CREATE');
-  const hasDeletePermission = hasPermission('SUBDEALER_COMMISSION', 'DELETE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'SUBDEALER_COMMISSION_UPDATE');
+  const hasAddPermission = hasPermission(permissions,'SUBDEALER_COMMISSION_CREATE');
+  const hasDeletePermission = hasPermission(permissions,'SUBDEALER_COMMISSION_DELETE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

@@ -27,6 +27,7 @@ import Swal from 'sweetalert2';
 import { hasPermission } from '../../utils/permissionUtils';
 import CIcon from '@coreui/icons-react';
 import { cilCheckCircle, cilZoomOut } from '@coreui/icons';
+import { useAuth } from '../../context/AuthContext';
 
 function StockVerification() {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,7 +36,7 @@ function StockVerification() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { permissions} = useAuth();
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const branchId = storedUser.branch?._id;
   const userRole = (localStorage.getItem('userRole') || '').toUpperCase();
@@ -194,10 +195,6 @@ function StockVerification() {
           <CTableHead>
             <CTableRow>
               <CTableHeaderCell scope="col">
-                {/* <CFormCheck
-                  onChange={handleSelectAll}
-                  checked={selectedVehicles.length === filteredPendings.length && filteredPendings.length > 0}
-                /> */}
               </CTableHeaderCell>
               <CTableHeaderCell scope="col">Sr.no</CTableHeaderCell>
               <CTableHeaderCell scope="col">Type</CTableHeaderCell>
@@ -231,7 +228,7 @@ function StockVerification() {
                   <CTableDataCell>{vehicle.chassisNumber}</CTableDataCell>
                   <CTableDataCell>{vehicle.unloadLocation?.name || ''}</CTableDataCell>
                   <CTableDataCell>
-                    {hasPermission('VEHICLE_INWARD', 'APPROVE') && (
+                    {hasPermission(permissions,'VEHICLE_INWARD_APPROVE') && (
                       <CButton 
                         size="sm" 
                         className="action-btn"

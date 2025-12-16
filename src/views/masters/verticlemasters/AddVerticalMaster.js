@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import '../../../css/form.css';
 import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CForm } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilLayers, cilCheckCircle } from '@coreui/icons'; // Changed cilLayerGroup to cilLayers
+import { cilLayers, cilCheckCircle } from '@coreui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { showFormSubmitError, showFormSubmitToast } from '../../../utils/sweetAlerts';
 import FormButtons from '../../../utils/FormButtons';
 import axiosInstance from '../../../axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
+import { hasPermission } from '../../../utils/permissionUtils';
 
 function AddVerticalMaster() {
   const [formData, setFormData] = useState({
@@ -17,6 +19,11 @@ function AddVerticalMaster() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'TERMS_CONDITION_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'TERMS_CONDITION_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'TERMS_CONDITION_CREATE');
+  const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {
     if (id) {

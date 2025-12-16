@@ -39,6 +39,7 @@ import {
   cilFilter, 
   cilPlus
 } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext.js';
 
 const HeadersList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -61,10 +62,10 @@ const HeadersList = () => {
   const [verticles, setVerticles] = useState([]);
   const [selectedVerticleId, setSelectedVerticleId] = useState('');
   const [exportErrors, setExportErrors] = useState({});
-
-  const hasEditPermission = hasPermission('HEADER', 'UPDATE');
-  const hasDeletePermission = hasPermission('HEADER', 'DELETE');
-  const hasCreatePermission = hasPermission('HEADER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'HEADER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'HEADER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'HEADER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

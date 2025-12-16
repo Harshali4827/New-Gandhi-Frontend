@@ -34,6 +34,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddProvider from './AddProvider';
+import { useAuth } from '../../../context/AuthContext';
 
 const ProviderList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -47,9 +48,10 @@ const ProviderList = () => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
 
   const { currentRecords, PaginationOptions } = usePagination(filteredData);
-  const hasEditPermission = hasPermission('INSURANCE_PROVIDER', 'UPDATE');
-  const hasDeletePermission = hasPermission('INSURANCE_PROVIDER', 'DELETE');
-  const hasCreatePermission = hasPermission('INSURANCE_PROVIDER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'INSURANCE_PROVIDER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'INSURANCE_PROVIDER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'INSURANCE_PROVIDER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

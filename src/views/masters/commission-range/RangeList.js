@@ -33,6 +33,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import BrokerRange from './BrokerRange';
+import { useAuth } from '../../../context/AuthContext';
 
 const RangeList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -45,10 +46,10 @@ const RangeList = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
-
-  const hasEditPermission = hasPermission('BROKER', 'UPDATE');
-  const hasDeletePermission = hasPermission('BROKER', 'DELETE');
-  const hasCreatePermission = hasPermission('BROKER', 'CREATE');
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'BROKER_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'BROKER_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'BROKER_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {

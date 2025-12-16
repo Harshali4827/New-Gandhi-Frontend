@@ -29,7 +29,8 @@ import {
   CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilSettings, cilPencil, cilTrash, cilPlus } from '@coreui/icons';
+import { cilSettings, cilTrash, cilPlus } from '@coreui/icons';
+import { useAuth } from '../../../context/AuthContext';
 
 const PaymentModeList = ({ payments, onDelete, onEdit, onAddNew }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -37,7 +38,7 @@ const PaymentModeList = ({ payments, onDelete, onEdit, onAddNew }) => {
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
   const { currentRecords, PaginationOptions } = usePagination(filteredData || []);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { permissions} = useAuth();
   useEffect(() => {
     const paymentData = Array.isArray(payments) ? payments : [];
     setData(paymentData);
@@ -72,9 +73,9 @@ const PaymentModeList = ({ payments, onDelete, onEdit, onAddNew }) => {
     handleFilter(value, getDefaultSearchFields('payment_mode'));
   };
 
-  const hasCreatePermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'CREATE');
-  const hasEditPermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'UPDATE');
-  const hasDeletePermission = hasPermission('BANK_SUB_PAYMENT_MODE', 'DELETE');
+  const hasCreatePermission = hasPermission(permissions,'BANK_SUB_PAYMENT_MODE_CREATE');
+  const hasEditPermission = hasPermission(permissions,'BANK_SUB_PAYMENT_MODE_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'BANK_SUB_PAYMENT_MODE_DELETE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
   return (

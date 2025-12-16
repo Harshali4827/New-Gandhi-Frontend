@@ -36,12 +36,12 @@ import {
   Menu,
   MenuItem,
   getDefaultSearchFields,
-  useTableFilter,
   showError,
   showSuccess,
   axiosInstance
 } from 'src/utils/tableImports.js';
 import { hasPermission } from 'src/utils/permissionUtils.js';
+import { useAuth } from '../../context/AuthContext';
 
 const BufferList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -51,22 +51,19 @@ const BufferList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { permissions} = useAuth();
 
-  // Modals state
   const [unfreezeModalVisible, setUnfreezeModalVisible] = useState(false);
   const [extendTimeModalVisible, setExtendTimeModalVisible] = useState(false);
 
-  // Selected user
   const [selectedUserId, setSelectedUserId] = useState(null);
-
-  // Form states
   const [unfreezeReason, setUnfreezeReason] = useState('');
   const [extendTimeData, setExtendTimeData] = useState({
     additionalHours: 24,
     reason: ''
   });
 
-  const hasUpdatePermission = hasPermission('USER_BUFFER', 'UPDATE');
+  const hasUpdatePermission = hasPermission(permissions,'USER_BUFFER_UPDATE');
   const showActionColumn = hasUpdatePermission;
 
   useEffect(() => {

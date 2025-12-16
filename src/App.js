@@ -139,6 +139,7 @@ import './scss/style.scss'
 import './scss/examples.scss'
 import PublicRoute from './utils/PublicRoute'
 import ProtectedRoute from './utils/ProtectedRoutes'
+import { AuthProvider } from './context/AuthContext'
 
 // Lazy pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -147,6 +148,7 @@ const VerifyOTP = React.lazy(() => import('./views/pages/verify-otp/VerifyOTP'))
 
 const App = () => {
   return (
+    <AuthProvider>
     <HashRouter>
       <Suspense fallback={<div className="pt-3 text-center"><CSpinner color="primary" variant="grow" /></div>}>
         <Routes>
@@ -183,6 +185,7 @@ const App = () => {
         </Routes>
       </Suspense>
     </HashRouter>
+    </AuthProvider>
   )
 }
 

@@ -30,6 +30,8 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash } from '@coreui/icons';
 import AddMinimumBookingAmount from './AddMinimumBookingAmount';
+import { useAuth } from '../../../context/AuthContext';
+import { hasPermission } from '../../../utils/permissionUtils';
 
 const MinimumBookingAmountList = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,6 +43,11 @@ const MinimumBookingAmountList = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'MINIMUMAMOUNT_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'MINIMUMAMOUNT_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'MINIMUMAMOUNT_CREATE');
+  const showActionColumn = hasEditPermission || hasDeletePermission;
 
   useEffect(() => {
     fetchData();
@@ -149,13 +156,15 @@ const MinimumBookingAmountList = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
+          {hasCreatePermission && (
             <CButton 
               size="sm" 
               className="action-btn me-1"
               onClick={handleShowAddModal}
             >
-              <CIcon icon={cilPlus} className='icon'/> New Minimum Amount
+              <CIcon icon={cilPlus} className='icon'/> Add
             </CButton>
+          )}
           </div>
         </CCardHeader>
         
@@ -208,6 +217,7 @@ const MinimumBookingAmountList = () => {
                       <CTableDataCell>
                         {formatPercentage(item?.min_amount || 0)}
                       </CTableDataCell>
+                      {showActionColumn && (
                       <CTableDataCell>
                         <CButton
                           size="sm"
@@ -223,6 +233,7 @@ const MinimumBookingAmountList = () => {
                           open={menuId === item?._id} 
                           onClose={handleClose}
                         >
+                           {hasEditPermission && (
                           <MenuItem 
                             onClick={() => handleShowEditModal(item)}
                             style={{ color: 'black' }}
@@ -230,12 +241,16 @@ const MinimumBookingAmountList = () => {
                             <CIcon icon={cilPencil} className="me-2" />
                             Edit
                           </MenuItem>
+                           )}
+                          {hasDeletePermission && (
                           <MenuItem onClick={() => handleDelete(item?._id)}>
                             <CIcon icon={cilTrash} className="me-2" />
                             Delete
                           </MenuItem>
+                          )}
                         </Menu>
                       </CTableDataCell>
+                      )}
                     </CTableRow>
                   ))
                 )}

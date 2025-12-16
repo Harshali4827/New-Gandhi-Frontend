@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../../css/permission.css';
 import '../../css/form.css';
 import {
@@ -24,6 +24,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showError, showFormSubmitError, showFormSubmitToast } from 'src/utils/sweetAlerts';
 import axiosInstance from 'src/axiosInstance';
 import { jwtDecode } from 'jwt-decode';
+import { AuthContext } from '../../context/AuthContext';
+// import { refreshUserPermissions } from '../../utils/permissionRefresh';
 
 function AddUser() {
   const [formData, setFormData] = useState({
@@ -52,6 +54,7 @@ function AddUser() {
   const [showPermissions, setShowPermissions] = useState(false);
   const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
   const [error, setError] = useState(null);
+  const { refreshPermissions } = useContext(AuthContext)
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -394,6 +397,9 @@ function AddUser() {
     try {
       if (id) {
         await axiosInstance.put(`/users/${id}`, payload);
+        await refreshPermissions()
+        // await refreshUserPermissions();
+        //triggerPermissionRefresh();
         await showFormSubmitToast('User updated successfully!', () => navigate('/users/users-list'));
       } else {
         await axiosInstance.post('/auth/register', payload);

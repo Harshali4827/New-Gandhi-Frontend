@@ -22,28 +22,34 @@ import {
   cilSettings, 
   cilPencil, 
   cilTrash,
-  cilPlus
+  cilPlus,
+  cilMagnifyingGlass
 } from '@coreui/icons';
-import { cilMagnifyingGlass } from '@coreui/icons';
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
-import '../../../css/table.css';
-import '../../../css/importCsv.css';
 import { useTableFilter } from '../../../utils/tableFilters';
 import axiosInstance from '../../../axiosInstance';
 import { confirmDelete, showError, showSuccess } from '../../../utils/sweetAlerts';
-
+import { hasPermission } from '../../../utils/permissionUtils';
+import { useAuth } from '../../../context/AuthContext';
+import '../../../css/table.css';
 const TemplateList = () => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data, setData, filteredData, setFilteredData, handleFilter } = useTableFilter([]);
-
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
+  
+  const { permissions} = useAuth();
+  const hasEditPermission = hasPermission(permissions,'TEMPLATE_UPDATE');
+  const hasDeletePermission = hasPermission(permissions,'TEMPLATE_DELETE');
+  const hasCreatePermission = hasPermission(permissions,'TEMPLATE_CREATE');
+  const hasViewPermission = hasPermission(permissions,'TEMPLATE_READ');
+  const showActionColumn = hasEditPermission || hasDeletePermission || hasViewPermission;
 
   useEffect(() => {
     fetchTemplates();
@@ -107,7 +113,7 @@ const TemplateList = () => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-      {error}
+        {error}
       </div>
     );
   }
@@ -119,11 +125,13 @@ const TemplateList = () => {
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
-            <Link to="/templateForm/template-list/create">
+          {hasCreatePermission && (
+            <Link to="/templateform/template-list/create">
               <CButton size="sm" className="action-btn me-1">
-                <CIcon icon={cilPlus} className='icon'/> New Template
+                <CIcon icon={cilPlus} className='icon'/>Add
               </CButton>
             </Link>
+          )}
           </div>
         </CCardHeader>
         
@@ -137,7 +145,6 @@ const TemplateList = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search by template name or subject..."
               />
             </div>
           </div>
@@ -189,6 +196,7 @@ const TemplateList = () => {
                       <CTableDataCell>
                         {new Date(template.created_at).toLocaleDateString()}
                       </CTableDataCell>
+                      {showActionColumn && (
                       <CTableDataCell>
                         <CButton
                           size="sm"
@@ -212,15 +220,18 @@ const TemplateList = () => {
                             horizontal: 'right',
                           }}
                         >
-                          <MenuItem onClick={handleClose}>
-                            <Link 
-                              className="Link" 
-                              to={`/templateform/template-list/preview/${template._id}`}
-                              style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
-                            >
-                              <CIcon icon={cilMagnifyingGlass} className="me-2" /> Preview
-                            </Link>
-                          </MenuItem>
+                          {hasViewPermission && (
+                               <MenuItem onClick={handleClose}>
+                               <Link 
+                                 className="Link" 
+                                 to={`/templateform/template-list/preview/${template._id}`}
+                                 style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                               >
+                                 <CIcon icon={cilMagnifyingGlass} className="me-2" /> Preview
+                               </Link>
+                             </MenuItem>
+                          )}
+                          {hasEditPermission && (
                           <MenuItem onClick={handleClose}>
                             <Link 
                               className="Link" 
@@ -230,14 +241,18 @@ const TemplateList = () => {
                               <CIcon icon={cilPencil} className="me-2" /> Edit
                             </Link>
                           </MenuItem>
+                          )}
+                          {hasDeletePermission && (
                           <MenuItem onClick={() => {
                             handleDelete(template._id);
                             handleClose();
                           }}>
                             <CIcon icon={cilTrash} className="me-2" /> Delete
                           </MenuItem>
+                          )}
                         </Menu>
                       </CTableDataCell>
+                      )}
                     </CTableRow>
                   ))
                 )}
