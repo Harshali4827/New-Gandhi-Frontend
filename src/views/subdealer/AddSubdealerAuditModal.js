@@ -14,15 +14,19 @@ import {
   CSpinner,
   CRow,
   CCol,
-  CAlert
+  CAlert,
+  CButtonGroup
 } from '@coreui/react';
 import { showError, axiosInstance } from 'src/utils/tableImports';
 
 const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
+  const [auditType, setAuditType] = useState('weekly'); // 'daily', 'weekly', 'monthly'
   const [formData, setFormData] = useState({
     subdealer: '',
     day: '',
-    remarks: ''
+    remarks: '',
+    frequency: 'everyday', // for daily: 'everyday', 'weekdays', 'weekends'
+    dayOfMonth: 1, // for monthly: 1-31
   });
   
   const [subdealers, setSubdealers] = useState([]);
@@ -36,10 +40,15 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
     }
     
     if (editingAudit) {
+      const editingType = editingAudit.auditType || 'weekly';
+      setAuditType(editingType);
+      
       setFormData({
         subdealer: editingAudit.subdealer || editingAudit.subdealerDetails?._id || '',
         day: editingAudit.day || '',
-        remarks: editingAudit.remarks || ''
+        remarks: editingAudit.remarks || '',
+        frequency: editingAudit.frequency || 'everyday',
+        dayOfMonth: editingAudit.dayOfMonth || 1
       });
     } else {
       resetForm();
@@ -73,6 +82,20 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
     }
   };
 
+  const handleAuditTypeChange = (type) => {
+    setAuditType(type);
+    // Reset validation errors when changing type
+    setFormErrors({});
+    
+    // Reset frequency to default when switching to daily
+    if (type === 'daily') {
+      setFormData(prev => ({
+        ...prev,
+        frequency: 'everyday'
+      }));
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     
@@ -80,16 +103,63 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
       errors.subdealer = 'Subdealer is required';
     }
     
-    if (!formData.day.trim()) {
-      errors.day = 'Day is required';
-    }
-    
     if (!formData.remarks.trim()) {
       errors.remarks = 'Remarks are required';
     }
 
+    // Validate based on audit type
+    switch(auditType) {
+      case 'weekly':
+        if (!formData.day.trim()) {
+          errors.day = 'Day is required for weekly audits';
+        }
+        break;
+      case 'monthly':
+        if (!formData.dayOfMonth) {
+          errors.dayOfMonth = 'Day of month is required';
+        } else if (formData.dayOfMonth < 1 || formData.dayOfMonth > 31) {
+          errors.dayOfMonth = 'Day must be between 1 and 31';
+        }
+        break;
+      case 'daily':
+        if (!formData.frequency) {
+          errors.frequency = 'Frequency is required for daily audits';
+        }
+        break;
+      default:
+        break;
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const preparePayload = () => {
+    const basePayload = {
+      subdealer: formData.subdealer,
+      remarks: formData.remarks,
+      auditType: auditType
+    };
+
+    switch(auditType) {
+      case 'daily':
+        return {
+          ...basePayload,
+          frequency: formData.frequency
+        };
+      case 'weekly':
+        return {
+          ...basePayload,
+          day: formData.day
+        };
+      case 'monthly':
+        return {
+          ...basePayload,
+          dayOfMonth: parseInt(formData.dayOfMonth, 10)
+        };
+      default:
+        return basePayload;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -101,11 +171,7 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
 
     setSubmitting(true);
     try {
-      const payload = {
-        subdealer: formData.subdealer,
-        day: formData.day,
-        remarks: formData.remarks
-      };
+      const payload = preparePayload();
 
       if (editingAudit) {
         await axiosInstance.put(`/subdealer-audits/${editingAudit._id}`, payload);
@@ -132,10 +198,13 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
   };
 
   const resetForm = () => {
+    setAuditType('weekly');
     setFormData({
       subdealer: '',
       day: '',
-      remarks: ''
+      remarks: '',
+      frequency: 'everyday',
+      dayOfMonth: 1
     });
     setFormErrors({});
   };
@@ -158,8 +227,24 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
     ];
   };
 
+  const getFrequencyOptions = () => {
+    return [
+      { value: 'everyday', label: 'Everyday' },
+      { value: 'weekdays', label: 'Weekdays (Mon-Fri)' },
+      { value: 'weekends', label: 'Weekends (Sat-Sun)' }
+    ];
+  };
+
+  const getDayOfMonthOptions = () => {
+    const days = [{ value: '', label: 'Select Day of Month' }];
+    for (let i = 1; i <= 31; i++) {
+      days.push({ value: i, label: i.toString() });
+    }
+    return days;
+  };
+
   return (
-    <CModal visible={show} onClose={handleClose}>
+    <CModal visible={show} onClose={handleClose} size="lg">
       <CModalHeader>
         <CModalTitle>{editingAudit ? 'Edit Audit Schedule' : 'Add New Audit Schedule'}</CModalTitle>
       </CModalHeader>
@@ -170,6 +255,39 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
               {formErrors.general}
             </CAlert>
           )}
+          
+          {/* Audit Type Buttons */}
+          <div className="mb-4">
+            <CFormLabel className="d-block mb-2">
+              Audit Type <span className="required">*</span>
+            </CFormLabel>
+            <CButtonGroup role="group" aria-label="Audit type selection" className="w-100">
+              <CButton
+                color={auditType === 'daily' ? 'primary' : 'secondary'}
+                onClick={() => handleAuditTypeChange('daily')}
+                disabled={submitting}
+                className="flex-fill"
+              >
+                Daily
+              </CButton>
+              <CButton
+                color={auditType === 'weekly' ? 'primary' : 'secondary'}
+                onClick={() => handleAuditTypeChange('weekly')}
+                disabled={submitting}
+                className="flex-fill"
+              >
+                Weekly
+              </CButton>
+              <CButton
+                color={auditType === 'monthly' ? 'primary' : 'secondary'}
+                onClick={() => handleAuditTypeChange('monthly')}
+                disabled={submitting}
+                className="flex-fill"
+              >
+                Monthly
+              </CButton>
+            </CButtonGroup>
+          </div>
           
           <div className="mb-3">
             <CFormLabel htmlFor="subdealer">
@@ -204,30 +322,87 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
             )}
           </div>
           
-          <div className="mb-3">
-            <CFormLabel htmlFor="day">
-              Day <span className="required">*</span>
-            </CFormLabel>
-            <CFormSelect
-              id="day"
-              name="day"
-              value={formData.day}
-              onChange={handleInputChange}
-              invalid={!!formErrors.day}
-              disabled={submitting}
-            >
-              {getDayOptions().map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </CFormSelect>
-            {formErrors.day && (
-              <div className="error-text">
-                {formErrors.day}
-              </div>
-            )}
-          </div>
+          {/* Dynamic Fields based on Audit Type */}
+          {auditType === 'daily' && (
+            <div className="mb-3">
+              <CFormLabel htmlFor="frequency">
+                Frequency <span className="required">*</span>
+              </CFormLabel>
+              <CFormSelect
+                id="frequency"
+                name="frequency"
+                value={formData.frequency}
+                onChange={handleInputChange}
+                invalid={!!formErrors.frequency}
+                disabled={submitting}
+              >
+                {getFrequencyOptions().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </CFormSelect>
+              {formErrors.frequency && (
+                <div className="error-text">
+                  {formErrors.frequency}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {auditType === 'weekly' && (
+            <div className="mb-3">
+              <CFormLabel htmlFor="day">
+                Day <span className="required">*</span>
+              </CFormLabel>
+              <CFormSelect
+                id="day"
+                name="day"
+                value={formData.day}
+                onChange={handleInputChange}
+                invalid={!!formErrors.day}
+                disabled={submitting}
+              >
+                {getDayOptions().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </CFormSelect>
+              {formErrors.day && (
+                <div className="error-text">
+                  {formErrors.day}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {auditType === 'monthly' && (
+            <div className="mb-3">
+              <CFormLabel htmlFor="dayOfMonth">
+                Day of Month <span className="required">*</span>
+              </CFormLabel>
+              <CFormSelect
+                id="dayOfMonth"
+                name="dayOfMonth"
+                value={formData.dayOfMonth}
+                onChange={handleInputChange}
+                invalid={!!formErrors.dayOfMonth}
+                disabled={submitting}
+              >
+                {getDayOfMonthOptions().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </CFormSelect>
+              {formErrors.dayOfMonth && (
+                <div className="error-text">
+                  {formErrors.dayOfMonth}
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="mb-3">
             <CFormLabel htmlFor="remarks">
@@ -241,7 +416,7 @@ const AddSubdealerAuditModal = ({ show, onClose, onSaved, editingAudit }) => {
               invalid={!!formErrors.remarks}
               disabled={submitting}
               rows={3}
-              placeholder="Enter audit remarks (e.g., Weekly stock audit)"
+              placeholder={`Enter audit remarks for ${auditType} audit`}
             />
             {formErrors.remarks && (
               <div className="error-text">

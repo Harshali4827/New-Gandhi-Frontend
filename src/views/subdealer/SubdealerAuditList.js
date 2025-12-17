@@ -16,7 +16,15 @@ import {
   CSpinner,
   CBadge,
   CAlert,
-  CFormLabel
+  CFormLabel,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CFormSelect,
+  CRow,
+  CCol
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { 
@@ -25,7 +33,9 @@ import {
   cilPencil, 
   cilTrash,
   cilCheckCircle,
-  cilXCircle
+  cilXCircle,
+  cilSearch,
+  cilZoomOut
 } from '@coreui/icons';
 import {
   Menu,
@@ -50,11 +60,23 @@ const SubdealerAuditList = () => {
   const [editingAudit, setEditingAudit] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [subdealers, setSubdealers] = useState([]);
+  
+  // Filter states
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedSubdealer, setSelectedSubdealer] = useState(null);
+  const [selectedAuditType, setSelectedAuditType] = useState('daily');
+  const [tempSelectedSubdealer, setTempSelectedSubdealer] = useState(null);
+  const [tempSelectedAuditType, setTempSelectedAuditType] = useState('daily');
+  const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
     fetchData();
     fetchSubdealers();
   }, []);
+
+  useEffect(() => {
+    filterData();
+  }, [selectedSubdealer, selectedAuditType, data]);
 
   const fetchSubdealers = async () => {
     try {
@@ -62,9 +84,9 @@ const SubdealerAuditList = () => {
       setSubdealers(response.data.data.subdealers || []);
     } catch (error) {
       const message = showError(error);
-  if (message) {
-    setError(message);
-  }
+      if (message) {
+        setError(message);
+      }
     }
   };
 
@@ -72,8 +94,9 @@ const SubdealerAuditList = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get('/subdealer-audits');
-      setData(response.data.data.subdealerAudits || []);
-      setFilteredData(response.data.data.subdealerAudits || []);
+      const audits = response.data.data.subdealerAudits || [];
+      setData(audits);
+      setFilteredData(audits);
     } catch (error) {
       const message = showError(error);
       if (message) {
@@ -84,14 +107,54 @@ const SubdealerAuditList = () => {
     }
   };
 
+  const filterData = () => {
+    let filtered = data;
+
+    // Filter by audit type
+    if (selectedAuditType !== 'all') {
+      filtered = filtered.filter(audit => audit.auditType === selectedAuditType);
+    }
+
+    // Filter by subdealer
+    if (selectedSubdealer) {
+      filtered = filtered.filter(audit => 
+        audit.subdealer === selectedSubdealer || 
+        audit.subdealerDetails?._id === selectedSubdealer
+      );
+    }
+
+    setFilteredData(filtered);
+    
+    // Check if any filter is active
+    const hasActiveFilter = selectedAuditType !== 'daily' || selectedSubdealer !== null;
+    setIsFiltered(hasActiveFilter);
+  };
+
   const handleSearch = (searchValue) => {
+    setSearchTerm(searchValue);
+    
+    let dataToFilter = data;
+    
+    // Apply current filters first
+    if (selectedAuditType !== 'all') {
+      dataToFilter = dataToFilter.filter(audit => audit.auditType === selectedAuditType);
+    }
+    
+    if (selectedSubdealer) {
+      dataToFilter = dataToFilter.filter(audit => 
+        audit.subdealer === selectedSubdealer || 
+        audit.subdealerDetails?._id === selectedSubdealer
+      );
+    }
+    
     handleFilter(searchValue, [
       'subdealerDetails.name',
       'day',
       'timeSlot',
       'remarks',
-      'createdByDetails.name'
-    ]);
+      'createdByDetails.name',
+      'scheduleDescription'
+    ], dataToFilter);
   };
 
   const handleClick = (event, id) => {
@@ -179,6 +242,71 @@ const SubdealerAuditList = () => {
     });
   };
 
+  // Filter modal handlers
+  const handleFilterClick = () => {
+    setTempSelectedSubdealer(selectedSubdealer);
+    setTempSelectedAuditType(selectedAuditType);
+    setShowFilterModal(true);
+  };
+
+  const handleApplyFilter = () => {
+    setSelectedSubdealer(tempSelectedSubdealer);
+    setSelectedAuditType(tempSelectedAuditType);
+    setShowFilterModal(false);
+  };
+
+  const handleCancelFilter = () => {
+    setShowFilterModal(false);
+    setTempSelectedSubdealer(selectedSubdealer);
+    setTempSelectedAuditType(selectedAuditType);
+  };
+
+  const clearFilters = () => {
+    setSelectedSubdealer(null);
+    setSelectedAuditType('daily');
+    setIsFiltered(false);
+  };
+
+  const getSubdealerNameById = (subdealerId) => {
+    const subdealer = subdealers.find(s => s._id === subdealerId);
+    return subdealer ? `${subdealer.name} - ${subdealer.location || 'N/A'}` : '';
+  };
+
+  const getFilterText = () => {
+    let filterText = '';
+    
+    if (selectedAuditType !== 'daily') {
+      filterText += `(Type: ${selectedAuditType})`;
+    }
+    
+    if (selectedSubdealer) {
+      if (filterText) filterText += ' ';
+      filterText += `(Subdealer: ${getSubdealerNameById(selectedSubdealer)})`;
+    }
+    
+    return filterText;
+  };
+
+  const getAuditTypeBadge = (type) => {
+    const typeColors = {
+      daily: 'primary',
+      weekly: 'info',
+      monthly: 'success'
+    };
+    
+    const typeLabels = {
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly'
+    };
+    
+    return (
+      <CBadge color={typeColors[type] || 'secondary'}>
+        {typeLabels[type] || type}
+      </CBadge>
+    );
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
@@ -197,7 +325,7 @@ const SubdealerAuditList = () => {
 
   return (
     <div>
-      <div className='title'>Subdealer Audit Schedule</div>
+      <div className='title'>Subdealer Audit Schedule {getFilterText()}</div>
       
       {successMessage && (
         <CAlert color="success" className="mb-3">
@@ -215,12 +343,36 @@ const SubdealerAuditList = () => {
             >
               <CIcon icon={cilPlus} className='icon'/> New Audit Schedule
             </CButton>
+            
+            <CButton 
+              size="sm" 
+              className="action-btn me-1"
+              onClick={handleFilterClick}
+            >
+              <CIcon icon={cilSearch} className='icon' /> Filter
+            </CButton>
+
+            {isFiltered && (
+              <CButton 
+                size="sm" 
+                color="secondary" 
+                className="action-btn me-1"
+                onClick={clearFilters}
+              >
+                <CIcon icon={cilZoomOut} className='icon' /> 
+                Reset Filter
+              </CButton>
+            )}
           </div>
         </CCardHeader>
         
         <CCardBody>
           <div className="d-flex justify-content-between mb-3">
-            <div></div>
+            <div>
+              <span className="text-muted">
+               
+              </span>
+            </div>
             <div className='d-flex'>
               <CFormLabel className='mt-1 m-1'>Search:</CFormLabel>
               <CFormInput
@@ -228,7 +380,6 @@ const SubdealerAuditList = () => {
                 className="d-inline-block square-search"
                 value={searchTerm}
                 onChange={(e) => {
-                  setSearchTerm(e.target.value);
                   handleSearch(e.target.value);
                 }}
                 placeholder="Search by subdealer, day, remarks..."
@@ -241,9 +392,10 @@ const SubdealerAuditList = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell>Sr.no</CTableHeaderCell>
+                  <CTableHeaderCell>Audit Type</CTableHeaderCell>
                   <CTableHeaderCell>Subdealer</CTableHeaderCell>
-                  <CTableHeaderCell>Day</CTableHeaderCell>
-                  <CTableHeaderCell>Time Slot</CTableHeaderCell>
+                  <CTableHeaderCell>Schedule</CTableHeaderCell>
+                  <CTableHeaderCell>Next Audit Date</CTableHeaderCell>
                   <CTableHeaderCell>Remarks</CTableHeaderCell>
                   <CTableHeaderCell>Created By</CTableHeaderCell>
                   <CTableHeaderCell>Created Date</CTableHeaderCell>
@@ -257,20 +409,49 @@ const SubdealerAuditList = () => {
                     <CTableRow key={audit._id}>
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>
+                        {getAuditTypeBadge(audit.auditType)}
+                      </CTableDataCell>
+                      <CTableDataCell>
                         {audit.subdealerDetails?.name || 'N/A'}
                         <div className="text-muted small">
                           {audit.subdealerDetails?.location || ''}
                         </div>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color="info" className="text-capitalize">
-                          {audit.dayFormatted || audit.day}
-                        </CBadge>
+                        <div className="mb-1">
+                          {audit.scheduleDescription || 
+                            (audit.auditType === 'daily' ? `Daily (${audit.frequency})` : 
+                             audit.auditType === 'weekly' ? `Weekly on ${audit.dayFormatted || audit.day}` :
+                             audit.auditType === 'monthly' ? `Monthly on day ${audit.dayOfMonth}` : '')}
+                        </div>
+                        {audit.frequency && audit.auditType !== 'daily' && (
+                          <div className="text-muted small">
+                            Frequency: {audit.frequency}
+                          </div>
+                        )}
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color="secondary">
-                          {audit.timeSlot || 'N/A'}
-                        </CBadge>
+                        <div className="d-flex flex-column">
+                          <span>
+                            {audit.nextAuditDate ? 
+                              new Date(audit.nextAuditDate).toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              }) : 'N/A'
+                            }
+                          </span>
+                          {audit.auditStatus === 'due-tomorrow' && (
+                            <CBadge color="warning" className="mt-1">
+                              Due Tomorrow
+                            </CBadge>
+                          )}
+                          {audit.daysUntil !== undefined && audit.daysUntil > 0 && (
+                            <span className="text-muted small">
+                              in {audit.daysUntil} day{audit.daysUntil !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
                       </CTableDataCell>
                       <CTableDataCell>
                         {audit.remarks || '-'}
@@ -332,8 +513,11 @@ const SubdealerAuditList = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan="9" className="text-center">
-                      No audit schedules available
+                    <CTableDataCell colSpan="10" className="text-center">
+                      {data.length === 0 
+                        ? 'No audit schedules available. Click "New Audit Schedule" to create one.'
+                        : `No audit schedules found for the selected filters. Try changing the filter or search term.`
+                      }
                     </CTableDataCell>
                   </CTableRow>
                 )}
@@ -342,6 +526,53 @@ const SubdealerAuditList = () => {
           </div>
         </CCardBody>
       </CCard>
+
+      {/* Filter Modal */}
+      <CModal size='lg' visible={showFilterModal} onClose={handleCancelFilter}>
+        <CModalHeader>
+          <CModalTitle>Filter Audit Schedules</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <label className="form-label">Select Audit Type:</label>
+              <CFormSelect
+                value={tempSelectedAuditType || 'daily'}
+                onChange={(e) => setTempSelectedAuditType(e.target.value)}
+              >
+                <option value="all">All Types</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </CFormSelect>
+            </CCol>
+            <CCol md={6}>
+              <label className="form-label">Select Subdealer:</label>
+              <CFormSelect
+                value={tempSelectedSubdealer || ''}
+                onChange={(e) => setTempSelectedSubdealer(e.target.value || null)}
+              >
+                <option value="">All Subdealers</option>
+                {subdealers
+                  .filter(subdealer => subdealer.status === 'active')
+                  .map(subdealer => (
+                    <option key={subdealer._id} value={subdealer._id}>
+                      {subdealer.name} - {subdealer.location || 'N/A'}
+                    </option>
+                  ))}
+              </CFormSelect>
+            </CCol>
+          </CRow>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleCancelFilter}>
+            Cancel
+          </CButton>
+          <CButton className='submit-button' onClick={handleApplyFilter}>
+            Apply Filter
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       <AddSubdealerAuditModal
         show={showModal}
