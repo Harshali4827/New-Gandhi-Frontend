@@ -36,7 +36,7 @@ function InwardStock() {
     if (formData.type === 'EV') {
       return model.type === 'EV';
     } else if (formData.type === 'ICE') {
-      return model.type === 'ICE' || model.type === 'CSD';
+      return model.type === 'ICE';
     }
     return false;
   });

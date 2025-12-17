@@ -62,46 +62,80 @@ function StockVerification() {
     fetchLocationData();
   }, []);
 
+  
+
+  // const fetchData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const res = await axiosInstance.get('/vehicles/status/not_approved');
+  //     let vehicles = res.data?.data?.vehicles || [];
+
+  //     if (userRole !== 'SUPERADMIN' && branchId) {
+  //       vehicles = vehicles.filter((v) => v.unloadLocation?._id === branchId);
+  //     }
+
+  //     setPendingData(vehicles);
+  //     setFilteredPendings(vehicles);
+  //   } catch (err) {
+  //     const message = showError(error);
+  //     if (message) {
+  //       setError(message);
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const fetchLocationData = async () => {
+  //   try {
+  //     const res = await axiosInstance.get('/vehicles/status/in_stock');
+  //     let vehicles = res.data?.data?.vehicles || [];
+
+  //     if (userRole !== 'SUPERADMIN' && branchId) {
+  //       vehicles = vehicles.filter((v) => v.unloadLocation?._id === branchId);
+  //     }
+
+  //     setApprovedData(vehicles);
+  //     setFilteredApproved(vehicles);
+  //   } catch (error) {
+  //     const message = showError(error);
+  //     if (message) {
+  //       setError(message);
+  //     }
+  //   }
+  // };
+
+
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await axiosInstance.get('/vehicles/status/not_approved');
-      let vehicles = res.data?.data?.vehicles || [];
-
-      if (userRole !== 'SUPERADMIN' && branchId) {
-        vehicles = vehicles.filter((v) => v.unloadLocation?._id === branchId);
-      }
-
-      setPendingData(vehicles);
-      setFilteredPendings(vehicles);
-    } catch (err) {
-      const message = showError(error);
-      if (message) {
-        setError(message);
-      }
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const res = await axiosInstance.get('/vehicles/status/not_approved');
+    let vehicles = res.data?.data?.vehicles || [];
+    setPendingData(vehicles);
+    setFilteredPendings(vehicles);
+  } catch (err) {
+    const message = showError(error);
+    if (message) {
+      setError(message);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const fetchLocationData = async () => {
-    try {
-      const res = await axiosInstance.get('/vehicles/status/in_stock');
-      let vehicles = res.data?.data?.vehicles || [];
-
-      if (userRole !== 'SUPERADMIN' && branchId) {
-        vehicles = vehicles.filter((v) => v.unloadLocation?._id === branchId);
-      }
-
-      setApprovedData(vehicles);
-      setFilteredApproved(vehicles);
-    } catch (error) {
-      const message = showError(error);
-      if (message) {
-        setError(message);
-      }
+const fetchLocationData = async () => {
+  try {
+    const res = await axiosInstance.get('/vehicles/status/in_stock');
+    let vehicles = res.data?.data?.vehicles || [];
+    setApprovedData(vehicles);
+    setFilteredApproved(vehicles);
+  } catch (error) {
+    const message = showError(error);
+    if (message) {
+      setError(message);
     }
-  };
+  }
+};
 
   const handleSelectVehicle = (vehicleId, isChecked) => {
     if (isChecked) {

@@ -531,6 +531,8 @@ import {
   CFormTextarea,
   CFormCheck
 } from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilLocationPin, cilWarning } from '@coreui/icons';
 import axiosInstance from '../../../axiosInstance';
 import '../../../css/form.css';
 import { showError } from '../../../utils/sweetAlerts';
@@ -556,10 +558,8 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
   const isCashPayment = booking?.payment?.type?.toLowerCase() === 'cash';
   const isFinanceBooking = booking?.payment?.type?.toLowerCase() === 'finance'; 
 
- 
   useEffect(() => {
     if (show) {
-  
       setChassisNumber(booking?.chassisNumber || '');
       setReason('');
       setHasClaim(null);
@@ -580,7 +580,6 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
     }
   }, [show, booking]);
 
-
   useEffect(() => {
     if (chassisNumber && availableChassisData.length > 0) {
       const selectedChassis = availableChassisData.find(chassis => chassis.chassisNumber === chassisNumber);
@@ -590,9 +589,8 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
       console.log('Selected allocatedBooking:', selectedChassis?.allocatedBooking);
       
       if (selectedChassis) {
-   
         const isCurrentChassis = selectedChassis.allocatedBooking === booking?._id;
-       
+        
         if (selectedChassis.status === 'booked') {
           console.log('Booked chassis - no note or reason field');
           setShowNonFifoNote(false);
@@ -600,58 +598,45 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
           return;
         }
         
- 
         if (selectedChassis.status === 'in_stock') {
-         
           const hasCurrentChassisInList = availableChassisData.some(chassis => chassis.allocatedBooking === booking?._id);
           
           console.log('Has current chassis in entire list?', hasCurrentChassisInList);
           
           if (hasCurrentChassisInList) {
-           
             if (isCurrentChassis) {
-           
               console.log('Current chassis selected - show note field only');
               setShowNonFifoNote(true);
               setShowReasonField(false);
             } else {
-    
               console.log('Non-current chassis selected (current exists) - show BOTH fields');
               setShowNonFifoNote(true);
               setShowReasonField(true);
             }
           } else {
-          
             console.log('No current chassis in list');
-   
+            
             const inStockChassis = availableChassisData.filter(chassis => chassis.status === 'in_stock');
             
             if (inStockChassis.length > 0) {
-         
               const sortedInStock = [...inStockChassis].sort((a, b) => b.ageInDays - a.ageInDays);
-              
-           
               const oldestInStockChassis = sortedInStock[0];
               
               console.log('Oldest in_stock chassis:', oldestInStockChassis.chassisNumber);
               
-           
               setShowNonFifoNote(true);
               
-           
               const shouldShowReason = selectedChassis.chassisNumber !== oldestInStockChassis.chassisNumber;
               console.log('Should show reason field?', shouldShowReason);
               
               setShowReasonField(shouldShowReason);
               
-   
               if (!shouldShowReason) {
                 setNonFifoReason('');
               }
             }
           }
         } else {
-
           setShowNonFifoNote(false);
           setShowReasonField(false);
         }
@@ -669,9 +654,30 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
       const availableData = response.data.data.chassisNumbers || [];
 
       console.log('API Response:', availableData);
+      
+      // Get the booking's branch ID
+      const bookingBranchId = booking.branch?._id;
+      console.log('Booking Branch ID:', bookingBranchId);
+
+      // Filter chassis numbers to only show those from the same branch
+      const filteredData = availableData.filter((chassis) => {
+        // Check if location exists and has id, then compare with booking's branch ID
+        const chassisBranchId = chassis.location?.id;
+        const isSameBranch = chassisBranchId === bookingBranchId;
+        
+        console.log(`Chassis ${chassis.chassisNumber}:`, {
+          chassisBranchId,
+          bookingBranchId,
+          isSameBranch
+        });
+        
+        return isSameBranch;
+      });
+
+      console.log('Filtered Chassis Numbers (Same Branch):', filteredData);
 
       // Sort by ageInDays (descending) - oldest first (FIFO)
-      const sortedData = [...availableData].sort((a, b) => b.ageInDays - a.ageInDays);
+      const sortedData = [...filteredData].sort((a, b) => b.ageInDays - a.ageInDays);
       
       // Store the full data
       setAvailableChassisData(sortedData);
@@ -685,28 +691,83 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
         setChassisNumber(sortedData[0].chassisNumber);
       }
 
-      if (isUpdate && booking.chassisNumber && !chassisNumberStrings.includes(booking.chassisNumber)) {
-        setAvailableChassisNumbers([booking.chassisNumber, ...chassisNumberStrings]);
-        // Also add current chassis to the data array for display
-        const currentChassisData = {
-          chassisNumber: booking.chassisNumber, 
-          age: 'Current', 
-          ageInDays: 0, 
-          addedDate: 'Current',
-          status: 'allocated',
-          isBookedOrBlocked: false,
-          eligibilityMessage: 'Current Allocation',
-          allocatedBooking: booking._id // Set allocatedBooking to match booking ID
-        };
+      // If in update mode and the current chassis is not in the filtered list,
+      // we should still include it (it might be from a different branch or location)
+      if (isUpdate && booking.chassisNumber) {
+        // Check if current chassis is in the filtered list
+        const currentChassisInFiltered = filteredData.some(
+          (chassis) => chassis.chassisNumber === booking.chassisNumber
+        );
         
-        setAvailableChassisData((prev) => [currentChassisData, ...prev]);
+        if (!currentChassisInFiltered) {
+          // Add current chassis to the list
+          setAvailableChassisNumbers([booking.chassisNumber, ...chassisNumberStrings]);
+          
+          // Also add current chassis to the data array for display
+          const currentChassisData = {
+            chassisNumber: booking.chassisNumber, 
+            age: 'Current', 
+            ageInDays: 0, 
+            addedDate: 'Current',
+            status: 'allocated',
+            isBookedOrBlocked: false,
+            eligibilityMessage: 'Current Allocation',
+            allocatedBooking: booking._id,
+            location: {
+              id: booking.branch?._id,
+              name: booking.branch?.name,
+              type: 'branch'
+            }
+          };
+          
+          setAvailableChassisData((prev) => [currentChassisData, ...prev]);
+        }
       }
+
+      // Show a warning if no chassis numbers are available in the same branch
+      if (filteredData.length === 0 && !isUpdate) {
+        console.warn('No chassis numbers available in the same branch');
+      }
+
     } catch (error) {
       console.error('Error fetching chassis numbers:', error);
       showError(error);
     } finally {
       setLoadingChassisNumbers(false);
     }
+  };
+
+  const getChassisDisplayText = (chassis) => {
+    const isCurrentChassis = chassis.allocatedBooking === booking?._id;
+    
+    if (isCurrentChassis) {
+      return `${chassis.chassisNumber} (Current)`;
+    }
+    
+    let displayText = chassis.chassisNumber;
+    let ageText = '';
+    let locationText = '';
+
+    // Add location info if available
+    if (chassis.location?.name) {
+      locationText = ` - ${chassis.location.name}`;
+    }
+
+    if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
+      const days = chassis.ageInDays;
+      ageText = ` (${days} day${days !== 1 ? 's' : ''}${locationText})`;
+    } else if (locationText) {
+      // If no age but has location, show just location
+      ageText = locationText;
+    }
+    
+    if (chassis.isBookedOrBlocked && chassis.eligibilityMessage) {
+      displayText = `${chassis.chassisNumber} - ${chassis.eligibilityMessage}${ageText}`;
+    } else {
+      displayText = `${chassis.chassisNumber}${ageText}`;
+    }
+    
+    return displayText;
   };
 
   const handleDocumentUpload = (e) => {
@@ -796,7 +857,6 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
           }
         }
       } else {
-    
         const inStockChassis = availableChassisData.filter(chassis => chassis.status === 'in_stock');
         
         if (inStockChassis.length > 0) {
@@ -825,7 +885,6 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
       }
     }
 
-  
     const payload = {
       chassisNumber: chassisNumber.trim(),
       ...(reason.trim() && { reason: reason.trim() }), 
@@ -837,41 +896,12 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
           documents: claimDetails.documents
         }
       }),
-   
       ...((isCashPayment || isFinanceBooking) && { is_deviation: isDeviation })
     };
 
     console.log('Final Payload:', payload);
 
     onSave(payload);
-  };
-
-  const getChassisDisplayText = (chassis) => {
-
-    const isCurrentChassis = chassis.allocatedBooking === booking?._id;
-    
-    if (isCurrentChassis) {
-      return `${chassis.chassisNumber} (Current)`;
-    }
-    
-    let displayText = chassis.chassisNumber;
-    let ageText = '';
-    
-
-    if (chassis.ageInDays !== undefined && chassis.ageInDays >= 0) {
-      const days = chassis.ageInDays;
-      ageText = ` (${days} day${days !== 1 ? 's' : ''})`;
-    }
-    
-  
-    if (chassis.isBookedOrBlocked && chassis.eligibilityMessage) {
-      displayText = `${chassis.chassisNumber} - ${chassis.eligibilityMessage}${ageText}`;
-    } else {
-    
-      displayText = `${chassis.chassisNumber}${ageText}`;
-    }
-    
-    return displayText;
   };
 
   const handleCloseModal = () => {
@@ -945,6 +975,17 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
 
             <div className="mb-3">
               <CFormLabel htmlFor="chassisNumber">Chassis Number</CFormLabel>
+              
+              {/* Show branch info */}
+              {!loadingChassisNumbers && availableChassisNumbers.length > 0 && (
+                <div className="mb-2">
+                  <small className="text-info">
+                    <CIcon icon={cilLocationPin} className="me-1" />
+                    Showing chassis numbers from {booking.branch?.name} branch only
+                  </small>
+                </div>
+              )}
+              
               {loadingChassisNumbers ? (
                 <div className="text-center">
                   <CSpinner size="sm" />
@@ -960,7 +1001,15 @@ const ChassisNumberModal = ({ show, onClose, onSave, isLoading, booking, isUpdat
                   ))}
                 </CFormSelect>
               ) : (
-                <div className="text-danger">No chassis numbers available for this model and color combination</div>
+                <>
+                  <div className="text-danger mb-2">No chassis numbers available for this model and color combination</div>
+                  {!isUpdate && (
+                    <div className="alert alert-warning mt-2">
+                      <CIcon icon={cilWarning} className="me-2" />
+                      No chassis numbers available in {booking.branch?.name} branch for this model and color combination.
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
