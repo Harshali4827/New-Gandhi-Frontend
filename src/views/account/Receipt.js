@@ -257,7 +257,9 @@ function Receipt() {
     const dob = data.customerDetails.dob ? new Date(data.customerDetails.dob).
     toLocaleDateString('en-GB') : 'N/A';
     const recentPaymentAmount = data.recentPayment?.amount || 0;
+    const recentPaymentAmountRef = data.recentPayment?.transactionReference || "-";
     const recentPaymentAmountInWords = numberToWords(recentPaymentAmount);
+    const recentPaymentAmountType = data.recentPayment?.paymentMode || "-";
 
     const recentPaymentDate = data.recentPayment?.date 
     ? new Date(data.recentPayment.date).toLocaleDateString('en-GB')
@@ -527,7 +529,7 @@ function Receipt() {
       <div class="customer-info-right">
         <div class="customer-info-row"><strong>Model Name:</strong> ${data.model.model_name}</div>
        <div class="customer-info-row"><strong>Chassis No:</strong></div>
-        <div class="customer-info-row"><strong>Payment Mode:</strong> ${data.payment?.type || 'CASH'}</div>
+        <div class="customer-info-row"><strong>Payment Type:</strong> ${data.payment?.type || 'CASH'}</div>
          <div class="customer-info-row"><strong>Financer:</strong> ${data.payment?.financer?.name || ''}</div>
         <div class="customer-info-row"><strong>Sales Executive:</strong> ${data.salesExecutive?.name || 'N/A'}</div>
       </div>
@@ -536,7 +538,7 @@ function Receipt() {
     <!-- Received Amount Section -->
     <div class="payment-info-box">
       ${data.recentPayment ? `
-        <div><strong>Received Amount (Rs):</strong> ₹${data.recentPayment.amount.toFixed(2)}</div>
+        <div><strong>Received Amount (Rs):</strong> ₹${data.recentPayment.amount.toFixed(2)},(Reference No : ${recentPaymentAmountRef}),(Payment Mode : ${recentPaymentAmountType})</div>
       ` : '<div>No payment history available</div>'}
       <div class="amount-in-words">
         <strong>(In Words):</strong> ${recentPaymentAmountInWords} Only
@@ -1092,4 +1094,5 @@ const renderPendingListTable = () => {
 }
 
 export default Receipt;
+
 

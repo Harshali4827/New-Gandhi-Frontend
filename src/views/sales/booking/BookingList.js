@@ -1,4 +1,3 @@
-
 import '../../../css/table.css';
 import '../../../css/form.css';
 import '../../../css/invoice.css';
@@ -236,8 +235,12 @@ const BookingList = () => {
 
       setAllData(branchBookings);
 
+      // Updated to include FREEZZED status in pending bookings
       const pendingBookings = branchBookings.filter(
-        (booking) => booking.status === 'PENDING_APPROVAL' || booking.status === 'PENDING_APPROVAL (Discount_Exceeded)'
+        (booking) => 
+          booking.status === 'PENDING_APPROVAL' || 
+          booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ||
+          booking.status === 'FREEZZED'
       );
       setPendingData(pendingBookings);
       setFilteredPending(pendingBookings);
@@ -744,6 +747,7 @@ const BookingList = () => {
     setActiveTab(tab);
     setSearchTerm('');
   };
+  
   const renderBookingTable = (records, tabIndex) => {
     if (tabIndex === 5 || tabIndex === 6) {
       return (
@@ -788,12 +792,9 @@ const BookingList = () => {
                     <CTableDataCell>{cancellation.cancellationRequest?.reason || 'N/A'}</CTableDataCell>
                     <CTableDataCell>{cancellation.cancellationRequest?.requestedAt ? new Date(cancellation.cancellationRequest.requestedAt).toLocaleDateString('en-GB') : 'N/A'}</CTableDataCell>
                     <CTableDataCell>{cancellation.cancellationRequest?.requestedByDetails?.name || 'N/A'}</CTableDataCell>
-                    {/* <CTableDataCell>₹{cancellation.cancellationRequest?.cancellationCharges || 0}</CTableDataCell>
+                    <CTableDataCell>₹{cancellation.financials?.cancellationCharges || 0}</CTableDataCell>
                     <CTableDataCell>₹{cancellation.financials?.received || 0}</CTableDataCell>
-                    <CTableDataCell>₹{cancellation.financials?.refundAmount || 0}</CTableDataCell> */}
-<CTableDataCell>₹{cancellation.financials?.cancellationCharges || 0}</CTableDataCell>
-<CTableDataCell>₹{cancellation.financials?.received || 0}</CTableDataCell>
-<CTableDataCell>₹{cancellation.financials?.refundAmount || 0}</CTableDataCell>
+                    <CTableDataCell>₹{cancellation.financials?.refundAmount || 0}</CTableDataCell>
                     <CTableDataCell>
                       <span className={`status-badge ${cancellation.cancellationRequest?.status?.toLowerCase() || ''}`}>
                         {cancellation.cancellationRequest?.status || 'N/A'}
@@ -966,8 +967,28 @@ const BookingList = () => {
                     </CTableDataCell>
                   )}
                   <CTableDataCell>
-                    <span className={`status-badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
-                  </CTableDataCell>
+  {/* Show "FROZEN" for FREEZZED status */}
+  <span 
+    className="status-badge" 
+    style={{
+      backgroundColor: booking.status === 'FREEZZED' ? '#ffc107' : 
+                      booking.status === 'PENDING_APPROVAL' ? '#0d6efd' : 
+                      booking.status === 'PENDING_APPROVAL (Discount_Exceeded)' ? '#fd7e14' : 
+                      booking.status === 'APPROVED' ? '#198754' : 
+                      booking.status === 'REJECTED' ? '#dc3545' : 
+                      booking.status === 'ALLOCATED' ? '#6f42c1' : 
+                      booking.status === 'ON_HOLD' ? '#6c757d' : '#6c757d',
+      color: booking.status === 'FREEZZED' ? '#000' : '#fff',
+      padding: '2px 8px',
+      borderRadius: '12px',
+      fontSize: '12px',
+      fontWeight: '500',
+      display: 'inline-block'
+    }}
+  >
+    {booking.status === 'FREEZZED' ? 'FROZEN (self insurance)' : booking.status}
+  </span>
+</CTableDataCell>
                   {tabIndex === 0 && (
                     <CTableDataCell>
                       <span className={`status-badge ${booking.updateRequestStatus.toLowerCase()}`}>
@@ -1039,7 +1060,8 @@ const BookingList = () => {
                               <CIcon icon={cilCheck} className="me-2" /> Back to Normal
                             </MenuItem>
                           )}
-                          {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && (
+                          {/* Disable edit for frozen bookings */}
+                          {tabIndex != 2 && tabIndex != 3 && tabIndex != 4 && booking.status !== 'FREEZZED' && (
                             <Link className="Link" to={`/booking-form/${booking.id}`} style={{ textDecoration: 'none' }}>
                               <MenuItem style={{ color: 'black' }}>
                                 <CIcon icon={cilPencil} className="me-2" /> Edit
@@ -1108,6 +1130,16 @@ const BookingList = () => {
                       {tabIndex === 1 && booking.status === 'APPROVED' && (
                         <MenuItem onClick={() => handleOpenAvailableDocs(booking.id)} style={{ color: 'black' }}>
                           <CIcon icon={cilFile} className="me-2" /> Available Documents
+                        </MenuItem>
+                      )}
+                      
+                      {/* Self Insurance Management Option - Only for Frozen bookings */}
+                      {tabIndex === 0 && booking.status === 'FREEZZED' && (
+                        <MenuItem 
+                          onClick={() => window.location.href = '/self-insurance'} 
+                          style={{ color: 'black' }}
+                        >
+                          <CIcon icon={cilSettings} className="me-2" /> Manage Self Insurance
                         </MenuItem>
                       )}
                     </Menu>
@@ -1627,7 +1659,7 @@ const BookingList = () => {
         open={viewModalVisible} 
         onClose={() => setViewModalVisible(false)} 
         booking={selectedBooking} 
-        refreshData={fetchAllData}  // Changed to fetchAllData
+        refreshData={fetchAllData}
       />
       <KYCView
         open={kycModalVisible}
@@ -1636,7 +1668,7 @@ const BookingList = () => {
           setKycBookingId(null);
         }}
         kycData={kycData}
-        refreshData={fetchAllData}  // Changed to fetchAllData
+        refreshData={fetchAllData}
         bookingId={kycBookingId}
       />
       <FinanceView
@@ -1646,7 +1678,7 @@ const BookingList = () => {
           setFinanceBookingId(null);
         }}
         financeData={financeData}
-        refreshData={fetchAllData}  // Changed to fetchAllData
+        refreshData={fetchAllData}
         bookingId={financeBookingId}
       />
       <ChassisNumberModal
@@ -1681,4 +1713,6 @@ const BookingList = () => {
 };
 
 export default BookingList;
+
+
 
