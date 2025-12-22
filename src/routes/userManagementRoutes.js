@@ -14,6 +14,6 @@ export const userManagementRoutes = [
     { path:'/users/update-user/:id', name:'Update User', element:AddUser},
     { path:'/users/users-list', name:'Users List', element:UsersList},
     { path:'/buffer/buffer-list', name:'Buffer List', element:BufferList},
-    { path:'/users/manager-deviation', name:'Manager Deviation', element:ManagerDeviation},
+    { path:'/manager-deviation', name:'Manager Deviation', element:ManagerDeviation},
     { path:'/gm-deviation', name:'Manager Deviation', element:GMDeviation},
 ];

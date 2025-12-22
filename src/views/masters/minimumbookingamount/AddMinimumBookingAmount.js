@@ -173,7 +173,7 @@ const AddMinimumBookingAmount = ({ show, onClose, onSaved, editingItem }) => {
       { value: '', label: 'Select Type' },
       { value: 'ICE', label: 'ICE' },
       { value: 'EV', label: 'EV' },
-      { value: 'CSD', label: 'CSD' }
+    
     ];
   };
 

@@ -38,6 +38,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilPlus, cilSettings, cilPencil, cilTrash, cilInfo } from '@coreui/icons';
 import AddOpeningBalance from './AddOpeningBalance';
+import { useAuth } from '../../context/AuthContext';
 
 const OpeningBalanceList = () => {
   const [anchorEl, setAnchorEl] = useState(null);

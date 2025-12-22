@@ -22,7 +22,7 @@ const PrintModal = ({ show, onClose, bookingId }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [financeDisbursement, setFinanceDisbursement] = useState('');
-  const [hasDeviation, setHasDeviation] = useState('NO');
+  
 
   useEffect(() => {
     if (show && bookingId) {
@@ -31,7 +31,7 @@ const PrintModal = ({ show, onClose, bookingId }) => {
       setSuccess('');
       // Reset finance disbursement to empty when modal opens
       setFinanceDisbursement('');
-      setHasDeviation('NO');
+     
     }
   }, [show, bookingId]);
 
@@ -93,7 +93,7 @@ const PrintModal = ({ show, onClose, bookingId }) => {
         bookingId: bookingId,
         disbursementAmount: disbursementAmount,
         downPaymentExpected: calculateDownPayment(),
-        is_deviation: hasDeviation === 'YES'
+       
       };
 
       console.log('Submitting disbursement data:', disbursementData);
@@ -375,13 +375,7 @@ const PrintModal = ({ show, onClose, bookingId }) => {
                 <label className="form-label">Downpayment Amount (₹)</label>
                 <CFormInput type="number" value={downPayment} readOnly className="bg-light font-weight-bold" />
               </CCol>
-              <CCol md={6}>
-                <label className="form-label">Is there a deviation?</label>
-                <CFormSelect value={hasDeviation} onChange={(e) => setHasDeviation(e.target.value)} disabled={loading}>
-                  <option value="NO">No</option>
-                  <option value="YES">Yes</option>
-                </CFormSelect>
-              </CCol>
+              
             </CRow>
           </CForm>
         </CModalBody>

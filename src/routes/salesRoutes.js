@@ -3,7 +3,7 @@ const NewBooking = React.lazy(() => import('../views/sales/booking/NewBooking'))
 const SelfInsurance = React.lazy(() => import('../views/sales/booking/SelfInsurance'))
 const BookingList = React.lazy(() => import('../views/sales/booking/BookingList'))
 const DeliveryChallan = React.lazy(() => import('../views/sales/delivery-challan/DeliveryChallan'))
-const GSTInvoice = React.lazy(() => import('../views/sales/Invoice'))
+const Invoice = React.lazy(() => import('../views/sales/Invoice'))
 const HelmetInvoice = React.lazy(() => import('../views/sales/HelmetInvoice'))
 const DealForm = React.lazy(() => import('../views/sales/DealForm'))
 const UploadDealForm = React.lazy(() => import('../views/sales/UploadDealForm'))
@@ -21,7 +21,7 @@ export const salesRoutes = [
     { path:'/upload-kyc/:id', name:'Upload KYC', element:uploadKYC},
   
     { path:'/delivery-challan', name:'Delivery Challan', element:DeliveryChallan},
-    { path:'/gst-invoice', name:'GST Invoice', element:GSTInvoice},
+    { path:'/invoice', name:'GST Invoice', element:Invoice},
     { path:'/helmet-invoice', name:'Helmet Invoice', element:HelmetInvoice},
     { path:'/deal-form', name:'Deal Form', element:DealForm},
     { path:'/upload-deal', name:'Upload Deal', element:UploadDealForm},

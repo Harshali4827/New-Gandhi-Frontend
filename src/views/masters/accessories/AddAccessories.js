@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import '../../../css/form.css';
-import { CInputGroup, CInputGroupText, CFormInput, CFormSelect } from '@coreui/react';
+import { CInputGroup, CInputGroupText, CFormInput, CFormSelect, CButton } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilBuilding, cilLocationPin, cilUser } from '@coreui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -26,8 +25,37 @@ function AddAccessories() {
   const [models, setModels] = useState([]);
   const [categories, setCategories] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // Service functions
+  const fetchAccessoryByIdService = async (id) => {
+    try {
+      const response = await axiosInstance.get(`/accessories/${id}`);
+      return response.data.data.accessory;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateAccessoryService = async (id, payload) => {
+    try {
+      const response = await axiosInstance.put(`/accessories/${id}`, payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createAccessoryService = async (payload) => {
+    try {
+      const response = await axiosInstance.post('/accessories', payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -103,6 +131,7 @@ function AddAccessories() {
 
   const fetchAccessory = async (id) => {
     try {
+      setLoading(true);
       const accessory = await fetchAccessoryByIdService(id);
       setFormData({
         ...accessory,
@@ -110,6 +139,8 @@ function AddAccessories() {
       });
     } catch (error) {
       showFormSubmitError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,38 +161,56 @@ function AddAccessories() {
         applicable_models: isSelected ? prevData.applicable_models.filter((id) => id !== modelId) : [...prevData.applicable_models, modelId]
       };
     });
+    // Clear error when user selects at least one model
+    if (errors.applicable_models) {
+      setErrors(prev => ({ ...prev, applicable_models: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted'); // Debug log
+    
     let formErrors = {};
 
-    if (!formData.name) formErrors.name = 'This field is required';
-    if (!formData.price) formErrors.price = 'This field is required';
-    if (!formData.part_number) formErrors.part_number = 'This field is required';
-    if (!formData.gst_rate) formErrors.gst_rate = 'This field is required';
+    if (!formData.name.trim()) formErrors.name = 'This field is required';
+    if (!formData.price || formData.price <= 0) formErrors.price = 'Valid price is required';
+    if (!formData.part_number.trim()) formErrors.part_number = 'This field is required';
+    if (!formData.gst_rate || formData.gst_rate < 0) formErrors.gst_rate = 'Valid GST rate is required';
     if (!formData.category) formErrors.category = 'This field is required';
     if (formData.applicable_models.length === 0) {
       formErrors.applicable_models = 'Please select at least one compatible model';
     }
 
     if (Object.keys(formErrors).length > 0) {
+      console.log('Form errors:', formErrors); // Debug log
       setErrors(formErrors);
+      
+      // Scroll to first error
+      const firstErrorKey = Object.keys(formErrors)[0];
+      const element = document.querySelector(`[name="${firstErrorKey}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
+    
     const payload = {
-      name: formData.name,
-      description: formData.description,
-      price: formData.price,
-      gst_rate: formData.gst_rate,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: parseFloat(formData.price),
+      gst_rate: parseFloat(formData.gst_rate),
       category: formData.category,
-      part_number: formData.part_number,
+      part_number: formData.part_number.trim(),
       applicable_models: formData.applicable_models,
       part_number_status: 'active',
       status: 'active'
     };
 
+    console.log('Submitting payload:', payload); // Debug log
+
     try {
+      setLoading(true);
       if (id) {
         await updateAccessoryService(id, payload);
         showFormSubmitToast('Accessory updated successfully!');
@@ -171,7 +220,10 @@ function AddAccessories() {
       }
       navigate('/accessories/accessories-list');
     } catch (error) {
+      console.error('Submit error:', error); // Debug log
       showFormSubmitError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,6 +238,33 @@ function AddAccessories() {
     }
     return null;
   };
+
+
+  const renderButtons = () => (
+    <div className="form-buttons" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+      <CButton 
+        type="submit" 
+        color="primary" 
+        disabled={loading}
+        style={{ minWidth: '100px' }}
+      >
+        {loading ? 'Processing...' : (id ? 'Update' : 'Submit')}
+      </CButton>
+      <CButton 
+        type="button" 
+        color="secondary" 
+        onClick={handleCancel}
+        disabled={loading}
+        style={{ minWidth: '100px' }}
+      >
+        Cancel
+      </CButton>
+    </div>
+  );
+
+  if (loading && id) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
     <div className="form-container">
@@ -203,7 +282,14 @@ function AddAccessories() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilUser} />
                   </CInputGroupText>
-                  <CFormInput type="text" name="name" value={formData.name} onChange={handleChange} />
+                  <CFormInput 
+                    type="text" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Enter accessory name"
+                  />
                 </CInputGroup>
                 {errors.name && <p className="error">{errors.name}</p>}
               </div>
@@ -214,7 +300,14 @@ function AddAccessories() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilUser} />
                   </CInputGroupText>
-                  <CFormInput type="text" name="description" value={formData.description} onChange={handleChange} />
+                  <CFormInput 
+                    type="text" 
+                    name="description" 
+                    value={formData.description} 
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Enter description"
+                  />
                 </CInputGroup>
               </div>
 
@@ -227,7 +320,16 @@ function AddAccessories() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilBuilding} />
                   </CInputGroupText>
-                  <CFormInput type="text" name="price" value={formData.price} onChange={handleChange} />
+                  <CFormInput 
+                    type="number" 
+                    name="price" 
+                    value={formData.price} 
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Enter price"
+                    min="0"
+                    step="0.01"
+                  />
                 </CInputGroup>
                 {errors.price && <p className="error">{errors.price}</p>}
               </div>
@@ -240,7 +342,12 @@ function AddAccessories() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilLocationPin} />
                   </CInputGroupText>
-                  <CFormSelect name="category" value={formData.category} onChange={handleChange}>
+                  <CFormSelect 
+                    name="category" 
+                    value={formData.category} 
+                    onChange={handleChange}
+                    disabled={loading}
+                  >
                     <option value="">-Select-</option>
                     {categories.map((category) => (
                       <option key={category._id} value={category._id}>
@@ -260,27 +367,44 @@ function AddAccessories() {
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilBuilding} />
                   </CInputGroupText>
-                  <CFormInput type="text" name="part_number" value={formData.part_number} onChange={handleChange} />
+                  <CFormInput 
+                    type="text" 
+                    name="part_number" 
+                    value={formData.part_number} 
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Enter part number"
+                  />
                 </CInputGroup>
                 {errors.part_number && <p className="error">{errors.part_number}</p>}
               </div>
               <div className="input-box">
                 <div className="details-container">
-                  <span className="details">GST Rate</span>
+                  <span className="details">GST Rate (%)</span>
                   <span className="required">*</span>
                 </div>
                 <CInputGroup>
                   <CInputGroupText className="input-icon">
                     <CIcon icon={cilBuilding} />
                   </CInputGroupText>
-                  <CFormInput type="text" name="gst_rate" value={formData.gst_rate} onChange={handleChange} />
+                  <CFormInput 
+                    type="number" 
+                    name="gst_rate" 
+                    value={formData.gst_rate} 
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Enter GST rate"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                  />
                 </CInputGroup>
                 {errors.gst_rate && <p className="error">{errors.gst_rate}</p>}
               </div>
             </div>
 
             <div className="offer-container">
-              <form className="permissions-form">
+              <div className="permissions-form">
                 <h4>
                   Compatible Models <span className="required">* </span>
                   {getSelectedCategoryType() && (
@@ -302,11 +426,12 @@ function AddAccessories() {
                       const isSelected = formData.applicable_models.includes(modelId);
                       return (
                         <div key={modelId} className="permission-item">
-                          <label>
+                          <label style={{ cursor: loading ? 'not-allowed' : 'pointer' }}>
                             <input 
                               type="checkbox" 
                               checked={isSelected} 
-                              onChange={() => handleModelSelect(modelId)} 
+                              onChange={() => !loading && handleModelSelect(modelId)}
+                              disabled={loading}
                             />
                             {model.model_name}
                             <span className="model-type"> ({model.type})</span>
@@ -318,10 +443,13 @@ function AddAccessories() {
 
                   {errors.applicable_models && <p className="error">{errors.applicable_models}</p>}
                 </div>
-              </form>
+              </div>
             </div>
 
-            <FormButtons onCancel={handleCancel} />
+     
+            {renderButtons()}
+            
+  
           </form>
         </div>
       </div>

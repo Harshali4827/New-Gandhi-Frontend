@@ -161,7 +161,7 @@ function AddModel() {
                     <option value="">-Select-</option>
                     <option value="EV">EV</option>
                     <option value="ICE">ICE</option>
-                    <option value="CSD">CSD</option>
+                  
                   </CFormSelect>
                 </CInputGroup>
                 {errors.type && <p className="error">{errors.type}</p>}

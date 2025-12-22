@@ -1136,7 +1136,7 @@ const BookingList = () => {
                       {/* Self Insurance Management Option - Only for Frozen bookings */}
                       {tabIndex === 0 && booking.status === 'FREEZZED' && (
                         <MenuItem 
-                          onClick={() => window.location.href = '/self-insurance'} 
+                          onClick={() => window.location.href = '/#/self-insurance'} 
                           style={{ color: 'black' }}
                         >
                           <CIcon icon={cilSettings} className="me-2" /> Manage Self Insurance

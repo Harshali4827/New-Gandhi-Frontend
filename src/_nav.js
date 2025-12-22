@@ -743,6 +743,13 @@ const getNav = (userPermissions = []) => {
       to: '/upload-challan',
     });
   }
+  {
+    purchaseItems.push({
+      component: CNavItem,
+      name: 'RTO Chassis',
+      to: '/rto-chassis',
+    });
+  }
 
   if (purchaseItems.length > 0) {
     _nav.push({

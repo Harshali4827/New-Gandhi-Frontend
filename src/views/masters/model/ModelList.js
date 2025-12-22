@@ -80,7 +80,7 @@ const ModelList = () => {
   const hasCreatePermission = hasPermission(permissions,'MODEL_CREATE');
   const showActionColumn = hasEditPermission || hasDeletePermission;
 
-  const availableTypes = ['EV', 'ICE', 'CSD'];
+  const availableTypes = ['EV', 'ICE'];
 
   const getVerticleNameById = (verticleId) => {
     if (!verticleId) return '-';

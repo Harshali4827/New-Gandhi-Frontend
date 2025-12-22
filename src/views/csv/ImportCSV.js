@@ -62,8 +62,8 @@ const ImportCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFil
     
     if (!selectedModelType) {
       errors.modelType = 'Please select a model type.';
-    } else if (!['EV', 'ICE', 'CSD'].includes(selectedModelType)) {
-      errors.modelType = 'Please select a valid model type (EV, ICE, or CSD).';
+    } else if (!['EV', 'ICE'].includes(selectedModelType)) {
+      errors.modelType = 'Please select a valid model type (EV, ICE).';
     }
     
     if (exportTarget === 'branch' && !selectedBranchId) {
@@ -163,7 +163,7 @@ const ImportCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFil
         showFormSubmitError({
           response: {
             status: 400,
-            data: { message: 'Invalid vehicle type. Please select EV, ICE, or CSD.' }
+            data: { message: 'Invalid vehicle type. Please select EV, ICE.' }
           }
         });
       } else if (error.response?.data?.error?.includes('verticle')) {
@@ -285,10 +285,10 @@ const ImportCSV = ({ endpoint, onSuccess, buttonText = 'Import CSV', acceptedFil
               <option value="">-- Select Vehicle Type --</option>
               <option value="EV">EV</option>
               <option value="ICE">ICE</option>
-              <option value="CSD">CSD</option>
+             
             </CFormSelect>
             {importErrors.modelType && <div className="invalid-feedback d-block">{importErrors.modelType}</div>}
-            <small className="text-muted">Select EV, ICE, or CSD as per your data</small>
+            <small className="text-muted">Select EV, ICE as per your data</small>
           </div>
 
           {/* Verticle selection - Now Required */}

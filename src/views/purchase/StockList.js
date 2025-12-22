@@ -339,7 +339,7 @@ const StockList = () => {
     return status.toLowerCase() === 'blocked';
   };
   const isVehicleFriz = (status) => {
-    return status.toUpperCase() === 'FREEZZED';
+    return status.toUpperCase() === 'FROZEN';
   };
 
   if (loading) {
@@ -695,7 +695,7 @@ const handleAllocateClick = (vehicle) => {
           </CButton>
         </CModalFooter>
       </CModal>
-      <AllocateVehicleModal
+<AllocateVehicleModal
   vehicleId={selectedVehicleForAllocation}
   visible={allocateModalOpen}
   onClose={() => {

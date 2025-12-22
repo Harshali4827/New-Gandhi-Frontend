@@ -474,7 +474,7 @@ const HeadersList = () => {
               <option value="">-- Select Model Type --</option>
               <option value="EV">EV</option>
               <option value="ICE">ICE</option>
-              <option value="CSD">CSD</option>
+           
             </CFormSelect>
             {exportErrors.modelType && <div className="invalid-feedback d-block">{exportErrors.modelType}</div>}
           </div>
